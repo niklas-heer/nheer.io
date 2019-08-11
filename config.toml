@@ -50,7 +50,7 @@ disableHugoGeneratorInject = false
   keywords = "homepage, blog, science, informatics, development, programming, freelancer, selbstständig, projects, cloud, software"
   images = [""]
 
-  homeSubtitle = "Computer Scientist"
+  homeSubtitle = "DevOps and Quality"
 
   # Prefix of link to the git commit detail page. GitInfo must be enabled.
   gitUrl = "https://github.com/niklas-heer/nheer.io/commit/"
