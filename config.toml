@@ -53,31 +53,31 @@ disableHugoGeneratorInject = false
   homeSubtitle = "Computer Scientist"
 
   # Prefix of link to the git commit detail page. GitInfo must be enabled.
-  gitUrl = "https://github.com/rhazdon/homepage/commit/"
+  gitUrl = "https://github.com/niklas-heer/nheer.io/commit/"
 
   # Default theme "light" or "dark"
   defaultTheme = "dark"
 
   [params.logo]
-    logoText     = "$ cd /home/"
+    logoText     = "niklas heer"
     logoHomeLink = "/"
 
   # Social icons
   [[params.social]]
     name = "twitter"
-    url  = "https://twitter.com/rhazdon/"
+    url  = "https://twitter.com/niklas_heer/"
 
   [[params.social]]
     name = "email"
-    url  = "mailto:djordje@atlialp.com"
+    url  = "mailto:niklas.heer@gmail.com"
 
   [[params.social]]
     name = "github"
-    url  = "https://github.com/rhazdon/"
+    url  = "https://github.com/niklas-heer/"
 
   [[params.social]]
     name = "linkedin"
-    url  = "https://www.linkedin.com/in/djordje-atlialp-141386b9/"
+    url  = "https://de.linkedin.com/in/niklas-heer-b89364b8"
 
 [languages]
   [languages.en]
@@ -97,9 +97,9 @@ disableHugoGeneratorInject = false
     url        = "about/"
   [[menu.main]]
     identifier = "posts"
-    name       = "Articles"
+    name       = "Blog"
     url        = "posts/"
-  [[menu.main]]
-    identifier = "works"
-    name       = "Works"
-    url        = "works/"
+  # [[menu.main]]
+  #   identifier = "works"
+  #   name       = "Works"
+  #   url        = "works/"
