@@ -1,0 +1,3 @@
+[submodule "themes/hello-friendly"]
+	path = themes/hello-friendly
+	url = https://github.com/niklas-heer/hugo-theme-hello-friendly.git
