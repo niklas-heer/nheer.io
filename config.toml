@@ -1,7 +1,7 @@
 baseURL = "https://peaceful-goldberg-bb0221.netlify.com"
 title   = "Niklas Heer"
 
-DefaultContentLanguage = "de"
+DefaultContentLanguage = "en"
 theme = "hello-friendly"
 
 pygmentsCodefences = false
