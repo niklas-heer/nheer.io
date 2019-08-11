@@ -1,9 +1,9 @@
 ---
-title: "Hello World!"
-description: "Mein erster Post."
-date: "2011-11-08"
+title: Hello World!
+description: Mein erster Post.
+date: 2011-11-08
 categories:
-    - "fun"
+  - fun
 ---
 
 Ich habe es endlich geschafft mich mal aufzuraffen und auf meinem Server
@@ -16,8 +16,6 @@ zu versorgen.
 
 Betrachten wir es einfach mal als eine Art Experiment. Seid gespannt
 darauf! :P
-
- 
 
 Viele Grüße,
 
