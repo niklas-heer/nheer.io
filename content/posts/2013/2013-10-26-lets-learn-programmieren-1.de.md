@@ -1,5 +1,5 @@
 ---
-title: "Let's Learn - Programmieren #1 - Teaser"
+title: "Let's Learn - Programmieren 1 - Teaser"
 eyecatch: fa-youtube-play
 slug: "lets-learn_programmieren-1"
 description: "Let's Learn - Programmieren #1"

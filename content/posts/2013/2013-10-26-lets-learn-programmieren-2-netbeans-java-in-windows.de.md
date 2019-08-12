@@ -1,5 +1,5 @@
 ---
-title: "Let's Learn - Programmieren #2 - Windows"
+title: "Let's Learn - Programmieren 2 - Windows"
 eyecatch: fa-youtube-play
 description: "Let's Learn - Programmieren #2"
 date: 2013-10-26

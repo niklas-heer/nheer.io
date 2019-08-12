@@ -13,7 +13,7 @@ toc: false
     </figure>
 </center>
 
-## Why I switched to [Hugo][hugo]
+## Why I switched to Hugo
 
 [Jekyll][jekyll] was my first real static site generator. I loved it! There was only one problem: I really dislike ruby and the gem system. It is simply too slow!
 
