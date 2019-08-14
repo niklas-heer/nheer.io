@@ -1,5 +1,5 @@
 ---
-title: "Thinklight Script für Linux"
+title: "Thinklight Script for Linux"
 eyecatch: fa-code
 description: "Thinklight Script für Linux"
 date: 2013-04-29

@@ -48,13 +48,4 @@ Zum Abschalten:
 
 Und hier noch das Script selbst ;D
 
-```bash
-#!/bin/sh
-if [ "$1" = "on" ]; then
-    echo 1 > /sys/devices/platform/thinkpad_acpi/leds/tpacpi::thinklight/brightness
-elif [ "$1" = "off" ]; then
-    echo 0 > /sys/devices/platform/thinkpad_acpi/leds/tpacpi::thinklight/brightness
-else
-    echo "Error: Wrong paramater! Only on/off allowed!"
-fi
-```
+{{< gist niklas-heer 5490084 >}}
