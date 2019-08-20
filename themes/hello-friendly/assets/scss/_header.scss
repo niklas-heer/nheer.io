@@ -1,5 +1,5 @@
 .header {
-  background: #fafafa;
+  background: $light-header;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7,7 +7,7 @@
   padding: 20px;
 
   .dark-theme & {
-    background: #282a36;
+    background: $dark-header;
   }
 
   &__right {
