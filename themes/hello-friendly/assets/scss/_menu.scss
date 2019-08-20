@@ -1,7 +1,14 @@
 .menu {
+  // needed for the mobile menu
+  background: $light-header;
   border-right: 1px solid;
   margin-right: 18px;
   z-index: 9999;
+
+  .dark-theme & {
+    // needed for the mobile menu
+    background: $dark-header;
+  }
 
   @media #{$media-size-phone} {
     position: absolute;
