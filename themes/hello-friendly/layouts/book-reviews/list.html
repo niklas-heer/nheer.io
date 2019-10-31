@@ -1,9 +1,9 @@
 {{ define "main" }}
     <main class="books">
-        <h1>{{ .Title }}</h1>
+        <h1>{{ .Title | emojify }}</h1>
 
         {{- if .Content }}
-            <div class="content">{{ .Content }}</div>
+            <div class="books-content">{{ .Content }}</div>
         {{- end }}
 
         {{- range .Data.Pages.GroupByParamDate "readingEnd" "2006" }}

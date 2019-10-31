@@ -104,11 +104,11 @@ disableHugoGeneratorInject = false
     identifier = "posts"
     name       = "Blog"
     url        = "posts/"
+  # [[menu.main]]
+  #   identifier = "projects"
+  #   name       = "Projects"
+  #   url        = "projects/"
   [[menu.main]]
-    identifier = "projects"
-    name       = "Projects"
-    url        = "projects/"
-  [[menu.main]]
-    identifier = "reading"
-    name       = "Reading"
-    url        = "reading/"
+    identifier = "book-reviews"
+    name       = "Book Reviews"
+    url        = "book-reviews/"
