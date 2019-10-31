@@ -1,6 +1,7 @@
 ---
 date: 2015-08-18T10:21:41+02:00
 title: Hello Hugo!
+icon: ":wave:"
 description: Hugo, even faster than jekyll
 author: Niklas Heer
 toc: false

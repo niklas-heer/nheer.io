@@ -1,6 +1,5 @@
 ---
 title: "Thinklight Script für Linux"
-eyecatch: fa-code
 description: "Thinklight Script für Linux"
 date: 2013-04-29
 tags: [code, linux, thinkpad]

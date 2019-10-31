@@ -1,5 +1,6 @@
 ---
 title: vtop an unknown terminal beauty
+icon: ":heart_eyes:"
 date: 2014-12-01
 published: True
 tags: [code, terminal, linux]

@@ -1,5 +1,6 @@
 ---
 title: Hello Jekyll!
+icon: ":wave:"
 date: 2014-11-30
 tag:
   - jekyll
