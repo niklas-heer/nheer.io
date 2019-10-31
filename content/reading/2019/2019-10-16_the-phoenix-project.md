@@ -17,4 +17,5 @@ author = "Niklas Heer"
 
 ## Review
 
-I really
+I really enjoyed reading this book it pulled me in from the first few minutes due to it's novel like narrative.
+There were a lot of situations in the book which I can totally relate to.
