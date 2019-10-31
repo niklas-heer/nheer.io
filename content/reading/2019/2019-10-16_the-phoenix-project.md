@@ -19,3 +19,9 @@ author = "Niklas Heer"
 
 I really enjoyed reading this book it pulled me in from the first few minutes due to it's novel like narrative.
 There were a lot of situations in the book which I can totally relate to.
+
+Although I know about the DevOps movement for quite some time now I didn't know about the book and it's role defining it.
+It is a great read and has some great lessons you can learn from it.
+
+For me the most memorable thing was about applying lean principles to IT and software development.
+This is a thing I will try to encorporate into my own day to day life.
