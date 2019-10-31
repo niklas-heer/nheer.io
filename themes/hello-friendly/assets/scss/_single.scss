@@ -5,6 +5,13 @@
   padding: 20px;
   margin: 20px auto;
 
+  line-height: 1.58;
+  letter-spacing: -0.004em;
+
+  p {
+    margin-top: 1.8em;
+  }
+
   @media #{$media-size-tablet} {
     max-width: 600px;
   }
@@ -111,6 +118,7 @@
       vertical-align: -.125em;
       width: 1em;
       height: 1em;
+      padding-left: 1px;
     }
   }
 

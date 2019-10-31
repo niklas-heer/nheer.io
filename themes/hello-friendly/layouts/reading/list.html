@@ -1,0 +1,33 @@
+{{ define "main" }}
+    <main class="books">
+        <h1>{{ .Title }}</h1>
+
+        {{- if .Content }}
+            <div class="content">{{ .Content }}</div>
+        {{- end }}
+
+        {{- range .Data.Pages.GroupByParamDate "readingEnd" "2006" }}
+            <div class="books-group">
+                <div class="books-year">{{ .Key }}</div>
+                {{- range .Pages.GroupByParamDate "readingEnd" "2006-01-01" }}
+
+                <div class="books-month">{{ dateFormat "January" .Key }}</div>
+                    {{- range .Pages }}
+                    <div class="book-cover">
+                        <span class="book-img">
+                            <a href="{{.Permalink}}">
+                                <img src="{{ .Params.bookCover }}"/>
+                            </a>
+                        </span>
+                        <span class="book-meta">
+                            <span class="book-rating">
+                                {{ chomp (partial "book-rating.html" .)}}
+                            </span>
+                        </span>
+                    </div>
+                    {{- end }}
+                {{- end }}
+            </div>
+        {{- end }}
+    </main>
+{{ end }}

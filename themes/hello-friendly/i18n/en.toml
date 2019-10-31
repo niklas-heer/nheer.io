@@ -34,3 +34,17 @@ other = "Table of Contents"
 [wordCount]
 one   = "One Word"
 other = "{{ .Count }} Words"
+
+# reading/single.html
+[readingDuration]
+one = "Read in one day"
+other = "Read in {{ .Count }} days"
+
+[readingToolAudible]
+other = "Audible (audio book)"
+
+[readingToolKindle]
+other = "Kindle (e-book)"
+
+[readingToolHardcover]
+other = "Hardcover"

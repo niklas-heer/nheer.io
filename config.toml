@@ -60,8 +60,11 @@ disableHugoGeneratorInject = false
   # Default theme "light" or "dark"
   defaultTheme = "dark"
 
+  # Maximal number of rating
+  maxRating = 5
+
   [params.logo]
-    logoText     = "niklas heer"
+    logoText     = "nheer"
     logoHomeLink = "/"
 
   # Social icons
@@ -101,7 +104,11 @@ disableHugoGeneratorInject = false
     identifier = "posts"
     name       = "Blog"
     url        = "posts/"
-  # [[menu.main]]
-  #   identifier = "works"
-  #   name       = "Works"
-  #   url        = "works/"
+  [[menu.main]]
+    identifier = "projects"
+    name       = "Projects"
+    url        = "projects/"
+  [[menu.main]]
+    identifier = "reading"
+    name       = "Reading"
+    url        = "reading/"
