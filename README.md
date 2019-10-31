@@ -4,6 +4,14 @@
 
 This is the source of [my homepage](https://nheer.io) and my blog.
 
+## Development
+
+You can use the [Netlify CLI](https://cli.netlify.com/) tool and it will show the same thing that will be depolyed.
+
+```
+netlify dev
+```
+
 ## Credits
 
 Made with [Hugo](https://gohugo.io)
