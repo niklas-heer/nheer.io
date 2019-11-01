@@ -21,7 +21,11 @@
                         </span>
                         <span class="book-meta">
                             <span class="book-rating">
-                                {{ chomp (partial "book-rating.html" .)}}
+                                {{- if .Params.draft }}
+                                    <span class="book-draft">Draft</span>
+                                {{- else }}
+                                    {{ chomp (partial "book-rating.html" .)}}
+                                {{- end }}
                             </span>
                         </span>
                     </div>

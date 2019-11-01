@@ -15,6 +15,9 @@
                         <li class="post-item">
                             <a href="{{.Permalink}}">
                                 <span class="post-title">{{.Params.icon | emojify }} {{.Title}}</span>
+                                {{- if .Params.draft }}
+                                <span class="post-draft">Draft</span>
+                                {{- end }}
                                 <span class="post-day">{{ if .Site.Params.dateformShort }}{{ .Date.Format .Site.Params.dateformShort }}{{ else }}{{ .Date.Format "Jan 2"}}{{ end }}</span>
                             </a>
                         </li>
