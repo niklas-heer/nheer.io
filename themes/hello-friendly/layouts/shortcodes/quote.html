@@ -1,5 +1,9 @@
 {{ if .Get 0 }}
     <blockquote>
         <p>{{ .Get 0 }}</p>
+        {{ if .Get 1 }}
+            <br />
+            <footer>— {{ .Get 1}}</footer>
+        {{ end }}
     </blockquote>
 {{ end }}
