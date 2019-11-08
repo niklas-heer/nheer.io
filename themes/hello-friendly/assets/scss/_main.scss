@@ -114,6 +114,10 @@ figure {
   &.center {
     margin-left: auto;
     margin-right: auto;
+
+    img {
+      margin: auto;
+    }
   }
 
   &.right {
@@ -131,6 +135,8 @@ figure {
 
     &.center {
       text-align: center;
+      max-width: 80%;
+      margin: auto;
     }
 
     &.right {
