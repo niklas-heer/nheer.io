@@ -1,10 +1,10 @@
----
-title: "{{ replace .Name "-" " " | title }}"
-date: {{ .Date }}
-draft: true
-toc: false
-images:
-tags:
-  - untagged
----
++++
+title = "{{ replace .Name "-" " " | title }}"
+icon = ":bulb:"
+date = {{ .Date }}
+draft = true
+toc = false
+images = ""
+tags = [ "untagged" ]
++++
 

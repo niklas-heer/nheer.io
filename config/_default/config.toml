@@ -49,10 +49,11 @@ disableHugoGeneratorInject = false
 
   # Metadata mostly used in document's head
   description = "Homepage and blog by Niklas Heer"
-  keywords = "homepage, blog, science, informatics, development, programming, projects, cloud, software"
+  keywords = "homepage, blog, science, informatics, development, programming, projects, cloud, software, devops, leadership, security, quality"
   images = [""]
 
-  homeSubtitle = "DevOps and Quality"
+  homeSubtitle = "Leadership, DevSecOps and Quality"
+  homeLogo = "/assets/images/nheer_logo.svg"
 
   # Prefix of link to the git commit detail page. GitInfo must be enabled.
   gitUrl = "https://github.com/niklas-heer/nheer.io/commit/"
@@ -60,8 +61,11 @@ disableHugoGeneratorInject = false
   # Default theme "light" or "dark"
   defaultTheme = "dark"
 
+  # Maximal number of rating
+  maxRating = 5
+
   [params.logo]
-    logoText     = "niklas heer"
+    logoText     = "nheer"
     logoHomeLink = "/"
 
   # Social icons
@@ -70,16 +74,28 @@ disableHugoGeneratorInject = false
     url  = "https://twitter.com/niklas_heer/"
 
   [[params.social]]
+    name = "telegram"
+    url  = "https://t.me/niklas_heer"
+
+  [[params.social]]
     name = "email"
-    url  = "mailto:niklas.heer@gmail.com"
+    url  = "mailto:me@nheer.io"
 
   [[params.social]]
     name = "github"
     url  = "https://github.com/niklas-heer/"
 
   [[params.social]]
+    name = "goodreads"
+    url  = "https://www.goodreads.com/user/show/72344845-niklas-heer"
+
+  [[params.social]]
     name = "linkedin"
     url  = "https://de.linkedin.com/in/niklas-heer-b89364b8"
+
+  [[params.social]]
+    name = "xing"
+    url  = "https://www.xing.com/profile/Niklas_Heer"
 
 [languages]
   [languages.en]
@@ -95,13 +111,21 @@ disableHugoGeneratorInject = false
 [menu]
   [[menu.main]]
     identifier = "about"
+    weight     = -200
     name       = "About"
     url        = "about/"
   [[menu.main]]
     identifier = "posts"
-    name       = "Blog"
+    weight     = -190
+    name       = "Posts"
     url        = "posts/"
   # [[menu.main]]
-  #   identifier = "works"
-  #   name       = "Works"
-  #   url        = "works/"
+  #   identifier = "workings"
+  #   weight     = -180
+  #   name       = "Workings"
+  #   url        = "workings/"
+  [[menu.main]]
+    identifier = "book-reviews"
+    weight     = -170
+    name       = "Book Reviews"
+    url        = "book-reviews/"

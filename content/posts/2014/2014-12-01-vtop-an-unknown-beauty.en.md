@@ -1,5 +1,6 @@
 ---
 title: vtop an unknown terminal beauty
+icon: ":heart_eyes:"
 date: 2014-12-01
 published: True
 tags: [code, terminal, linux]
@@ -20,24 +21,14 @@ But let's start at the beginning of my journey.
 
 ### Why not simple old `top`?
 
-<center>
-    <figure class="half">
-        <a href="/assets/images/2014-12-01/top.png"><img src="/assets/images/2014-12-01/top.png" alt=""></a>
-        <a href="/assets/images/2014-12-01/htop.png"><img src="/assets/images/2014-12-01/htop.png" alt=""></a>
-        <figcaption>top vs htop</figcaption>
-    </figure>
-</center>
+{{< figure src="2014-12-01/top.png" position="center" caption="top" >}}
+{{< figure src="2014-12-01/htop.png" position="center" caption="htop" >}}
 
 As you can guess from the pictures above `htop` does really exactly the same as `top`, but in a much nicer way so in my opinion there is no discussion about why you would choose `top` over `htop`!
 
 ### vtop the unknown beauty
 
-<center>
-    <figure>
-        <a href="/assets/images/2014-12-01/vtop.png"><img src="/assets/images/2014-12-01/vtop.png" alt=""></a>
-        <figcaption>vtop</figcaption>
-    </figure>
-</center>
+{{< figure src="2014-12-01/vtop.png" position="center" caption="vtop" >}}
 
 [vtop][vtop] looks much cleaner than htop. One look and you exactly know whats going on on the system! You can list processes by CPU or Memory usage which is really awesome, you can navigate with your arrow keys or `k` and `j` which is also nice and the best of all you can simply highlight/select a process and kill it by typing `dd`!
 

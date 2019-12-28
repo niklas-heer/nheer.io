@@ -34,3 +34,14 @@ other = "Inhaltsverzeichnis"
 [wordCount]
 one   = "Ein Wort"
 other = "{{ .Count }} Wörter"
+
+# reading/single.html
+[readingDuration]
+one = "In einem Tag gelesen"
+other = "In {{ .Count }} Tagen gelesen"
+
+[readingToolKindle]
+other = "Kindle (eBook)"
+
+[readingToolAudible]
+other = "Audible (Hörbuch)"

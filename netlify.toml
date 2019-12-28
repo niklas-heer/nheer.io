@@ -2,7 +2,7 @@
 publish = "public"
 command = "hugo --gc --minify"
 
-[context.production.environment]
+[context.production.development]
 HUGO_VERSION = "0.56.3"
 HUGO_ENV = "production"
 HUGO_ENABLEGITINFO = "true"
@@ -29,3 +29,8 @@ HUGO_VERSION = "0.56.3"
 [context.next.environment]
 HUGO_ENABLEGITINFO = "true"
 
+[dev]
+command = "hugo server -w"
+port = 8888
+targetPort = 1313
+publish = "dist"
