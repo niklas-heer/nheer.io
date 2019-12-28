@@ -7,12 +7,7 @@ author: Niklas Heer
 toc: false
 ---
 
-<center>
-    <figure>
-        <a href="/assets/images/2015-08-18/screen.png"><img src="/assets/images/2015-08-18/screen.png" alt=""></a>
-        <figcaption>even faster than jekyll</figcaption>
-    </figure>
-</center>
+{{< figure src="2015-08-18/screen.png" position="center" caption="even faster than jekyll" >}}
 
 ## Why I switched to Hugo
 
@@ -49,20 +44,11 @@ That is pretty neat.
 
 ### Locally
 
-<center>
-    <figure>
-        <a href="/assets/images/2015-08-18/screen2.png"><img src="/assets/images/2015-08-18/screen2.png" alt=""></a>
-        <figcaption>My workspace when I'm writing</figcaption>
-    </figure>
-</center>
+{{< figure src="2015-08-18/screen2.png" position="center" caption="My workspace when I'm writing" >}}
 
 When I'm writing new posts, I can view my changes instantly in my browser. Hugo serves my page locally and rebuilds and reloads the site whenever I change and save a file. This is achieved with this command: `hugo server -w -t "nh"`. When listening it should look similar to this:
 
-<center>
-    <figure>
-        <a href="/assets/images/2015-08-18/screen3.png"><img src="/assets/images/2015-08-18/screen3.png" alt=""></a>
-    </figure>
-</center>
+{{< figure src="2015-08-18/screen3.png" position="center" >}}
 
 ### Online
 
@@ -132,11 +118,7 @@ A more detailed instruction on how to set this up, can be found [here](https://g
 You should place this script somewhere in `static`, because Hugo will put files in this directory directly in the `public` folder.
 I also recommend to set your webroot to the `public` folder of your Hugo project.
 
-<center>
-    <figure>
-        <a href="/assets/images/2015-08-18/screen4.png"><img src="/assets/images/2015-08-18/screen4.png" alt=""></a>
-    </figure>
-</center>
+{{< figure src="2015-08-18/screen4.png" position="center" >}}
 
 Additionally you can install the [Hugo binary](https://github.com/spf13/hugo/releases) on your server to build the site automatically, when you push any changes.
 This is the way I chose to do it.

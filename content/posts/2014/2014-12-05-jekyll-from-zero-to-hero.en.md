@@ -7,12 +7,7 @@ categories: []
 tags: [code, jekyll, linux, git, web]
 ---
 
-<center>
-    <figure>
-        <a href="/assets/images/2014-12-05/after.png"><img src="/assets/images/2014-12-05/after.png" alt=""></a>
-        <figcaption>my blog was never faster nor easier to deploy!</figcaption>
-    </figure>
-</center>
+{{< figure src="2014-12-05/after.png" position="center" caption="my blog was never faster nor easier to deploy!" >}}
 
 ## Deployment via git
 
@@ -92,13 +87,8 @@ git push production
 This is the fastest site I've ever built.
 </blockquote>
 
-<center>
-    <figure class="half">
-        <a href="/assets/images/2014-12-05/before.png"><img src="/assets/images/2014-12-05/before.png" alt=""></a>
-        <a href="/assets/images/2014-12-05/after.png"><img src="/assets/images/2014-12-05/after.png" alt=""></a>
-        <figcaption>before and after</figcaption>
-    </figure>
-</center>
+{{< figure src="2014-12-05/before.png" position="center" caption="before" >}}
+{{< figure src="2014-12-05/after.png" position="center" caption="after" >}}
 
 ### Optimizing the web-server
 

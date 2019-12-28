@@ -14,7 +14,7 @@ tags:
   - draft
 ---
 
-{{< figure src="/assets/images/2019/2019-11-01_draft.png" >}}
+{{< figure src="2019/2019-11-01_draft.png" >}}
 
 I'm using Hugo for my blog and I wanted to find a way in which I can view drafts while developing, but hide them on the deployed site.
 

@@ -23,7 +23,7 @@ As Team Lead CPS, I actively guide and support my team to achieve our mission an
 - `11.2013 - 08.2015`: **Web Frontend Developer** (working student) @ [Bertsch Innovation GmbH](https://bertschinnovation.com/)
 - `01.2012 - 11.2013`: **Web Frontend Developer** (working student) @ [Sellaround GmbH](https://www.facebook.com/pg/sellaround/about/)
 
-See more information at [LindedIn](https://de.linkedin.com/in/niklas-heer-b89364b8) or [Xing](https://www.xing.com/profile/Niklas_Heer).
+See more information at [LinkedIn](https://de.linkedin.com/in/niklas-heer-b89364b8) or [Xing](https://www.xing.com/profile/Niklas_Heer).
 
 <br>
 
