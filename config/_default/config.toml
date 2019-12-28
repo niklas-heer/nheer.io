@@ -73,16 +73,28 @@ disableHugoGeneratorInject = false
     url  = "https://twitter.com/niklas_heer/"
 
   [[params.social]]
+    name = "telegram"
+    url  = "https://t.me/niklas_heer"
+
+  [[params.social]]
     name = "email"
-    url  = "mailto:niklas.heer@gmail.com"
+    url  = "mailto:me@nheer.io"
 
   [[params.social]]
     name = "github"
     url  = "https://github.com/niklas-heer/"
 
   [[params.social]]
+    name = "goodreads"
+    url  = "https://www.goodreads.com/user/show/72344845-niklas-heer"
+
+  [[params.social]]
     name = "linkedin"
     url  = "https://de.linkedin.com/in/niklas-heer-b89364b8"
+
+  [[params.social]]
+    name = "xing"
+    url  = "https://www.xing.com/profile/Niklas_Heer"
 
 [languages]
   [languages.en]
