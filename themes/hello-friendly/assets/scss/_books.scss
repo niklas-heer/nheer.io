@@ -180,7 +180,6 @@
     border-radius: 2px;
     color: $light-background;
     border-bottom: none;
-    color: $link-color;
     text-decoration: none;
     border-bottom: 0.15em solid $link-color;
     padding-bottom: .05em;
@@ -208,8 +207,9 @@
     max-width: 190px;
 
     img {
-      max-height: 261px;
-      max-width: 170px;
+      height: 261px;
+      width: 100%;
+      object-fit: cover;
       margin: auto;
     }
 
