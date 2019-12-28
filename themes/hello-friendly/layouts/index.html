@@ -1,6 +1,10 @@
 {{ define "main" }}
     <main aria-role="main">
         <div>
+            {{- with .Site.Params.homeLogo }}
+                <img class="center" alt="nheer logo" src="{{.}}" style="height: 15em;">
+            {{- end }}
+
             <h1>{{ .Site.Title }}</h1>
 
             {{- with .Site.Params.homeSubtitle }}
