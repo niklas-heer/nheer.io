@@ -1,0 +1,68 @@
+==================================================================
+https://keybase.io/nih
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://nheer.io
+  * I am nih (https://keybase.io/nih) on keybase.
+  * I have a public key with fingerprint 6729 6D47 97BD 51B6 88C6  987C DA71 EE9F C954 B79A
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "01016f50be6847aad408c5831d3e0a2f99548b1cc547b00885d997539d8c37f38d4d0a",
+            "fingerprint": "67296d4797bd51b688c6987cda71ee9fc954b79a",
+            "host": "keybase.io",
+            "key_id": "da71ee9fc954b79a",
+            "kid": "01016f50be6847aad408c5831d3e0a2f99548b1cc547b00885d997539d8c37f38d4d0a",
+            "uid": "6183842e9dfc52f4347dc185a133b819",
+            "username": "nih"
+        },
+        "service": {
+            "hostname": "nheer.io",
+            "protocol": "https:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1460840394,
+    "expire_in": 157680000,
+    "prev": "c4bd401b5d3344bb67f5c1fb74f55360b2702d7f6f531ac45098151057b8cacf",
+    "seqno": 4,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.0.53
+Comment: https://keybase.io/crypto
+
+yMIjAnicrVJZbE1BGL5tqWhiiSgPiGZIUK3M3DNzZs5NpCRqCaFF60HjOrOc9ij3
+3t57Wktr34JYkjbiAbVEqpFIijSkVClNFa01QQiRUIkoiSVChDnFm0fzMplvvu/7
+///Lf21ASiAtqaupJzsn+fWMpJtX9pQHFg2p66gEPCpXg1AlKFW9l1ouVcILl7oS
+hABEEJkOgVyZDFPblhgyQZiBpKGgHXQsi2DGkRAEUw4hY0RaFiWGJZkwqGMwiSW0
+QRZw3EixisfibsTTtiYNWqbE1KJcEsRNxoRpMSqkTZFSliO0LaeWLyyJJnyFbo7b
+CTXJjWpMP8K97f2D/5/7Lu+1MxEzGA4qSzqCBB1sYCoFYsRGhsEZsnxiQsUj9gql
+2RG3BKzNAhqocIXyM/WH+PtZolT89xixeNSLiuhyjZZ4XiwR8lXe6phPW6l4+I9B
+mLsRqePTigoVT7jRCAghzRSe6zsibEKGoWHhLKBWxdy4Crs+g1CTQX38OqpCWwrM
+dQyIE2kYGHNuUocI5HCKHUIME/IghUFJHZ2bgWyBCbQYIggSypmwhQP8kcoiURDS
+lTy7WFsm3OKI7ZXHFVh7taWoTyApLZDaN9lfq0Ba/8F/l22A1+9nbiffdnLy8OvT
+ShU/0jbxYEPT9IzsyjmZTRvJz++1zwcV36o6vH3MvnGk5j6817X44dIlVQcmlL0/
+uflx4aktzce2bbrb9GTjsNzklMZPO169q+941NjQveZh/qi5onVM9bxLHV3ZSTVz
+1qcPLvwxKC+4sK4qY/ysE5fhU3P67baeay3L8JcLdeGd3fWd77/0G28cnjps/oOx
+bxtzPl8sWFWQ+XFDwZTs2W2psdGpVsq6yrL8obe/qRNvFNhQ07z1TE/RjbN5R71w
+7Y2v7ce7wP3ajLb09S/yluW2n8/ZVI/zqkfMaK2tfrbr/Ok7RU92Z+0vXyNH7m2v
+Hvih+1znhfmHml8uCM5MB78AWmNADw==
+=fUj9
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/nih
+
+==================================================================
