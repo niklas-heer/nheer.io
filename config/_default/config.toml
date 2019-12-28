@@ -49,10 +49,11 @@ disableHugoGeneratorInject = false
 
   # Metadata mostly used in document's head
   description = "Homepage and blog by Niklas Heer"
-  keywords = "homepage, blog, science, informatics, development, programming, projects, cloud, software"
+  keywords = "homepage, blog, science, informatics, development, programming, projects, cloud, software, devops, leadership, security, quality"
   images = [""]
 
-  homeSubtitle = "DevOps and Quality"
+  homeSubtitle = "Leadership, DevSecOps and Quality"
+  homeLogo = "/assets/images/nheer_logo.svg"
 
   # Prefix of link to the git commit detail page. GitInfo must be enabled.
   gitUrl = "https://github.com/niklas-heer/nheer.io/commit/"

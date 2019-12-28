@@ -16,7 +16,7 @@ tags:
 
 {{< figure src="/assets/images/2019/2019-11-01_draft.png" >}}
 
-I'm using hugo for my blog and I wanted to find a way in which I can view drafts while developing, but hide them on the deployed site.
+I'm using Hugo for my blog and I wanted to find a way in which I can view drafts while developing, but hide them on the deployed site.
 
 Luckily `hugo` has a mechanism for that. It is a combination of features.
 First you need to set up a config directory instead of only a config file like `config.toml`. The docs [hugo docs](https://gohugo.io/getting-started/configuration/#configuration-directory) give you a good overview of what to do. I choose a very simple setup for now:
