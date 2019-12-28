@@ -166,6 +166,7 @@ pre {
   border-radius: 8px;
   font-size: .95rem;
   overflow: auto;
+  line-height: 1.2rem;
 
   @media #{$media-size-phone} {
     white-space: pre-wrap;
