@@ -80,6 +80,42 @@
   line-height: 1.58;
   letter-spacing: -0.004em;
 
+  h2, h3, h4, h5, h6 {
+    position: relative;
+
+    @media #{$media-size-phone} {
+      left: 1.2em;
+    }
+  }
+
+  .anchor {
+      text-decoration: none;
+      position: absolute;
+      left: -1.8rem;
+      color: $light-color-secondary;
+      font-size: 1.2rem;
+      font-weight: 400;
+      display: inline-flex;
+      align-self: center;
+
+      .feather {
+        height: 1em;
+        width: 1em;
+      }
+
+      .dark-theme & {
+        color: $dark-color-secondary;
+      }
+  }
+
+  .anchor:hover {
+    color: $light-color;
+
+    .dark-theme & {
+      color: $link-color;
+    }
+  }
+
   p {
     margin-top: 1.8em;
   }

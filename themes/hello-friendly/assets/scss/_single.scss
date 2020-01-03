@@ -1,4 +1,55 @@
 .post {
+  h2, h3, h4, h5, h6 {
+    position: relative;
+
+    @media #{$media-size-phone} {
+      left: 1.2em;
+    }
+  }
+
+  p.info {
+    background: #fff9df;
+    padding: 1rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    border-left: 5px solid #747160;
+  }
+
+  .dark-theme & {
+    p.info {
+      border-left: 5px solid $link-color;
+      background: $dark-background-secondary;
+    }
+  }
+
+  .anchor {
+      text-decoration: none;
+      position: absolute;
+      left: -1.8rem;
+      color: $light-color-secondary;
+      font-size: 1.2rem;
+      font-weight: 400;
+      display: inline-flex;
+      align-self: center;
+
+      .feather {
+        height: 1em;
+        width: 1em;
+      }
+
+      .dark-theme & {
+        color: $dark-color-secondary;
+      }
+  }
+
+  .anchor:hover {
+    color: $light-color;
+
+    .dark-theme & {
+      color: $link-color;
+    }
+  }
+
   width: 100%;
   max-width: 800px;
   text-align: left;
