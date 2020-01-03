@@ -14,7 +14,7 @@
     {{ if .IsHome }}
     {{ $.Site.Title }} {{ with $.Site.Params.Subtitle }} — {{ . }} {{ end }}
     {{ else }}
-    {{ replace .Title "*" "" }} :: {{ $.Site.Title }} {{ with $.Site.Params.Subtitle }} — {{ . }}{{ end }}
+    {{ .Title | markdownify | plainify }} :: {{ $.Site.Title }} {{ with $.Site.Params.Subtitle }} — {{ . }}{{ end }}
     {{ end }}
 </title>
 {{ end }}
