@@ -1,13 +1,13 @@
----
-title: vtop an unknown terminal beauty
-icon: ":heart_eyes:"
-date: 2014-12-01
-published: True
-tags: [code, terminal, linux]
----
++++
+title = "`vtop` an unknown terminal beauty"
+icon = ":heart_eyes:"
+date = 2014-12-01
+published = true
+tags = ["code", "terminal", "linux"]
++++
 
 <blockquote>
-Wow such top. So stats. More better than regular top. Written in node.js
+<p>Wow such top. So stats. More better than regular top. Written in node.js</p>
 <cite><a href="https://parall.ax/vtop">vtop</a></cite>
 </blockquote>
 
@@ -19,14 +19,14 @@ Although I really liked `htop` I always felt that it sometimes had a too clunky 
 Than I discovered `vtop`! <br>
 But let's start at the beginning of my journey.
 
-### Why not simple old `top`?
+## Why not simple old `top`
 
 {{< figure src="2014-12-01/top.png" position="center" caption="top" >}}
 {{< figure src="2014-12-01/htop.png" position="center" caption="htop" >}}
 
 As you can guess from the pictures above `htop` does really exactly the same as `top`, but in a much nicer way so in my opinion there is no discussion about why you would choose `top` over `htop`!
 
-### vtop the unknown beauty
+## vtop the unknown beauty
 
 {{< figure src="2014-12-01/vtop.png" position="center" caption="vtop" >}}
 
