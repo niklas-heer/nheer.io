@@ -142,7 +142,7 @@ disableHugoGeneratorInject = false
       identifier = "blog"
       weight     = -190
       name       = "Blog"
-      url        = "blog/"
+      url        = "posts/"
 
     # [[languages.de.menu.main]]
     #   identifier = "work"
