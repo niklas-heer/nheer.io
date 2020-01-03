@@ -22,7 +22,7 @@
                     {{- range .Pages }}
                         <li class="post-item">
                             <a href="{{.Permalink}}">
-                                <span class="post-title">{{.Params.icon | emojify }} {{.Title}}</span>
+                                <span class="post-title">{{.Params.icon | emojify }} {{.Title | markdownify}}</span>
                                 {{- if .Params.draft }}
                                 <span class="post-draft">Draft</span>
                                 {{- end }}
