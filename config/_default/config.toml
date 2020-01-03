@@ -103,29 +103,55 @@ disableHugoGeneratorInject = false
     weight    = 1
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
+    [[languages.en.menu.main]]
+      identifier = "about"
+      weight     = -200
+      name       = "About"
+      url        = "about/"
+
+    [[languages.en.menu.main]]
+      identifier = "posts"
+      weight     = -190
+      name       = "Blog"
+      url        = "posts/"
+
+    # [[languages.en.menu.main]]
+    #   identifier = "work"
+    #   weight     = -180
+    #   name       = "Work"
+    #   url        = "work/"
+
+    [[languages.en.menu.main]]
+      identifier = "books"
+      weight     = -170
+      name       = "Books"
+      url        = "books/"
+
   [languages.de]
     subtitle  = "Homepage & Blog"
     weight    = 2
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
-[menu]
-  [[menu.main]]
-    identifier = "about"
-    weight     = -200
-    name       = "About"
-    url        = "about/"
-  [[menu.main]]
-    identifier = "posts"
-    weight     = -190
-    name       = "Posts"
-    url        = "posts/"
-  # [[menu.main]]
-  #   identifier = "workings"
-  #   weight     = -180
-  #   name       = "Workings"
-  #   url        = "workings/"
-  [[menu.main]]
-    identifier = "book-reviews"
-    weight     = -170
-    name       = "Book Reviews"
-    url        = "book-reviews/"
+    [[languages.de.menu.main]]
+      identifier = "about"
+      weight     = -200
+      name       = "Über mich"
+      url        = "about/"
+
+    [[languages.de.menu.main]]
+      identifier = "blog"
+      weight     = -190
+      name       = "Blog"
+      url        = "blog/"
+
+    # [[languages.de.menu.main]]
+    #   identifier = "work"
+    #   weight     = -180
+    #   name       = "Arbeiten"
+    #   url        = "work/"
+
+    [[languages.de.menu.main]]
+      identifier = "books"
+      weight     = -170
+      name       = "Bücher"
+      url        = "books/"

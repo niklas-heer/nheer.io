@@ -5,7 +5,7 @@
             <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>{{ i18n "readingTime" .Page.ReadingTime }}
 
             {{ if .IsTranslated }}
-                {{ i18n "postAvailable" }}
+                | {{ i18n "postAvailable" }}
                 {{ range .Translations }}
                     <a href="{{ .Permalink }}"><span class="flag flag-icon flag-icon-{{ index $.Site.Data.langFlags (.Lang) }} flag-icon-squared"></span></a>
                 {{ end}}
@@ -27,7 +27,7 @@
 
             <div class="book-cover-single">
               {{ with .Params.bookCover }}
-                  <img src="{{ . }}" />
+                  <img class="zoomable" src="{{ . }}" />
               {{ end }}
             </div>
 
@@ -81,10 +81,10 @@
             </span>
         </div>
 
-        {{ if .Params.comments }}
-          <div id="comments" class="thin">
-      		    {{- partial "comments.html" . -}}
-      		</div>
+        {{ if not .Params.disable_comments }}
+            <div id="comments" class="thin">
+                {{- partial "comments.html" . -}}
+            </div>
         {{ end }}
     </main>
 {{ end }}
