@@ -1,6 +1,14 @@
 {{ define "main" }}
     <main class="posts">
-        <h1>{{ .Title }}</h1>
+        <div class="lang-toggle">
+            {{ if .IsTranslated }}
+                {{ i18n "postAvailable" }}
+                {{ range .Translations }}
+                    <a href="{{ .Permalink }}"><span class="flag flag-icon flag-icon-{{ index $.Site.Data.langFlags (.Lang) }} flag-icon-squared"></span></a>
+                {{ end}}
+            {{ end }}
+        </div>
+        <h1 style="margin-top: 0;">{{ .Title }}</h1>
 
         {{- if .Content }}
             <div class="content">{{ .Content }}</div>

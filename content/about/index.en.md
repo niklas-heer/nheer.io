@@ -1,9 +1,9 @@
----
-title: "About"
-date: 2019-01-19T02:42:30+01:00
-draft: false
-author: Niklas Heer
----
++++
+title = "About"
+date = 2019-01-19T02:42:30+01:00
+draft = false
+author = "Niklas Heer"
++++
 
 {{< image src="/assets/images/about/nheer.png" alt="Niklas Heer" position="center" style="height:250px;">}}
 
