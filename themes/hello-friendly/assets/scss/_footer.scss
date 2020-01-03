@@ -3,6 +3,26 @@
   flex-grow: 0;
   color: $light-color-secondary;
 
+  .summary {
+    font-size: 0.7rem;
+
+    .source {
+      display: inline-flex;
+      align-self: center;
+      color: red;
+
+      svg {
+        height:1.15em;
+        width:1.15em;
+      }
+    }
+
+    .baseline svg {
+      top: .14em;
+      position: relative;
+    }
+  }
+
   &__inner {
     display: flex;
     align-items: center;
