@@ -4,7 +4,7 @@ date: 2019-01-19T23:34:28+01:00
 draft: false
 ---
 
-## Information according to § 5 TMG an d Responsible for the content according to § 55 Abs. 2 RStV
+## Information according to § 5 TMG and Responsible for the content according to § 55 Abs. 2 RStV
 
 Niklas Heer
 <br />

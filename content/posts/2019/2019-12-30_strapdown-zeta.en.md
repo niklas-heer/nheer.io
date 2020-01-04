@@ -1,5 +1,5 @@
 +++
-title = "Markdown in HTML made fast"
+title = "**Strapdown**, fast markdown webpages"
 icon = ":thinking:"
 date = 2019-12-30T23:42:34+01:00
 author = "Niklas Heer"
@@ -7,6 +7,8 @@ toc = false
 images = ""
 tags = ["netlify", "markdown", "html"]
 +++
+
+{{% info %}}**Update:** I've found another (better) solution. See my post about [eleventy]({{< relref "2020-01-03_eleventy.en.md" >}}) {{%/ info %}}
 
 ## Backstory
 
