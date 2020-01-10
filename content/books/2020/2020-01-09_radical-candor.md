@@ -1,13 +1,12 @@
 +++
 title = "Radical Candor"
-date = 2020-01-09T08:53:59+01:00
+date = 2020-01-10T08:57:05+01:00
 bookCover = "/assets/images/books/2020/01_radical-candor/cover.jpg"
 tool = "audible"
 rating = 5.0
 readingStart = 2019-12-11
 readingEnd = 2020-01-06
 author = "Niklas Heer"
-draft = true
 +++
 
 ## General information
@@ -57,9 +56,17 @@ There are many other valuable insights in the book but I want to share these two
 
 ## Quotes
 
+{{< quote "Make sure that you are seeing each person on your team with fresh eyes every day. People evolve, and so your relationships must evolve with them. Care personally; don’t put people in boxes and leave them there." >}}
+
+{{< quote "The essence of leadership is not getting overwhelmed by circumstances." >}}
+
+{{< quote "When bosses are too invested in everyone getting along they also fail to encourage the people on their team to criticize one another other for fear of sowing discord. They create the kind of work environment where being \"nice\" is prioritized at the expense of critiquing and therefore improving actual performance." >}}
+
+{{< quote "A good rule of thumb for any relationship is to leave three unimportant things unsaid each day." >}}
+
 ## Conclusion
 
-I needed quite some time to read that book, because it is so densely covert with useful information, tools, techniques or interesting ideas. I cannot recommend this book enough. Especially for leaders. Giving growth oriented candid feedback to the people in your team is one of the essential posts of being a leader. But also the meeting and the whole mindest of the author was very helpful for my own understanding of leadership.
+I needed quite some time to read that book, because it is so densely covert with useful information, tools, techniques or interesting ideas. I cannot recommend this book enough. Especially for leaders. Giving growth oriented candid feedback to the people in your team is one of the essential parts of being a leader. But also the meetings described in the book and the whole mindset of the author was very helpful for my own understanding of leadership.
 
 ## Further reading
 
