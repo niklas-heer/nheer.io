@@ -12,7 +12,7 @@ author = "Niklas Heer"
 ## General information
 
 - :bust_in_silhouette: **Author**: Kim Malone Scott
-- :link: **Links**: [Goodreads](https://www.goodreads.com/book/show/1253.Leadership_101) | [Audible :de:](https://www.audible.de/pd/Radical-Candor-Fully-Revised-Updated-Edition-Hoerbuch/1250245788)
+- :link: **Links**: [Goodreads](https://www.goodreads.com/book/show/29939161-radical-candor) | [Audible :de:](https://www.audible.de/pd/Radical-Candor-Fully-Revised-Updated-Edition-Hoerbuch/1250245788)
 
 ## Review
 
