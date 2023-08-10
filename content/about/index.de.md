@@ -16,7 +16,8 @@ Als Team Lead CPS, leite und unterstütze ich mein Team aktiv um unsere Mission 
 ## Erfahrung
 
 - `09.2015 - today`[Tradebyte Software GmbH](https://www.tradebyte.com/)
-  - :pushpin: `11.2019 - today`: **Team Lead Central Platform Services**
+  - :pushpin: `03.2022 - today`: **Senior Team Lead Central Platform Services**
+  - `11.2019 - 03.2022`: **Team Lead Central Platform Services**
   - `08.2018 - 10.2019`: **DevOps and Quality Engineer**
   - `07.2017 - 08.2018`: **Software Developer**
   - `09.2015 - 07.2017`: **IT Specialist for Application Development**
