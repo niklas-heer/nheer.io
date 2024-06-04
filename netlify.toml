@@ -38,4 +38,9 @@ publish = "dist"
 [[redirects]]
   from = "/gh/sc"
   to = "https://github.com/niklas-heer/speed-comparison"
-  status = 302
+  status = 301
+
+[[redirects]]
+  from = "/gh/speed-comparison"
+  to = "https://github.com/niklas-heer/speed-comparison"
+  status = 301
