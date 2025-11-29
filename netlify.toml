@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "bash build.sh"
   publish = "dist"
 
 [build.environment]
@@ -26,10 +26,10 @@
   environment = { NODE_ENV = "production" }
 
 [context.deploy-preview]
-  command = "npm run build"
+  command = "bash build.sh"
 
 [context.branch-deploy]
-  command = "npm run build"
+  command = "bash build.sh"
 
 [[headers]]
   for = "/*"
