@@ -11,7 +11,6 @@
   "dependencies": {
     "@astrojs/mdx": "^4.3.12",
     "@astrojs/rss": "^4.0.14",
-    "@astrojs/tailwind": "^6.0.2",
     "@tailwindcss/vite": "^4.1.17",
     "astro": "^5.16.2",
     "astro-expressive-code": "^0.41.3",
