@@ -1,0 +1,108 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+
+const navigation = [
+  { name: 'About', href: '/about' },
+  { name: 'Blog', href: '/posts' },
+  { name: 'Reading', href: '/reading' },
+  { name: 'Reviews', href: '/reviews' },
+];
+---
+
+<header class="flex items-center justify-between">
+  <a href="/" class="text-xl font-bold hover:text-accent transition-colors group">
+    <span class="terminal-text" style="view-transition-name: site-title;">
+      <span class="terminal-prompt">❯</span>
+      <span class="terminal-typed" data-text="nheer"></span>
+      <span class="terminal-cursor">_</span>
+    </span>
+  </a>
+
+  <nav class="flex items-center gap-6">
+    <ul class="flex items-center gap-4">
+      {navigation.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="text-muted hover:text-foreground transition-colors"
+          >
+            {link.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="flex items-center border-l border-border pl-4">
+      <ThemeToggle />
+    </div>
+  </nav>
+</header>
+
+<style>
+  .terminal-text {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+  }
+
+  .terminal-prompt {
+    color: var(--color-accent);
+    opacity: 0.8;
+    font-weight: normal;
+  }
+
+  .terminal-typed {
+    position: relative;
+  }
+
+  .terminal-cursor {
+    color: var(--color-accent);
+    animation: blink 1s step-end infinite;
+    font-weight: normal;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Hover effect - re-type animation */
+  .group:hover .terminal-cursor {
+    animation: blink 0.5s step-end infinite;
+  }
+</style>
+
+<script>
+  function initTerminalTyping() {
+    const typedElements = document.querySelectorAll('.terminal-typed');
+
+    typedElements.forEach((el) => {
+      const text = el.getAttribute('data-text') || '';
+      const htmlEl = el as HTMLElement;
+
+      // Check if already typed (for view transitions)
+      if (htmlEl.textContent === text) return;
+
+      htmlEl.textContent = '';
+      let i = 0;
+
+      function type() {
+        if (i < text.length) {
+          htmlEl.textContent += text.charAt(i);
+          i++;
+          setTimeout(type, 100 + Math.random() * 50);
+        }
+      }
+
+      // Small delay before starting
+      setTimeout(type, 300);
+    });
+  }
+
+  // Run on initial load
+  initTerminalTyping();
+
+  // Run after view transitions
+  document.addEventListener('astro:after-swap', initTerminalTyping);
+</script>
