@@ -1,0 +1,94 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import BookRating from '../components/BookRating.astro';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  review: CollectionEntry<'reviews'>;
+}
+
+const { review } = Astro.props;
+const { title, date, rating, readingStart, readingEnd, bookCover, bookAuthor, tool, tags } = review.data;
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date);
+}
+
+function formatReadingPeriod(start: Date, end: Date): string {
+  const startStr = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(start);
+  const endStr = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(end);
+  return `${startStr} - ${endStr}`;
+}
+
+const readingDays = readingStart && readingEnd
+  ? Math.ceil((new Date(readingEnd).getTime() - new Date(readingStart).getTime()) / (1000 * 60 * 60 * 24))
+  : null;
+---
+
+<BaseLayout title={`${title} - Review`} description={`Review of ${title}${bookAuthor ? ` by ${bookAuthor}` : ''}`}>
+  <a href="/reviews" class="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors mb-6 text-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to reviews
+  </a>
+
+  <article>
+    <header class="mb-8">
+      <div class="flex flex-col sm:flex-row gap-6">
+        {bookCover && (
+          <img
+            src={bookCover}
+            alt={`Cover of ${title}`}
+            class="w-32 h-auto object-cover rounded-lg shadow-lg flex-shrink-0"
+          />
+        )}
+
+        <div>
+          <h1 class="text-3xl font-bold mb-2" style="view-transition-name: page-title;">{title}</h1>
+
+          {bookAuthor && (
+            <p class="text-lg text-muted mb-3">by {bookAuthor}</p>
+          )}
+
+          <BookRating rating={rating} />
+
+          <div class="flex flex-wrap items-center gap-4 text-sm text-muted mt-4">
+            {readingStart && readingEnd && (
+              <>
+                <span>
+                  {formatReadingPeriod(new Date(readingStart), new Date(readingEnd))}
+                </span>
+                <span>&middot;</span>
+                <span>{readingDays} days</span>
+              </>
+            )}
+
+            {tool && (
+              <>
+                {readingStart && <span>&middot;</span>}
+                <span class="capitalize">{tool}</span>
+              </>
+            )}
+          </div>
+
+          {tags && tags.length > 0 && (
+            <div class="flex flex-wrap gap-2 mt-4">
+              {tags.map((tag) => (
+                <span class="tag">{tag}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
