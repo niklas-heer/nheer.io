@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { parseEmoji, parseText } from '../utils/emoji';
+
+// Get archived posts (old German posts from 2011-2013)
+const allPosts = await getCollection('posts', ({ data }) => {
+  return !data.draft && data.archive;
+});
+
+// Sort by date descending
+const sortedPosts = allPosts.sort((a, b) =>
+  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+// Group posts by year
+const postsByYear = sortedPosts.reduce((acc, post) => {
+  const year = new Date(post.data.date).getFullYear();
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(post);
+  return acc;
+}, {} as Record<number, typeof sortedPosts>);
+
+const years = Object.keys(postsByYear).map(Number).sort((a, b) => b - a);
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric'
+  }).format(date);
+}
+
+function getPostUrl(post: typeof sortedPosts[0]): string {
+  const date = new Date(post.data.date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const slug = post.slug.split('/').pop();
+  return `/posts/${year}/${month}/${slug}/`;
+}
+---
+
+<BaseLayout title="Archive" description="Older blog posts from the archive">
+  <h1 class="text-3xl font-bold mb-2">Archive</h1>
+  <p class="text-muted mb-8">
+    Older posts from my early blogging days (mostly in German)
+  </p>
+
+  {years.map((year) => (
+    <section>
+      <h2 class="year-header">{year}</h2>
+      <div>
+        {postsByYear[year].map((post) => (
+          <article class="post-card">
+            <a href={getPostUrl(post)} class="block">
+              <div class="flex items-baseline justify-between gap-4">
+                <h3 class="text-lg font-medium text-foreground hover:text-accent transition-colors">
+                  {post.data.icon && <span class="mr-2">{parseEmoji(post.data.icon)}</span>}
+                  <span set:html={parseText(post.data.title)} />
+                  {post.data.lang === 'de' && (
+                    <span class="ml-2 text-xs text-muted">(DE)</span>
+                  )}
+                </h3>
+                <time class="text-sm text-muted whitespace-nowrap">
+                  {formatDate(new Date(post.data.date))}
+                </time>
+              </div>
+              {post.data.description && (
+                <p class="text-muted text-sm mt-1" set:html={parseText(post.data.description)} />
+              )}
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+  ))}
+
+  {years.length === 0 && (
+    <p class="text-muted">No archived posts.</p>
+  )}
+
+  <div class="mt-12 pt-8 border-t border-border">
+    <a href="/posts" class="text-accent hover:underline">
+      &larr; Back to current posts
+    </a>
+  </div>
+</BaseLayout>
