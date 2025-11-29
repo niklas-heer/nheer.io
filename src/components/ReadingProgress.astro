@@ -1,0 +1,73 @@
+---
+// Reading progress bar - shows scroll progress through the article
+---
+
+<div class="reading-progress" aria-hidden="true">
+  <div class="reading-progress-bar" id="reading-progress-bar"></div>
+</div>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    z-index: 100;
+  }
+
+  .reading-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+    transition: width 50ms ease-out;
+  }
+</style>
+
+<script>
+  function initReadingProgress() {
+    const progressBar = document.getElementById('reading-progress-bar');
+    const article = document.querySelector('article');
+
+    if (!progressBar || !article) return;
+
+    function updateProgress() {
+      const docHeight = document.documentElement.scrollHeight;
+      const windowHeight = window.innerHeight;
+      const scrollTop = window.scrollY;
+
+      // Simple calculation: how far through the scrollable area are we?
+      const scrollable = docHeight - windowHeight;
+
+      if (scrollable <= 0) {
+        progressBar!.style.width = '100%';
+        return;
+      }
+
+      const progress = (scrollTop / scrollable) * 100;
+      progressBar!.style.width = `${progress}%`;
+    }
+
+    // Update on scroll with requestAnimationFrame for performance
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateProgress();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Initial update
+    updateProgress();
+  }
+
+  // Run on load
+  initReadingProgress();
+
+  // Re-initialize after page transitions
+  document.addEventListener('astro:after-swap', initReadingProgress);
+</script>

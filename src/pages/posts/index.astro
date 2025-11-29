@@ -1,0 +1,234 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { parseEmoji, parseText } from '../../utils/emoji';
+
+// Get all posts, filter out drafts and archive posts
+const allPosts = await getCollection('posts', ({ data }) => {
+  return !data.draft && !data.archive && data.lang === 'en';
+});
+
+// Sort by date descending
+const sortedPosts = allPosts.sort((a, b) =>
+  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+// Group posts by year
+const postsByYear = sortedPosts.reduce((acc, post) => {
+  const year = new Date(post.data.date).getFullYear();
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(post);
+  return acc;
+}, {} as Record<number, typeof sortedPosts>);
+
+// Get years sorted descending
+const years = Object.keys(postsByYear).map(Number).sort((a, b) => b - a);
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric'
+  }).format(date);
+}
+
+function getPostUrl(post: typeof sortedPosts[0]): string {
+  const date = new Date(post.data.date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const slug = post.slug.split('/').pop();
+  return `/posts/${year}/${month}/${slug}/`;
+}
+---
+
+<BaseLayout title="Blog" description="Blog posts by Niklas Heer about Leadership, DevSecOps, and Quality">
+  <div class="page-header">
+    <h1 class="page-title" style="view-transition-name: page-title;">Blog</h1>
+    <p class="page-subtitle">Thoughts on leadership, DevSecOps, and quality</p>
+  </div>
+
+  <div class="posts-container">
+    {years.map((year) => (
+      <section class="year-section">
+        <div class="year-label">
+          <span>{year}</span>
+        </div>
+        <div class="posts-list">
+          {postsByYear[year].map((post) => (
+            <a href={getPostUrl(post)} class="post-item">
+              <div class="post-icon">
+                {post.data.icon ? parseEmoji(post.data.icon) : '📄'}
+              </div>
+              <div class="post-content">
+                <h3 class="post-title" set:html={parseText(post.data.title)} />
+                {post.data.description && (
+                  <p class="post-description" set:html={parseText(post.data.description)} />
+                )}
+              </div>
+              <time class="post-date">
+                {formatDate(new Date(post.data.date))}
+              </time>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+
+  {years.length === 0 && (
+    <p class="text-muted">No posts yet.</p>
+  )}
+
+  <a href="/archive" class="archive-link">
+    <span>View archive (older posts)</span>
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  </a>
+</BaseLayout>
+
+<style>
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-subtitle {
+    color: var(--color-muted);
+    font-size: 1.1rem;
+  }
+
+  .posts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .year-section {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .year-section {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+
+  .year-label {
+    flex-shrink: 0;
+    width: 60px;
+  }
+
+  .year-label span {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-accent);
+  }
+
+  .posts-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .post-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .post-item:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px color-mix(in srgb, var(--color-accent) 10%, transparent);
+  }
+
+  .post-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background);
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .post-content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .post-title {
+    font-weight: 600;
+    color: var(--color-foreground);
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-description {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-date {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+    padding: 0.25rem 0.5rem;
+    background: var(--color-background);
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .archive-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .archive-link:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    transform: translateY(-2px);
+  }
+</style>

@@ -1,0 +1,165 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import ReadingProgress from '../components/ReadingProgress.astro';
+import OptimizedContent from '../components/OptimizedContent.astro';
+import type { CollectionEntry } from 'astro:content';
+import { parseText } from '../utils/emoji';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { title, date, author, tags, description, icon } = post.data;
+const parsedTitle = parseText(title);
+const parsedIcon = icon ? parseText(icon) : null;
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(date);
+}
+
+// Calculate reading time
+const content = post.body || '';
+const words = content.split(/\s+/).length;
+const readingTime = Math.ceil(words / 200);
+---
+
+<BaseLayout title={title} description={description} lang={post.data.lang}>
+  <ReadingProgress />
+  <a href="/posts" class="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors mb-6 text-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to posts
+  </a>
+
+  <article>
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold mb-4" style="view-transition-name: page-title;">
+        {parsedIcon && <span class="mr-2">{parsedIcon}</span>}
+        <span set:html={parsedTitle} />
+      </h1>
+
+      <div class="flex flex-wrap items-center gap-4 text-sm text-muted">
+        <time datetime={date.toISOString()}>
+          {formatDate(new Date(date))}
+        </time>
+
+        <span>&middot;</span>
+
+        <span>{readingTime} min read</span>
+
+        {author && (
+          <>
+            <span>&middot;</span>
+            <span>by {author}</span>
+          </>
+        )}
+      </div>
+
+      {tags && tags.length > 0 && (
+        <div class="flex flex-wrap gap-2 mt-4">
+          {tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <OptimizedContent class="prose">
+      <slot />
+    </OptimizedContent>
+
+    <footer class="mt-12 pt-8 border-t border-border">
+      <a href="/posts" class="text-accent hover:underline">
+        &larr; Back to all posts
+      </a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<script>
+  // Initialize medium-zoom for images
+  import mediumZoom from 'medium-zoom';
+  import type { Zoom } from 'medium-zoom';
+
+  declare global {
+    interface Window {
+      __zoomInstance?: Zoom | null;
+    }
+  }
+
+  function cleanupZoom() {
+    if (window.__zoomInstance) {
+      window.__zoomInstance.close();
+      window.__zoomInstance.detach();
+      window.__zoomInstance = null;
+    }
+    // Remove any leftover medium-zoom elements
+    document.querySelectorAll('.medium-zoom-overlay, .medium-zoom-image--opened').forEach(el => el.remove());
+  }
+
+  function initProgressiveImages() {
+    const images = document.querySelectorAll('.prose img') as NodeListOf<HTMLImageElement>;
+
+    images.forEach((img) => {
+      // Skip if already processed
+      if (img.classList.contains('loaded') || img.classList.contains('loading')) return;
+
+      if (img.complete && img.naturalHeight !== 0) {
+        // Image already loaded (cached)
+        img.classList.add('loaded');
+      } else {
+        // Image still loading
+        img.classList.add('loading');
+        img.addEventListener('load', () => {
+          img.classList.remove('loading');
+          img.classList.add('loaded');
+        }, { once: true });
+        img.addEventListener('error', () => {
+          img.classList.remove('loading');
+        }, { once: true });
+      }
+    });
+  }
+
+  function initZoom() {
+    cleanupZoom();
+
+    const images = document.querySelectorAll('.prose img');
+    if (images.length === 0) return;
+
+    const theme = document.documentElement.getAttribute('data-theme');
+    const bgColor = theme === 'dark' ? '#181822' : '#fff';
+
+    window.__zoomInstance = mediumZoom('.prose img', {
+      margin: 24,
+      background: bgColor,
+    });
+  }
+
+  function initAll() {
+    initProgressiveImages();
+    initZoom();
+  }
+
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+
+  // Clean up before page transition starts
+  document.addEventListener('astro:before-swap', cleanupZoom);
+
+  // Re-initialize after page transition completes
+  document.addEventListener('astro:after-swap', initAll);
+
+  // Also listen for astro:page-load for full page loads
+  document.addEventListener('astro:page-load', initAll);
+</script>
