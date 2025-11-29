@@ -1,0 +1,461 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { parseEmoji } from '../utils/emoji';
+
+// Get latest posts
+const allPosts = await getCollection('posts', ({ data }) => {
+  return !data.draft && !data.archive && data.lang === 'en';
+});
+const latestPosts = allPosts
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+  .slice(0, 3);
+
+// Import Hardcover data for reading section
+import { fetchReadingData } from '../utils/hardcover';
+
+const readingData = await fetchReadingData();
+const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
+
+function getPostUrl(post: typeof latestPosts[0]): string {
+  const date = new Date(post.data.date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const slug = post.slug.split('/').pop();
+  return `/posts/${year}/${month}/${slug}/`;
+}
+---
+
+<BaseLayout title="Home" description="Homepage and blog by Niklas Heer - Leadership, DevSecOps and Quality">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-image-container">
+        <img
+          src="/assets/images/about/nheer-memoji.png"
+          alt="Niklas Heer"
+          class="hero-image"
+        />
+      </div>
+
+      <h1 class="hero-title">
+        <span class="hero-greeting">👋 Hey, I'm</span>
+        <span class="hero-name">Niklas Heer</span>
+      </h1>
+
+      <p class="hero-tagline">
+        Working on open source software and empowering developers.
+      </p>
+
+      <div class="hero-badges">
+        <span class="badge">Leadership</span>
+        <span class="badge">Platform</span>
+        <span class="badge">Engineering</span>
+      </div>
+
+      <div class="hero-socials">
+        <a href="https://github.com/niklas-heer" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+        </a>
+        <a href="https://linkedin.com/in/niklas-heer-b89364b8" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+        </a>
+        <a href="https://twitter.com/niklas_heer" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+          <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a href="mailto:me@nheer.io" aria-label="Email">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Grid -->
+  <section class="bento-grid">
+    <!-- Latest Posts - Large Card -->
+    <div class="bento-card bento-large">
+      <div class="bento-card-header">
+        <span class="bento-icon">📝</span>
+        <h2>Latest Posts</h2>
+        <a href="/posts" class="bento-link">View all →</a>
+      </div>
+      <div class="bento-card-content">
+        {latestPosts.map((post) => (
+          <a href={getPostUrl(post)} class="bento-post">
+            <span class="bento-post-title">
+              {post.data.icon && <span class="bento-post-icon">{parseEmoji(post.data.icon)}</span>}
+              {post.data.title.replace(/\*\*/g, '')}
+            </span>
+            <span class="bento-post-date">
+              {new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(post.data.date))}
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- About Card -->
+    <div class="bento-card bento-small">
+      <div class="bento-card-header">
+        <span class="bento-icon">👋</span>
+        <h2>About</h2>
+      </div>
+      <p class="bento-text">
+        Engineering Manager for Platform Engineering at Tradebyte, passionate about building great teams and high-quality software.
+      </p>
+      <a href="/about" class="bento-cta">Learn more →</a>
+    </div>
+
+    <!-- Reading Card -->
+    <div class="bento-card bento-small">
+      <div class="bento-card-header">
+        <span class="bento-icon">📖</span>
+        <h2>Reading</h2>
+      </div>
+      <div class="bento-books">
+        {currentlyReading.map((item) => (
+          <a href={`https://hardcover.app/books/${item.book.slug}`} target="_blank" rel="noopener" class="bento-book">
+            {item.book.image?.url && (
+              <img src={item.book.image.url} alt={item.book.title} />
+            )}
+          </a>
+        ))}
+      </div>
+      <a href="/reading" class="bento-cta">See reading list →</a>
+    </div>
+
+    <!-- Currently Card -->
+    <div class="bento-card bento-wide glass-card">
+      <div class="bento-status">
+        <span class="status-dot"></span>
+        <span>Currently</span>
+      </div>
+      <p class="bento-current">
+        Engineering Manager for the Platform Engineering team, focusing on DevSecOps practices and engineering excellence.
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hero Section */
+  .hero-section {
+    position: relative;
+    padding: 3rem 0 4rem;
+    text-align: center;
+  }
+
+  .hero-glow {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent) 15%, transparent) 0%,
+      color-mix(in srgb, var(--color-pink) 8%, transparent) 30%,
+      transparent 60%
+    );
+    filter: blur(80px);
+    pointer-events: none;
+    animation: pulse 8s ease-in-out infinite;
+    z-index: -1;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-image-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-image {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px color-mix(in srgb, var(--color-accent) 60%, transparent))
+            drop-shadow(0 0 40px color-mix(in srgb, var(--color-pink) 40%, transparent));
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-accent) 50%, transparent))
+              drop-shadow(0 0 30px color-mix(in srgb, var(--color-pink) 30%, transparent));
+    }
+    50% {
+      filter: drop-shadow(0 0 25px color-mix(in srgb, var(--color-accent) 70%, transparent))
+              drop-shadow(0 0 50px color-mix(in srgb, var(--color-pink) 50%, transparent));
+    }
+  }
+
+  .hero-title {
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-greeting {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .hero-name {
+    display: block;
+    font-size: 2.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-accent) 50%, var(--color-pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-tagline {
+    font-size: 1.25rem;
+    color: var(--color-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 0.375rem 1rem;
+    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: var(--color-accent);
+    transition: all 0.2s ease;
+  }
+
+  .badge:hover {
+    background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .hero-socials {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .hero-socials a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    transition: all 0.2s ease;
+  }
+
+  .hero-socials a:hover {
+    background: var(--color-accent);
+    color: var(--color-background);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+
+  /* Bento Grid */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 640px) {
+    .bento-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .bento-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+  }
+
+  .bento-card:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px color-mix(in srgb, var(--color-accent) 10%, transparent);
+  }
+
+  .bento-large {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 640px) {
+    .bento-large {
+      grid-column: span 1;
+    }
+  }
+
+  .bento-wide {
+    grid-column: span 2;
+  }
+
+  @media (max-width: 640px) {
+    .bento-wide {
+      grid-column: span 1;
+    }
+  }
+
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)),
+      color-mix(in srgb, var(--color-pink) 5%, var(--color-surface))
+    );
+  }
+
+  .bento-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .bento-card-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .bento-icon {
+    font-size: 1.25rem;
+  }
+
+  .bento-link {
+    font-size: 0.875rem;
+    color: var(--color-accent);
+  }
+
+  .bento-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bento-post {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--color-background);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .bento-post:hover {
+    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-background));
+  }
+
+  .bento-post-title {
+    font-weight: 500;
+    color: var(--color-foreground);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .bento-post-icon {
+    flex-shrink: 0;
+  }
+
+  .bento-post-date {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  .bento-text {
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .bento-cta {
+    font-size: 0.875rem;
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  .bento-books {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .bento-book img {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    transition: transform 0.2s ease;
+  }
+
+  .bento-book:hover img {
+    transform: scale(1.05);
+  }
+
+  .bento-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--color-green);
+    border-radius: 50%;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .bento-current {
+    font-size: 1rem;
+    color: var(--color-foreground);
+    line-height: 1.6;
+  }
+</style>
