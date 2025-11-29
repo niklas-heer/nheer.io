@@ -1,0 +1,66 @@
+---
+interface Props {
+  repo: string;
+  class?: string;
+}
+
+const { repo, class: className } = Astro.props;
+const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
+---
+
+<div class:list={["star-history", className]}>
+  <div class="star-history-header">
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z" />
+    </svg>
+    <span>Star History</span>
+  </div>
+  <a href={`https://star-history.com/#${repo}&Date`} target="_blank" rel="noopener noreferrer" class="star-history-link">
+    <img
+      src={chartUrl}
+      alt={`Star history chart for ${repo}`}
+      loading="lazy"
+    />
+  </a>
+</div>
+
+<style>
+  .star-history {
+    margin: 1.5rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    background: #0d1117;
+  }
+
+  .star-history-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    color: #e6edf3;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .star-history-header svg {
+    width: 16px;
+    height: 16px;
+    color: #f0c14b;
+  }
+
+  .star-history-link {
+    display: block;
+    background: #0d1117;
+    padding: 1rem;
+  }
+
+  .star-history-link img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: hue-rotate(0deg) saturate(1.1);
+  }
+</style>
