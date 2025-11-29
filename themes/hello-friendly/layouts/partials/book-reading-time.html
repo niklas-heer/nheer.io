@@ -1,5 +1,0 @@
-{{ $start := (time .Params.readingStart) }}
-{{ $end := (time .Params.readingEnd) }}
-{{ $delta := $end.Sub $start }}
-
-{{ int (div $delta.Hours 24) }}

@@ -1,9 +1,0 @@
-{{ $type := .Params.tool }}
-
-{{ if (eq $type "audible") }}
-  {{ i18n "readingToolAudible" }} {{ ":headphones:" | emojify }}
-{{ else if (eq $type "kindle") }}
-  {{ i18n "readingToolKindle" }} {{ ":iphone:" | emojify }}
-{{ else }}
-  {{ i18n "readingToolHardcover" }} {{ ":closed_book:" | emojify }}
-{{ end }}
