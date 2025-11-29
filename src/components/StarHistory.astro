@@ -5,7 +5,8 @@ interface Props {
 }
 
 const { repo, class: className } = Astro.props;
-const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
+const darkChartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date&theme=dark`;
+const lightChartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
 ---
 
 <div class:list={["star-history", className]}>
@@ -17,12 +18,45 @@ const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
   </div>
   <a href={`https://star-history.com/#${repo}&Date`} target="_blank" rel="noopener noreferrer" class="star-history-link">
     <img
-      src={chartUrl}
+      src={darkChartUrl}
+      data-light-src={lightChartUrl}
+      data-dark-src={darkChartUrl}
       alt={`Star history chart for ${repo}`}
       loading="lazy"
+      class="star-history-img"
     />
   </a>
 </div>
+
+<script>
+  function updateStarHistoryChart() {
+    const img = document.querySelector('.star-history-img') as HTMLImageElement;
+    if (!img) return;
+
+    const theme = document.documentElement.getAttribute('data-theme');
+    const src = theme === 'dark' ? img.dataset.darkSrc : img.dataset.lightSrc;
+    if (src && img.src !== src) {
+      img.src = src;
+    }
+  }
+
+  // Run on load
+  updateStarHistoryChart();
+
+  // Watch for theme changes
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme') {
+        updateStarHistoryChart();
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, { attributes: true });
+
+  // Handle Astro page transitions
+  document.addEventListener('astro:page-load', updateStarHistoryChart);
+</script>
 
 <style>
   .star-history {
@@ -30,7 +64,6 @@ const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--color-border);
-    background: #0d1117;
   }
 
   .star-history-header {
@@ -38,9 +71,9 @@ const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    background: #161b22;
-    border-bottom: 1px solid #30363d;
-    color: #e6edf3;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
     font-size: 0.875rem;
     font-weight: 500;
   }
@@ -53,14 +86,24 @@ const chartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`;
 
   .star-history-link {
     display: block;
-    background: #0d1117;
-    padding: 1rem;
+    line-height: 0;
+    padding: 0;
+    margin: 0;
   }
 
-  .star-history-link img {
+  :global([data-theme="dark"]) .star-history-link {
+    background: #0d1117;
+  }
+
+  :global([data-theme="light"]) .star-history-link {
+    background: #ffffff;
+  }
+
+  .star-history-img {
     width: 100%;
     height: auto;
     display: block;
-    filter: hue-rotate(0deg) saturate(1.1);
+    margin: 0;
+    padding: 0;
   }
 </style>
