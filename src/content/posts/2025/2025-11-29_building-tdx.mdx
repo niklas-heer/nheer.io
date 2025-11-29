@@ -1,0 +1,191 @@
+---
+title: "Building tdx"
+icon: ":white_check_mark:"
+date: "2025-11-29T22:00:00+01:00"
+author: "Niklas Heer"
+description: "How I built a fast markdown todo manager with Go and AI"
+toc: false
+tags: ["go", "cli", "tui", "ai", "open-source"]
+lang: "en"
+---
+
+import GitHubRepo from '../../../components/GitHubRepo.astro';
+
+I recently released [tdx](https://github.com/niklas-heer/tdx), a terminal-based todo manager that stores tasks in plain markdown. This is the story of how it came to be.
+
+![tdx demo](/assets/images/2025/tdx-demo.gif)
+
+## The Problem
+
+I wanted a todo tool that:
+
+1. **Stores todos in files** - not a central database, but right in my project directories
+2. **Works with git** - plain text that I can version control
+3. **Is fast** - instant startup, no waiting
+
+I searched everywhere. Tried [taskwarrior](https://taskwarrior.org/), [todo.txt](http://todotxt.org/), [ultralist](https://ultralist.io/), and many others. They were either too complex, used proprietary formats, or stored everything in a central location.
+
+Nothing fit. So I decided to build it myself.
+
+## First Attempt: Bun + Ink
+
+My first prototype used [Bun](https://bun.sh/) with [Ink](https://github.com/vadimdemedes/ink) (React for the terminal). It worked! The development experience was great - JSX for terminal UIs felt natural.
+
+But there were problems:
+
+- **Startup time**: Noticeable delay before the TUI appeared
+- **Binary size**: The bundled executable was ~90MB
+- **Distribution**: Shipping a JS runtime adds complexity
+
+For a tool I'd run dozens of times a day, these tradeoffs weren't acceptable.
+
+## Rewriting in Go with AI
+
+I'd been using Claude for coding tasks and wondered: could it rewrite the entire thing in Go?
+
+I gave it the TypeScript codebase, explained what I wanted, and asked for a Go version using [Bubble Tea](https://github.com/charmbracelet/bubbletea) (Charm's TUI framework).
+
+**It worked in one shot.**
+
+The initial output wasn't perfect, but it was close enough to polish. The performance difference was staggering:
+
+![Go vs Bun performance comparison](/assets/images/2025/tdx-perf-go-vs-bun.jpeg)
+
+- **14x smaller** binary (4MB vs 59MB)
+- **38x faster** startup
+- **30x faster** operations
+- **Single binary** - no runtime dependencies
+
+## The Key Insight: Testable TUI
+
+Here's something I learned: **tests are essential when building with AI**.
+
+The most important feature I added was the ability to send keypresses programmatically to the TUI. This meant I could write tests like:
+
+```go
+func TestToggleTodo(t *testing.T) {
+    m := NewModel("- [ ] Test task")
+    m, _ = m.Update(tea.KeyMsg{Type: tea.KeySpace})
+    assert.Contains(t, m.View(), "[x]")
+}
+```
+
+With comprehensive tests, I could:
+- Ask Claude to add features
+- Run the test suite
+- Fix any regressions immediately
+
+This feedback loop made AI-assisted development much more reliable. Without tests, I'd be manually checking every interaction after each change.
+
+## AI-Driven Optimization
+
+One thing AI excels at: analyzing code for performance improvements.
+
+I asked Claude to review the rendering code. It spotted that regexes for inline code rendering were being compiled on every render. Pre-compiling them yielded significant gains:
+
+![Regex optimization results](/assets/images/2025/tdx-perf-regex-optimization.jpeg)
+
+- **37% faster** operations
+- **83% less memory** usage
+- **60% fewer allocations**
+
+This kind of optimization is tedious to find manually but trivial for AI to spot.
+
+## Why AST Matters
+
+Even with optimized regex, edge cases kept appearing - nested lists, code blocks containing checkboxes, malformed markdown.
+
+I eventually switched to an AST (Abstract Syntax Tree) approach using [Goldmark](https://github.com/yuin/goldmark). The benefits:
+
+- **Predictable changes** - modify the tree, serialize back to markdown
+- **Format preservation** - your spacing and structure stay intact
+- **Rich features** - headings, tags, priorities all parsed correctly
+
+The AST also enabled features like showing section headings between tasks:
+
+```markdown
+## Backend
+- [ ] API endpoints
+- [ ] Database schema
+
+## Frontend  
+- [ ] Component library
+- [ ] State management
+```
+
+## Charm is Great
+
+I can't say enough good things about [Charm's](https://charm.sh/) ecosystem:
+
+- **Bubble Tea** - The Elm architecture for terminals. Clean, testable, composable.
+- **Lip Gloss** - CSS-like styling for terminal output
+- **Bubbles** - Pre-built components (text inputs, lists, spinners)
+
+And for documentation, [VHS](https://github.com/charmbracelet/vhs) is brilliant. Write a script, get a GIF:
+
+```
+Output demo.gif
+Type "tdx"
+Enter
+Sleep 500ms
+Type "j"
+Sleep 200ms  
+Type " "
+```
+
+All the GIFs in tdx's documentation were generated this way.
+
+## Marketing: Start Small
+
+When tdx felt ready, I shared it with friends first. Their feedback shaped the initial release.
+
+Then I posted to Twitter/X and Reddit (r/commandline, r/golang). The response was encouraging - people tried it, reported bugs, requested features.
+
+## Features That Came from Users
+
+Almost every major feature after v0.1 came from user requests:
+
+- **Checklists** - Read-only mode for reusable templates
+- **Recent files** - Jump back to previously opened todos
+- **Tags** - `#backend #urgent` with filtering
+- **Priorities** - `!p1 !p2 !p3` with sorting
+- **Due dates** - `@due(2025-12-01)` with urgency coloring
+
+![Checklists feature](/assets/images/2025/tdx-checklists.gif)
+
+Each feature followed the same pattern:
+1. User suggests it
+2. I prototype with AI assistance
+3. Write tests
+4. Polish until it feels right
+
+## What I Learned
+
+**AI accelerates, but doesn't replace understanding.** Claude wrote most of the initial Go code, but I still needed to understand Bubble Tea's architecture to extend it properly.
+
+**Tests unlock AI productivity.** Without a test suite, AI-generated code is a liability. With tests, it's a superpower.
+
+**Start simple, add complexity when needed.** The AST rewrite only happened after regex hit its limits. Premature optimization would have slowed the initial release.
+
+**Users know what they need.** The best features came from people actually using the tool. Ship early, iterate often.
+
+## Try It
+
+<GitHubRepo repo="niklas-heer/tdx" />
+
+If you manage todos in markdown and want something fast:
+
+```bash
+# Install via Homebrew
+brew install niklas-heer/tap/tdx
+
+# Or quick install
+curl -fsSL https://niklas-heer.github.io/tdx/install.sh | bash
+```
+
+Then just run `tdx` in any directory with a `todo.md` file.
+
+The code is open source at [github.com/niklas-heer/tdx](https://github.com/niklas-heer/tdx). Issues and PRs welcome!
+
+[tdx]: https://github.com/niklas-heer/tdx
+[charm]: https://charm.sh/
