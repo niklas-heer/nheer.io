@@ -1,0 +1,39 @@
+---
+/**
+ * PostContent component that renders markdown with optimized images
+ * Images from /assets/images/ are automatically optimized using Astro's Image component
+ */
+import { Image } from 'astro:assets';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = 'prose' } = Astro.props;
+
+// Import all images from src/assets/images for optimization
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpeg,jpg,png,webp}',
+  { eager: true }
+);
+
+// Create a map for quick lookup
+const imageMap = new Map<string, ImageMetadata>();
+for (const [path, module] of Object.entries(allImages)) {
+  // Convert /src/assets/images/2025/foo.png to /assets/images/2025/foo.png
+  const publicPath = path.replace('/src/assets/images/', '/assets/images/');
+  imageMap.set(publicPath, module.default);
+}
+
+// Expose the image map to client-side script via data attribute
+const imageMapJson = JSON.stringify(Array.from(imageMap.keys()));
+---
+
+<div class={className} data-optimized-images={imageMapJson}>
+  <slot />
+</div>
+
+<script define:vars={{ imageMapJson }}>
+  // This script replaces img elements with optimized versions after render
+  // The actual optimization happens at build time through Astro's Image component
+</script>

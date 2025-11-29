@@ -1,0 +1,37 @@
+---
+// This component wraps markdown content and provides custom rendering for images
+import OptimizedImage from './OptimizedImage.astro';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = 'prose' } = Astro.props;
+---
+
+<div class={className}>
+  <slot />
+</div>
+
+<script>
+  // Process images after content is rendered to add optimization
+  function processImages() {
+    const proseImages = document.querySelectorAll('.prose img:not([data-processed])');
+
+    proseImages.forEach((img) => {
+      img.setAttribute('data-processed', 'true');
+      img.setAttribute('loading', 'lazy');
+      img.setAttribute('decoding', 'async');
+    });
+  }
+
+  // Run on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', processImages);
+  } else {
+    processImages();
+  }
+
+  // Re-run after page transitions
+  document.addEventListener('astro:page-load', processImages);
+</script>

@@ -1,0 +1,36 @@
+---
+const currentYear = new Date().getFullYear();
+const startYear = 2011;
+---
+
+<footer class="mt-16 border-t border-border pt-8 text-sm text-muted">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p>&copy; {startYear}&ndash;{currentYear} Niklas Heer</p>
+      <p class="mt-1">
+        Content licensed under{' '}
+        <a
+          href="https://creativecommons.org/licenses/by-nc/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-accent hover:underline"
+        >
+          CC BY-NC 4.0
+        </a>
+      </p>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <a href="/imprint" class="hover:text-foreground transition-colors">Imprint</a>
+      <a href="/rss.xml" class="hover:text-foreground transition-colors">RSS</a>
+      <a
+        href="https://github.com/niklas-heer"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hover:text-foreground transition-colors"
+      >
+        GitHub
+      </a>
+    </div>
+  </div>
+</footer>
