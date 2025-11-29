@@ -85,7 +85,7 @@ a:hover {
 }
 
 /* Prose links - modern pill/chip style */
-.prose a:not(.anchor-link):not(.github-repo-card) {
+.prose a:not(.anchor-link):not(.github-repo-card):not(.star-history-link) {
     color: var(--color-accent);
     text-decoration: none;
     background: color-mix(in srgb, var(--color-accent) 15%, transparent);
@@ -94,20 +94,26 @@ a:hover {
     transition: all 0.2s ease;
 }
 
-.prose a:not(.anchor-link):not(.github-repo-card):hover {
+.prose
+    a:not(.anchor-link):not(.github-repo-card):not(.star-history-link):hover {
     background: color-mix(in srgb, var(--color-accent) 30%, transparent);
     color: var(--color-accent-hover);
 }
 
 /* External link indicator */
-.prose a[href^="http"]:not([href*="nheer"]):not(.github-repo-card)::after {
+.prose
+    a[href^="http"]:not([href*="nheer"]):not(.github-repo-card):not(
+        .star-history-link
+    )::after {
     content: " ↗";
     font-size: 0.7em;
     opacity: 0.6;
 }
 
 .prose
-    a[href^="http"]:not([href*="nheer"]):not(.github-repo-card):hover::after {
+    a[href^="http"]:not([href*="nheer"]):not(.github-repo-card):not(
+        .star-history-link
+    ):hover::after {
     opacity: 1;
 }
 
