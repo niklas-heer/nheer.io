@@ -1,0 +1,120 @@
+---
+/**
+ * OptimizedContent - Renders content with optimized images
+ *
+ * This component processes the slot content and replaces img tags
+ * with optimized versions using Astro's getImage at build time
+ */
+import { getImage } from 'astro:assets';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = 'prose' } = Astro.props;
+
+// Import all optimizable images from src/assets/images
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/images/**/*.{jpeg,jpg,png,webp}',
+  { eager: true }
+);
+
+// Build lookup map: /assets/images/... -> ImageMetadata
+const imageMap = new Map<string, ImageMetadata>();
+for (const [modulePath, module] of Object.entries(imageModules)) {
+  const publicPath = modulePath.replace('/src/assets/images/', '/assets/images/');
+  imageMap.set(publicPath, module.default);
+}
+
+// Pre-generate optimized versions for images used in posts
+const optimizedImages = new Map<string, { src: string; srcSet: string; width: number; height: number }>();
+
+for (const [publicPath, metadata] of imageMap) {
+  try {
+    // Generate multiple sizes for srcset
+    const sizes = [400, 800, 1200];
+    const srcSetParts: string[] = [];
+    let mainSrc = '';
+
+    for (const width of sizes) {
+      const optimized = await getImage({
+        src: metadata,
+        width: width,
+        format: 'webp',
+        quality: 80,
+      });
+      srcSetParts.push(`${optimized.src} ${width}w`);
+      if (width === 800) {
+        mainSrc = optimized.src;
+      }
+    }
+
+    // Fallback to largest if 800 not available
+    if (!mainSrc) {
+      const fallback = await getImage({
+        src: metadata,
+        format: 'webp',
+        quality: 80,
+      });
+      mainSrc = fallback.src;
+    }
+
+    optimizedImages.set(publicPath, {
+      src: mainSrc,
+      srcSet: srcSetParts.join(', '),
+      width: metadata.width,
+      height: metadata.height,
+    });
+  } catch (e) {
+    console.warn(`Failed to optimize image: ${publicPath}`, e);
+  }
+}
+
+// Serialize for client-side use
+const optimizedData = Object.fromEntries(optimizedImages);
+---
+
+<div class={className}>
+  <slot />
+</div>
+
+<script define:vars={{ optimizedData }}>
+  function replaceImages() {
+    const images = document.querySelectorAll('.prose img:not([data-optimized])');
+
+    images.forEach((img) => {
+      const src = img.getAttribute('src');
+      if (!src) return;
+
+      // Skip GIFs (they lose animation when optimized)
+      if (src.toLowerCase().endsWith('.gif')) {
+        img.setAttribute('data-optimized', 'skip');
+        return;
+      }
+
+      const data = optimizedData[src];
+      if (!data) {
+        img.setAttribute('data-optimized', 'skip');
+        return;
+      }
+
+      // Update to optimized version
+      img.setAttribute('src', data.src);
+      img.setAttribute('srcset', data.srcSet);
+      img.setAttribute('sizes', '(max-width: 768px) 100vw, 768px');
+      img.setAttribute('width', data.width);
+      img.setAttribute('height', data.height);
+      img.setAttribute('loading', 'lazy');
+      img.setAttribute('decoding', 'async');
+      img.setAttribute('data-optimized', 'true');
+    });
+  }
+
+  // Run on load and after transitions
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', replaceImages);
+  } else {
+    replaceImages();
+  }
+  document.addEventListener('astro:page-load', replaceImages);
+</script>

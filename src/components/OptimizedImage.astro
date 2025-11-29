@@ -1,0 +1,55 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: string;
+  alt: string;
+  class?: string;
+}
+
+const { src, alt, class: className } = Astro.props;
+
+// Try to import the image from src/assets if it's a local path
+let optimizedSrc = src;
+let isOptimizable = false;
+
+// Handle local images starting with /assets/images/
+if (src.startsWith('/assets/images/')) {
+  const imagePath = src.replace('/assets/images/', '');
+  try {
+    // Dynamic import for images in src/assets/images
+    const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/images/**/*.{jpeg,jpg,png,gif,webp,svg}');
+    const imageKey = `/src/assets/images/${imagePath}`;
+
+    if (images[imageKey]) {
+      const imageModule = await images[imageKey]();
+      optimizedSrc = imageModule.default;
+      isOptimizable = true;
+    }
+  } catch (e) {
+    // Fall back to original src if import fails
+    console.warn(`Could not optimize image: ${src}`);
+  }
+}
+
+// Don't optimize GIFs (they lose animation) or SVGs (already optimized)
+const isGif = src.toLowerCase().endsWith('.gif');
+const isSvg = src.toLowerCase().endsWith('.svg');
+const shouldOptimize = isOptimizable && !isGif && !isSvg;
+---
+
+{shouldOptimize ? (
+  <Image
+    src={optimizedSrc}
+    alt={alt}
+    class={className}
+    widths={[400, 800, 1200]}
+    sizes="(max-width: 768px) 100vw, 768px"
+    format="webp"
+    quality={80}
+    loading="lazy"
+    decoding="async"
+  />
+) : (
+  <img src={src} alt={alt} class={className} loading="lazy" decoding="async" />
+)}
