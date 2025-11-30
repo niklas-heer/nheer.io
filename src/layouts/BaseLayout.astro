@@ -45,7 +45,9 @@ const fullTitle = title === 'Home' ? 'Niklas Heer' : `${title} | Niklas Heer`;
   </head>
   <body class="min-h-screen bg-background text-foreground transition-colors duration-300">
     <div class="mx-auto max-w-3xl px-4 py-8">
-      <Header lang={lang} />
+      <div class="relative">
+        <Header lang={lang} />
+      </div>
       <main class="mt-8">
         <slot />
       </main>

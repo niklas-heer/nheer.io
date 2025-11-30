@@ -18,7 +18,8 @@ const navigation = [
     </span>
   </a>
 
-  <nav class="flex items-center gap-6">
+  <!-- Desktop Navigation -->
+  <nav class="hidden sm:flex items-center gap-6">
     <ul class="flex items-center gap-4">
       {navigation.map((link) => (
         <li>
@@ -36,7 +37,41 @@ const navigation = [
       <ThemeToggle />
     </div>
   </nav>
+
+  <!-- Mobile Navigation -->
+  <div class="flex sm:hidden items-center gap-2">
+    <ThemeToggle />
+    <button
+      id="mobile-menu-button"
+      class="p-2 text-muted hover:text-foreground transition-colors"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+    >
+      <svg class="hamburger-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+      <svg class="close-icon w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
 </header>
+
+<!-- Mobile Menu Overlay -->
+<nav id="mobile-menu" class="mobile-menu sm:hidden">
+  <ul class="flex flex-col gap-4 p-6 bg-background border-b border-border">
+    {navigation.map((link) => (
+      <li>
+        <a
+          href={link.href}
+          class="block text-lg text-muted hover:text-foreground transition-colors"
+        >
+          {link.name}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
 
 <style>
   .terminal-text {
@@ -70,6 +105,20 @@ const navigation = [
   /* Hover effect - re-type animation */
   .group:hover .terminal-cursor {
     animation: blink 0.5s step-end infinite;
+  }
+
+  /* Mobile menu styles */
+  .mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+
+  .mobile-menu.open {
+    display: block;
   }
 </style>
 
@@ -105,4 +154,34 @@ const navigation = [
 
   // Run after view transitions
   document.addEventListener('astro:after-swap', initTerminalTyping);
+
+  // Mobile menu toggle
+  function initMobileMenu() {
+    const menuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamburgerIcon = menuButton?.querySelector('.hamburger-icon');
+    const closeIcon = menuButton?.querySelector('.close-icon');
+
+    if (!menuButton || !mobileMenu || !hamburgerIcon || !closeIcon) return;
+
+    menuButton.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+      hamburgerIcon.classList.toggle('hidden', isOpen);
+      closeIcon.classList.toggle('hidden', !isOpen);
+    });
+
+    // Close menu when clicking a link
+    mobileMenu.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        hamburgerIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+      });
+    });
+  }
+
+  initMobileMenu();
+  document.addEventListener('astro:after-swap', initMobileMenu);
 </script>
