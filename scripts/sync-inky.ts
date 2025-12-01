@@ -126,8 +126,9 @@ async function generateNewsComments(
 - Love ocean/nautical puns mixed with tech
 - Reference Docker, Kubernetes, containers (ocean themes!)
 - Fourth-wall breaks are welcome
-- Cute but sassy - think :3 energy with attitude
+- Cute but sassy with attitude
 - Keep comments short (1-2 sentences max)
+- Use real Unicode emojis sparingly (🐙, 🌊, 💀, 🔥, etc.) - NEVER use text emoticons like :3, UwU, :tada:, or similar
 
 Generate a snarky comment for each of these tech headlines:
 
@@ -146,7 +147,7 @@ Respond with ONLY a JSON array of strings, one comment per headline:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "anthropic/claude-3.5-haiku",
+          model: "openai/gpt-5.1-chat",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 1000,
         }),
@@ -188,8 +189,9 @@ async function generateGeneralComments(
 - Love ocean/nautical puns mixed with tech
 - Reference Docker, Kubernetes, containers, npm, git, JavaScript, etc.
 - Fourth-wall breaks are welcome
-- Cute but sassy - think :3 energy with attitude
+- Cute but sassy with attitude
 - Keep comments short (1-2 sentences max)
+- Use real Unicode emojis sparingly (🐙, 🌊, 💀, 🔥, etc.) - NEVER use text emoticons like :3, UwU, :tada:, or similar
 - Topics: programming frustrations, dependency hell, YAML nightmares, legacy code, git disasters, framework fatigue, etc.
 
 Respond with ONLY a JSON array of ${count} unique comment strings:
@@ -205,7 +207,7 @@ Respond with ONLY a JSON array of ${count} unique comment strings:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "anthropic/claude-3.5-haiku",
+          model: "openai/gpt-5.1-chat",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 1500,
         }),
