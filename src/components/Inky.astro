@@ -872,215 +872,234 @@ const comments = await getInkyComments(5);
 </script>
 
 <script>
-    const container = document.getElementById("inky-container");
-    const mascot = document.getElementById("inky-mascot");
-    const bubble = document.getElementById("inky-bubble");
-    const text = document.getElementById("inky-text");
-    const sourceLink = document.getElementById(
-        "inky-source",
-    ) as HTMLAnchorElement;
+    function initInky() {
+        const container = document.getElementById("inky-container");
+        const mascot = document.getElementById("inky-mascot");
+        const bubble = document.getElementById("inky-bubble");
+        const text = document.getElementById("inky-text");
+        const sourceLink = document.getElementById(
+            "inky-source",
+        ) as HTMLAnchorElement;
 
-    let isActivated = false;
-    let deactivateTimer: ReturnType<typeof setTimeout> | null = null;
-    const DEACTIVATE_DELAY = 12000; // 12 seconds
+        // Skip if elements not found
+        if (!mascot || !bubble || !text) return;
 
-    const comments = (window as any).inkyComments || [
-        "I surfaced from the deep web just to judge your code.",
-        "Your Docker containers are more tangled than my tentacles.",
-        "I've seen cleaner git histories in the Mariana Trench.",
-    ];
+        // Clean up previous event listeners by cloning
+        const newMascot = mascot.cloneNode(true) as HTMLElement;
+        mascot.parentNode?.replaceChild(newMascot, mascot);
 
-    // Shuffle array using Fisher-Yates algorithm
-    function shuffleArray<T>(array: T[]): T[] {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        let isActivated = false;
+        let deactivateTimer: ReturnType<typeof setTimeout> | null = null;
+        const DEACTIVATE_DELAY = 12000; // 12 seconds
+
+        const comments = (window as any).inkyComments || [
+            "I surfaced from the deep web just to judge your code.",
+            "Your Docker containers are more tangled than my tentacles.",
+            "I've seen cleaner git histories in the Mariana Trench.",
+        ];
+
+        // Shuffle array using Fisher-Yates algorithm
+        function shuffleArray<T>(array: T[]): T[] {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
         }
-        return shuffled;
-    }
 
-    // Track shown comments - shuffle on init and cycle through
-    let shuffledComments = shuffleArray(comments);
-    let currentIndex = 0;
-    let hasExhausted = false;
+        // Track shown comments - shuffle on init and cycle through
+        let shuffledComments = shuffleArray(comments);
+        let currentIndex = 0;
+        let hasExhausted = false;
 
-    const exhaustedMessages = [
-        "That's all I've got... for now. My tentacles are tired.",
-        "I've spilled all my ink! Check back tomorrow for fresh takes.",
-        "You've drained my ocean of wisdom. Come back later!",
-        "No more secrets from the deep. I need to recharge my snark.",
-        "*blub blub* That's everything. Even octopuses need a break.",
-    ];
+        const exhaustedMessages = [
+            "That's all I've got... for now. My tentacles are tired.",
+            "I've spilled all my ink! Check back tomorrow for fresh takes.",
+            "You've drained my ocean of wisdom. Come back later!",
+            "No more secrets from the deep. I need to recharge my snark.",
+            "*blub blub* That's everything. Even octopuses need a break.",
+        ];
 
-    // Reset deactivation timer
-    function resetDeactivateTimer() {
-        if (deactivateTimer) {
-            clearTimeout(deactivateTimer);
+        // Reset deactivation timer
+        function resetDeactivateTimer() {
+            if (deactivateTimer) {
+                clearTimeout(deactivateTimer);
+            }
+            deactivateTimer = setTimeout(() => {
+                if (isActivated) {
+                    isActivated = false;
+                    newMascot?.classList.remove("activated");
+                    bubble?.classList.remove("visible");
+                }
+            }, DEACTIVATE_DELAY);
         }
-        deactivateTimer = setTimeout(() => {
+
+        // Update source icon visibility and link
+        function updateSourceIcon(comment: any) {
+            if (!sourceLink) return;
+
+            const sourceType = comment?.sourceType;
+            const sourceUrl = comment?.sourceUrl;
+            const sourceTitle = comment?.sourceTitle;
+
+            // Hide all icons first
+            sourceLink.querySelector(".hn-icon")?.classList.remove("visible");
+            sourceLink.querySelector(".tns-icon")?.classList.remove("visible");
+            sourceLink
+                .querySelector(".devops-icon")
+                ?.classList.remove("visible");
+
+            // Only show for news comments with a URL
+            if (sourceType && sourceType !== "general" && sourceUrl) {
+                sourceLink.href = sourceUrl;
+                sourceLink.title = sourceTitle || "Read article";
+                sourceLink.style.display = "flex";
+
+                // Show the appropriate icon
+                if (sourceType === "hackernews") {
+                    sourceLink
+                        .querySelector(".hn-icon")
+                        ?.classList.add("visible");
+                } else if (sourceType === "thenewstack") {
+                    sourceLink
+                        .querySelector(".tns-icon")
+                        ?.classList.add("visible");
+                } else if (sourceType === "devops") {
+                    sourceLink
+                        .querySelector(".devops-icon")
+                        ?.classList.add("visible");
+                }
+            } else {
+                sourceLink.style.display = "none";
+            }
+        }
+
+        // Show next comment in sequence, or exhausted message
+        function showNextComment() {
+            if (currentIndex < shuffledComments.length) {
+                const comment = shuffledComments[currentIndex];
+                if (text) text.textContent = comment.comment || comment;
+                updateSourceIcon(comment);
+                currentIndex++;
+            } else if (!hasExhausted) {
+                // First time exhausting - show exhausted message
+                hasExhausted = true;
+                const exhaustedMsg =
+                    exhaustedMessages[
+                        Math.floor(Math.random() * exhaustedMessages.length)
+                    ];
+                if (text) text.textContent = exhaustedMsg;
+                updateSourceIcon(null); // Hide source for exhausted messages
+            } else {
+                // Already showed exhausted, just cycle the exhausted messages
+                const exhaustedMsg =
+                    exhaustedMessages[
+                        Math.floor(Math.random() * exhaustedMessages.length)
+                    ];
+                if (text) text.textContent = exhaustedMsg;
+                updateSourceIcon(null); // Hide source for exhausted messages
+            }
+            bubble?.classList.add("visible");
+        }
+
+        newMascot?.addEventListener("click", (e) => {
+            e.stopPropagation();
+
+            if (!isActivated) {
+                // First click - activate Inky (he stays up)
+                isActivated = true;
+                newMascot.classList.add("activated");
+            }
+
+            // Show next comment in sequence
+            showNextComment();
+
+            // Reset timer on interaction
+            resetDeactivateTimer();
+        });
+
+        // Reset timer when hovering
+        newMascot?.addEventListener("mouseenter", () => {
             if (isActivated) {
-                isActivated = false;
-                mascot?.classList.remove("activated");
+                resetDeactivateTimer();
+            }
+        });
+
+        // Close bubble when clicking outside, but keep Inky activated
+        document.addEventListener("click", (e) => {
+            if (!container?.contains(e.target as Node)) {
                 bubble?.classList.remove("visible");
             }
-        }, DEACTIVATE_DELAY);
-    }
+        });
 
-    // Update source icon visibility and link
-    function updateSourceIcon(comment: any) {
-        if (!sourceLink) return;
+        // Random blinking system
+        const eyelids = document.querySelectorAll(".eyelid");
 
-        const sourceType = comment?.sourceType;
-        const sourceUrl = comment?.sourceUrl;
-        const sourceTitle = comment?.sourceTitle;
+        function doBlink(type: "full" | "double" | "half") {
+            const leftEyelid = eyelids[0];
+            const rightEyelid = eyelids[1];
 
-        // Hide all icons first
-        sourceLink.querySelector(".hn-icon")?.classList.remove("visible");
-        sourceLink.querySelector(".tns-icon")?.classList.remove("visible");
-        sourceLink.querySelector(".devops-icon")?.classList.remove("visible");
-
-        // Only show for news comments with a URL
-        if (sourceType && sourceType !== "general" && sourceUrl) {
-            sourceLink.href = sourceUrl;
-            sourceLink.title = sourceTitle || "Read article";
-            sourceLink.style.display = "flex";
-
-            // Show the appropriate icon
-            if (sourceType === "hackernews") {
-                sourceLink.querySelector(".hn-icon")?.classList.add("visible");
-            } else if (sourceType === "thenewstack") {
-                sourceLink.querySelector(".tns-icon")?.classList.add("visible");
-            } else if (sourceType === "devops") {
-                sourceLink
-                    .querySelector(".devops-icon")
-                    ?.classList.add("visible");
-            }
-        } else {
-            sourceLink.style.display = "none";
-        }
-    }
-
-    // Show next comment in sequence, or exhausted message
-    function showNextComment() {
-        if (currentIndex < shuffledComments.length) {
-            const comment = shuffledComments[currentIndex];
-            if (text) text.textContent = comment.comment || comment;
-            updateSourceIcon(comment);
-            currentIndex++;
-        } else if (!hasExhausted) {
-            // First time exhausting - show exhausted message
-            hasExhausted = true;
-            const exhaustedMsg =
-                exhaustedMessages[
-                    Math.floor(Math.random() * exhaustedMessages.length)
-                ];
-            if (text) text.textContent = exhaustedMsg;
-            updateSourceIcon(null); // Hide source for exhausted messages
-        } else {
-            // Already showed exhausted, just cycle the exhausted messages
-            const exhaustedMsg =
-                exhaustedMessages[
-                    Math.floor(Math.random() * exhaustedMessages.length)
-                ];
-            if (text) text.textContent = exhaustedMsg;
-            updateSourceIcon(null); // Hide source for exhausted messages
-        }
-        bubble?.classList.add("visible");
-    }
-
-    mascot?.addEventListener("click", (e) => {
-        e.stopPropagation();
-
-        if (!isActivated) {
-            // First click - activate Inky (he stays up)
-            isActivated = true;
-            mascot.classList.add("activated");
-        }
-
-        // Show next comment in sequence
-        showNextComment();
-
-        // Reset timer on interaction
-        resetDeactivateTimer();
-    });
-
-    // Reset timer when hovering
-    mascot?.addEventListener("mouseenter", () => {
-        if (isActivated) {
-            resetDeactivateTimer();
-        }
-    });
-
-    // Close bubble when clicking outside, but keep Inky activated
-    document.addEventListener("click", (e) => {
-        if (!container?.contains(e.target as Node)) {
-            bubble?.classList.remove("visible");
-        }
-    });
-
-    // Random blinking system
-    const eyelids = document.querySelectorAll(".eyelid");
-
-    function doBlink(type: "full" | "double" | "half") {
-        const leftEyelid = eyelids[0];
-        const rightEyelid = eyelids[1];
-
-        if (type === "full") {
-            // Single full blink
-            leftEyelid?.classList.add("blink");
-            setTimeout(() => rightEyelid?.classList.add("blink"), 20);
-            setTimeout(() => {
-                leftEyelid?.classList.remove("blink");
-                rightEyelid?.classList.remove("blink");
-            }, 150);
-        } else if (type === "double") {
-            // Double blink
-            leftEyelid?.classList.add("blink");
-            setTimeout(() => rightEyelid?.classList.add("blink"), 20);
-            setTimeout(() => {
-                leftEyelid?.classList.remove("blink");
-                rightEyelid?.classList.remove("blink");
-            }, 120);
-            setTimeout(() => {
+            if (type === "full") {
+                // Single full blink
                 leftEyelid?.classList.add("blink");
                 setTimeout(() => rightEyelid?.classList.add("blink"), 20);
-            }, 250);
-            setTimeout(() => {
-                leftEyelid?.classList.remove("blink");
-                rightEyelid?.classList.remove("blink");
-            }, 400);
-        } else if (type === "half") {
-            // Half/sleepy blink
-            leftEyelid?.classList.add("half-blink");
-            setTimeout(() => rightEyelid?.classList.add("half-blink"), 30);
-            setTimeout(() => {
-                leftEyelid?.classList.remove("half-blink");
-                rightEyelid?.classList.remove("half-blink");
-            }, 300);
-        }
-    }
-
-    function scheduleNextBlink() {
-        // Random interval between 2-6 seconds
-        const delay = 2000 + Math.random() * 4000;
-
-        setTimeout(() => {
-            // Random blink type
-            const rand = Math.random();
-            if (rand < 0.6) {
-                doBlink("full");
-            } else if (rand < 0.85) {
-                doBlink("double");
-            } else {
-                doBlink("half");
+                setTimeout(() => {
+                    leftEyelid?.classList.remove("blink");
+                    rightEyelid?.classList.remove("blink");
+                }, 150);
+            } else if (type === "double") {
+                // Double blink
+                leftEyelid?.classList.add("blink");
+                setTimeout(() => rightEyelid?.classList.add("blink"), 20);
+                setTimeout(() => {
+                    leftEyelid?.classList.remove("blink");
+                    rightEyelid?.classList.remove("blink");
+                }, 120);
+                setTimeout(() => {
+                    leftEyelid?.classList.add("blink");
+                    setTimeout(() => rightEyelid?.classList.add("blink"), 20);
+                }, 250);
+                setTimeout(() => {
+                    leftEyelid?.classList.remove("blink");
+                    rightEyelid?.classList.remove("blink");
+                }, 400);
+            } else if (type === "half") {
+                // Half/sleepy blink
+                leftEyelid?.classList.add("half-blink");
+                setTimeout(() => rightEyelid?.classList.add("half-blink"), 30);
+                setTimeout(() => {
+                    leftEyelid?.classList.remove("half-blink");
+                    rightEyelid?.classList.remove("half-blink");
+                }, 300);
             }
-            scheduleNextBlink();
-        }, delay);
+        }
+
+        function scheduleNextBlink() {
+            // Random interval between 2-6 seconds
+            const delay = 2000 + Math.random() * 4000;
+
+            setTimeout(() => {
+                // Random blink type
+                const rand = Math.random();
+                if (rand < 0.6) {
+                    doBlink("full");
+                } else if (rand < 0.85) {
+                    doBlink("double");
+                } else {
+                    doBlink("half");
+                }
+                scheduleNextBlink();
+            }, delay);
+        }
+
+        // Start blinking
+        scheduleNextBlink();
     }
 
-    // Start blinking
-    scheduleNextBlink();
+    // Initialize on first load and after View Transitions navigation
+    initInky();
+    document.addEventListener("astro:page-load", initInky);
 </script>
 
 <style>
