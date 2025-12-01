@@ -1,187 +1,221 @@
 ---
-import ThemeToggle from './ThemeToggle.astro';
+import ThemeToggle from "./ThemeToggle.astro";
 
 const navigation = [
-  { name: 'About', href: '/about' },
-  { name: 'Blog', href: '/posts' },
-  { name: 'Reading', href: '/reading' },
-  { name: 'Reviews', href: '/reviews' },
+    { name: "About", href: "/about" },
+    { name: "Blog", href: "/posts" },
+    { name: "Reading", href: "/reading" },
+    { name: "Podcasts", href: "/podcasts" },
+    { name: "Reviews", href: "/reviews" },
 ];
 ---
 
 <header class="flex items-center justify-between">
-  <a href="/" class="text-xl font-bold hover:text-accent transition-colors group">
-    <span class="terminal-text" style="view-transition-name: site-title;">
-      <span class="terminal-prompt">❯</span>
-      <span class="terminal-typed" data-text="nheer"></span>
-      <span class="terminal-cursor">_</span>
-    </span>
-  </a>
-
-  <!-- Desktop Navigation -->
-  <nav class="hidden sm:flex items-center gap-6">
-    <ul class="flex items-center gap-4">
-      {navigation.map((link) => (
-        <li>
-          <a
-            href={link.href}
-            class="text-muted hover:text-foreground transition-colors"
-          >
-            {link.name}
-          </a>
-        </li>
-      ))}
-    </ul>
-
-    <div class="flex items-center border-l border-border pl-4">
-      <ThemeToggle />
-    </div>
-  </nav>
-
-  <!-- Mobile Navigation -->
-  <div class="flex sm:hidden items-center gap-2">
-    <ThemeToggle />
-    <button
-      id="mobile-menu-button"
-      class="p-2 text-muted hover:text-foreground transition-colors"
-      aria-label="Toggle menu"
-      aria-expanded="false"
+    <a
+        href="/"
+        class="text-xl font-bold hover:text-accent transition-colors group"
     >
-      <svg class="hamburger-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-      <svg class="close-icon w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-  </div>
+        <span class="terminal-text" style="view-transition-name: site-title;">
+            <span class="terminal-prompt">❯</span>
+            <span class="terminal-typed" data-text="nheer"></span>
+            <span class="terminal-cursor">_</span>
+        </span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden sm:flex items-center gap-6">
+        <ul class="flex items-center gap-4">
+            {
+                navigation.map((link) => (
+                    <li>
+                        <a
+                            href={link.href}
+                            class="text-muted hover:text-foreground transition-colors"
+                        >
+                            {link.name}
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
+
+        <div class="flex items-center border-l border-border pl-4">
+            <ThemeToggle />
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="flex sm:hidden items-center gap-2">
+        <ThemeToggle />
+        <button
+            id="mobile-menu-button"
+            class="p-2 text-muted hover:text-foreground transition-colors"
+            aria-label="Toggle menu"
+            aria-expanded="false"
+        >
+            <svg
+                class="hamburger-icon w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            <svg
+                class="close-icon w-6 h-6 hidden"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
 </header>
 
 <!-- Mobile Menu Overlay -->
 <nav id="mobile-menu" class="mobile-menu sm:hidden">
-  <ul class="flex flex-col gap-4 p-6 bg-background border-b border-border">
-    {navigation.map((link) => (
-      <li>
-        <a
-          href={link.href}
-          class="block text-lg text-muted hover:text-foreground transition-colors"
-        >
-          {link.name}
-        </a>
-      </li>
-    ))}
-  </ul>
+    <ul class="flex flex-col gap-4 p-6 bg-background border-b border-border">
+        {
+            navigation.map((link) => (
+                <li>
+                    <a
+                        href={link.href}
+                        class="block text-lg text-muted hover:text-foreground transition-colors"
+                    >
+                        {link.name}
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
 </nav>
 
 <style>
-  .terminal-text {
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-  }
+    .terminal-text {
+        font-family:
+            "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono",
+            "Source Code Pro", monospace;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
+    }
 
-  .terminal-prompt {
-    color: var(--color-accent);
-    opacity: 0.8;
-    font-weight: normal;
-  }
+    .terminal-prompt {
+        color: var(--color-accent);
+        opacity: 0.8;
+        font-weight: normal;
+    }
 
-  .terminal-typed {
-    position: relative;
-  }
+    .terminal-typed {
+        position: relative;
+    }
 
-  .terminal-cursor {
-    color: var(--color-accent);
-    animation: blink 1s step-end infinite;
-    font-weight: normal;
-  }
+    .terminal-cursor {
+        color: var(--color-accent);
+        animation: blink 1s step-end infinite;
+        font-weight: normal;
+    }
 
-  @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
+    @keyframes blink {
+        0%,
+        50% {
+            opacity: 1;
+        }
+        51%,
+        100% {
+            opacity: 0;
+        }
+    }
 
-  /* Hover effect - re-type animation */
-  .group:hover .terminal-cursor {
-    animation: blink 0.5s step-end infinite;
-  }
+    /* Hover effect - re-type animation */
+    .group:hover .terminal-cursor {
+        animation: blink 0.5s step-end infinite;
+    }
 
-  /* Mobile menu styles */
-  .mobile-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 50;
-  }
+    /* Mobile menu styles */
+    .mobile-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 50;
+    }
 
-  .mobile-menu.open {
-    display: block;
-  }
+    .mobile-menu.open {
+        display: block;
+    }
 </style>
 
 <script>
-  function initTerminalTyping() {
-    const typedElements = document.querySelectorAll('.terminal-typed');
+    function initTerminalTyping() {
+        const typedElements = document.querySelectorAll(".terminal-typed");
 
-    typedElements.forEach((el) => {
-      const text = el.getAttribute('data-text') || '';
-      const htmlEl = el as HTMLElement;
+        typedElements.forEach((el) => {
+            const text = el.getAttribute("data-text") || "";
+            const htmlEl = el as HTMLElement;
 
-      // Check if already typed (for view transitions)
-      if (htmlEl.textContent === text) return;
+            // Check if already typed (for view transitions)
+            if (htmlEl.textContent === text) return;
 
-      htmlEl.textContent = '';
-      let i = 0;
+            htmlEl.textContent = "";
+            let i = 0;
 
-      function type() {
-        if (i < text.length) {
-          htmlEl.textContent += text.charAt(i);
-          i++;
-          setTimeout(type, 100 + Math.random() * 50);
-        }
-      }
+            function type() {
+                if (i < text.length) {
+                    htmlEl.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, 100 + Math.random() * 50);
+                }
+            }
 
-      // Small delay before starting
-      setTimeout(type, 300);
-    });
-  }
+            // Small delay before starting
+            setTimeout(type, 300);
+        });
+    }
 
-  // Run on initial load
-  initTerminalTyping();
+    // Run on initial load
+    initTerminalTyping();
 
-  // Run after view transitions
-  document.addEventListener('astro:after-swap', initTerminalTyping);
+    // Run after view transitions
+    document.addEventListener("astro:after-swap", initTerminalTyping);
 
-  // Mobile menu toggle
-  function initMobileMenu() {
-    const menuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const hamburgerIcon = menuButton?.querySelector('.hamburger-icon');
-    const closeIcon = menuButton?.querySelector('.close-icon');
+    // Mobile menu toggle
+    function initMobileMenu() {
+        const menuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+        const hamburgerIcon = menuButton?.querySelector(".hamburger-icon");
+        const closeIcon = menuButton?.querySelector(".close-icon");
 
-    if (!menuButton || !mobileMenu || !hamburgerIcon || !closeIcon) return;
+        if (!menuButton || !mobileMenu || !hamburgerIcon || !closeIcon) return;
 
-    menuButton.addEventListener('click', () => {
-      const isOpen = mobileMenu.classList.toggle('open');
-      menuButton.setAttribute('aria-expanded', String(isOpen));
-      hamburgerIcon.classList.toggle('hidden', isOpen);
-      closeIcon.classList.toggle('hidden', !isOpen);
-    });
+        menuButton.addEventListener("click", () => {
+            const isOpen = mobileMenu.classList.toggle("open");
+            menuButton.setAttribute("aria-expanded", String(isOpen));
+            hamburgerIcon.classList.toggle("hidden", isOpen);
+            closeIcon.classList.toggle("hidden", !isOpen);
+        });
 
-    // Close menu when clicking a link
-    mobileMenu.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.remove('open');
-        menuButton.setAttribute('aria-expanded', 'false');
-        hamburgerIcon.classList.remove('hidden');
-        closeIcon.classList.add('hidden');
-      });
-    });
-  }
+        // Close menu when clicking a link
+        mobileMenu.querySelectorAll("a").forEach((link) => {
+            link.addEventListener("click", () => {
+                mobileMenu.classList.remove("open");
+                menuButton.setAttribute("aria-expanded", "false");
+                hamburgerIcon.classList.remove("hidden");
+                closeIcon.classList.add("hidden");
+            });
+        });
+    }
 
-  initMobileMenu();
-  document.addEventListener('astro:after-swap', initMobileMenu);
+    initMobileMenu();
+    document.addEventListener("astro:after-swap", initMobileMenu);
 </script>

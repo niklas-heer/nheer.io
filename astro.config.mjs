@@ -19,6 +19,13 @@ export default defineConfig({
         limitInputPixels: false,
       },
     },
+    // Allow remote images from Pocket Casts CDN
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "static.pocketcasts.com",
+      },
+    ],
   },
   site: "https://nheer.com",
   integrations: [

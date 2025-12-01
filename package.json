@@ -16,6 +16,7 @@
     "astro-expressive-code": "^0.41.3",
     "medium-zoom": "^1.1.0",
     "node-emoji": "^2.2.0",
+    "pg": "^8.16.3",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
