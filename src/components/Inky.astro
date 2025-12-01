@@ -846,6 +846,29 @@ const comments = await getInkyComments(5);
         "I've seen cleaner git histories in the Mariana Trench.",
     ];
 
+    // Shuffle array using Fisher-Yates algorithm
+    function shuffleArray<T>(array: T[]): T[] {
+        const shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
+    // Track shown comments - shuffle on init and cycle through
+    let shuffledComments = shuffleArray(comments);
+    let currentIndex = 0;
+    let hasExhausted = false;
+
+    const exhaustedMessages = [
+        "That's all I've got... for now. My tentacles are tired.",
+        "I've spilled all my ink! Check back tomorrow for fresh takes.",
+        "You've drained my ocean of wisdom. Come back later!",
+        "No more secrets from the deep. I need to recharge my snark.",
+        "*blub blub* That's everything. Even octopuses need a break.",
+    ];
+
     // Reset deactivation timer
     function resetDeactivateTimer() {
         if (deactivateTimer) {
@@ -860,11 +883,28 @@ const comments = await getInkyComments(5);
         }, DEACTIVATE_DELAY);
     }
 
-    // Show a random comment (always new)
-    function showNewComment() {
-        const randomComment =
-            comments[Math.floor(Math.random() * comments.length)];
-        if (text) text.textContent = randomComment.comment || randomComment;
+    // Show next comment in sequence, or exhausted message
+    function showNextComment() {
+        if (currentIndex < shuffledComments.length) {
+            const comment = shuffledComments[currentIndex];
+            if (text) text.textContent = comment.comment || comment;
+            currentIndex++;
+        } else if (!hasExhausted) {
+            // First time exhausting - show exhausted message
+            hasExhausted = true;
+            const exhaustedMsg =
+                exhaustedMessages[
+                    Math.floor(Math.random() * exhaustedMessages.length)
+                ];
+            if (text) text.textContent = exhaustedMsg;
+        } else {
+            // Already showed exhausted, just cycle the exhausted messages
+            const exhaustedMsg =
+                exhaustedMessages[
+                    Math.floor(Math.random() * exhaustedMessages.length)
+                ];
+            if (text) text.textContent = exhaustedMsg;
+        }
         bubble?.classList.add("visible");
     }
 
@@ -877,8 +917,8 @@ const comments = await getInkyComments(5);
             mascot.classList.add("activated");
         }
 
-        // Always show a new comment on click
-        showNewComment();
+        // Show next comment in sequence
+        showNextComment();
 
         // Reset timer on interaction
         resetDeactivateTimer();
