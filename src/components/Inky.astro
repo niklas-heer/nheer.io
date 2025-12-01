@@ -9,7 +9,48 @@ const comments = await getInkyComments(5);
     <!-- Speech bubble (hidden by default) -->
     <div class="inky-bubble" id="inky-bubble">
         <p class="inky-text" id="inky-text"></p>
-        <span class="inky-name">- Inky</span>
+        <div class="inky-footer">
+            <span class="inky-name">- Inky</span>
+            <a
+                class="inky-source"
+                id="inky-source"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                title=""
+            >
+                <!-- Hacker News icon -->
+                <svg
+                    class="source-icon hn-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M0 0v24h24V0H0zm12.3 12.5l3.6-6.5h1.7l-4.5 8v5.5h-1.6V14l-4.5-8h1.8l3.5 6.5z"
+                    ></path>
+                </svg>
+                <!-- The New Stack icon (generic news/article icon) -->
+                <svg
+                    class="source-icon tns-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+                    ></path>
+                </svg>
+                <!-- DevOps.com icon (gear/cog icon) -->
+                <svg
+                    class="source-icon devops-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"
+                    ></path>
+                </svg>
+            </a>
+        </div>
     </div>
 
     <!-- Inky the Octopus -->
@@ -835,6 +876,9 @@ const comments = await getInkyComments(5);
     const mascot = document.getElementById("inky-mascot");
     const bubble = document.getElementById("inky-bubble");
     const text = document.getElementById("inky-text");
+    const sourceLink = document.getElementById(
+        "inky-source",
+    ) as HTMLAnchorElement;
 
     let isActivated = false;
     let deactivateTimer: ReturnType<typeof setTimeout> | null = null;
@@ -883,11 +927,46 @@ const comments = await getInkyComments(5);
         }, DEACTIVATE_DELAY);
     }
 
+    // Update source icon visibility and link
+    function updateSourceIcon(comment: any) {
+        if (!sourceLink) return;
+
+        const sourceType = comment?.sourceType;
+        const sourceUrl = comment?.sourceUrl;
+        const sourceTitle = comment?.sourceTitle;
+
+        // Hide all icons first
+        sourceLink.querySelector(".hn-icon")?.classList.remove("visible");
+        sourceLink.querySelector(".tns-icon")?.classList.remove("visible");
+        sourceLink.querySelector(".devops-icon")?.classList.remove("visible");
+
+        // Only show for news comments with a URL
+        if (sourceType && sourceType !== "general" && sourceUrl) {
+            sourceLink.href = sourceUrl;
+            sourceLink.title = sourceTitle || "Read article";
+            sourceLink.style.display = "flex";
+
+            // Show the appropriate icon
+            if (sourceType === "hackernews") {
+                sourceLink.querySelector(".hn-icon")?.classList.add("visible");
+            } else if (sourceType === "thenewstack") {
+                sourceLink.querySelector(".tns-icon")?.classList.add("visible");
+            } else if (sourceType === "devopscom") {
+                sourceLink
+                    .querySelector(".devops-icon")
+                    ?.classList.add("visible");
+            }
+        } else {
+            sourceLink.style.display = "none";
+        }
+    }
+
     // Show next comment in sequence, or exhausted message
     function showNextComment() {
         if (currentIndex < shuffledComments.length) {
             const comment = shuffledComments[currentIndex];
             if (text) text.textContent = comment.comment || comment;
+            updateSourceIcon(comment);
             currentIndex++;
         } else if (!hasExhausted) {
             // First time exhausting - show exhausted message
@@ -897,6 +976,7 @@ const comments = await getInkyComments(5);
                     Math.floor(Math.random() * exhaustedMessages.length)
                 ];
             if (text) text.textContent = exhaustedMsg;
+            updateSourceIcon(null); // Hide source for exhausted messages
         } else {
             // Already showed exhausted, just cycle the exhausted messages
             const exhaustedMsg =
@@ -904,6 +984,7 @@ const comments = await getInkyComments(5);
                     Math.floor(Math.random() * exhaustedMessages.length)
                 ];
             if (text) text.textContent = exhaustedMsg;
+            updateSourceIcon(null); // Hide source for exhausted messages
         }
         bubble?.classList.add("visible");
     }
@@ -1128,11 +1209,44 @@ const comments = await getInkyComments(5);
         color: var(--color-foreground);
     }
 
-    .inky-name {
-        display: block;
+    .inky-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-top: 0.5rem;
+    }
+
+    .inky-name {
         font-size: 0.75rem;
         color: #bc3eff;
         font-style: italic;
+    }
+
+    .inky-source {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        color: var(--color-foreground);
+        opacity: 0.6;
+        transition:
+            opacity 0.2s ease,
+            color 0.2s ease;
+    }
+
+    .inky-source:hover {
+        opacity: 1;
+        color: #bc3eff;
+    }
+
+    .source-icon {
+        display: none;
+        width: 16px;
+        height: 16px;
+    }
+
+    .source-icon.visible {
+        display: block;
     }
 </style>
