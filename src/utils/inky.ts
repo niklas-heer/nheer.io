@@ -13,9 +13,11 @@ export interface InkyComment {
 }
 
 /**
- * Get random active Inky comments for the page
+ * Get Inky comments for the page (fetched at build time)
+ * - News comments: Get the most recent ones (they're timely)
+ * - General comments: Get all of them (they're timeless, randomized at runtime via JS)
  */
-export async function getInkyComments(count = 5): Promise<InkyComment[]> {
+export async function getInkyComments(): Promise<InkyComment[]> {
   const connectionString = import.meta.env.DATABASE_URL;
   if (!connectionString) {
     console.warn("DATABASE_URL not set, using fallback comments");
@@ -27,23 +29,35 @@ export async function getInkyComments(count = 5): Promise<InkyComment[]> {
   try {
     await client.connect();
 
-    // Get random mix of comments, preferring less-used ones
-    const result = await client.query(
+    // Get recent news comments (from the last 7 days)
+    const newsResult = await client.query(
       `SELECT id, comment, source_type, source_title, source_url
        FROM inky_comments
        WHERE is_active = true
-       ORDER BY used_count ASC, RANDOM()
-       LIMIT $1`,
-      [count],
+         AND source_type != 'general'
+         AND created_at > NOW() - INTERVAL '7 days'
+       ORDER BY created_at DESC
+       LIMIT 10`,
+    );
+
+    // Get all general comments (timeless humor)
+    const generalResult = await client.query(
+      `SELECT id, comment, source_type, source_title, source_url
+       FROM inky_comments
+       WHERE is_active = true
+         AND source_type = 'general'
+       ORDER BY created_at DESC`,
     );
 
     await client.end();
 
-    if (result.rows.length === 0) {
+    const allComments = [...newsResult.rows, ...generalResult.rows];
+
+    if (allComments.length === 0) {
       return getFallbackComments();
     }
 
-    return result.rows.map((row) => ({
+    return allComments.map((row) => ({
       id: row.id,
       comment: row.comment,
       sourceType: row.source_type,
