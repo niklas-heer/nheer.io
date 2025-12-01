@@ -291,17 +291,19 @@ async function syncInkyComments() {
       }
     }
 
-    // Check if we need more general comments
+    // Only generate general comments if running low (they're filler, not the main attraction)
     const generalCount = await client.query(
       `SELECT COUNT(*) FROM inky_comments WHERE source_type = 'general' AND is_active = true`,
     );
     const currentGeneralCount = parseInt(generalCount.rows[0].count);
     console.log(`\nCurrent general comments: ${currentGeneralCount}`);
 
-    // Keep pool of ~20-30 general comments, add 3 new ones if below 20
-    if (currentGeneralCount < 20) {
-      const toGenerate = Math.min(5, 25 - currentGeneralCount);
-      console.log(`Generating ${toGenerate} new general comments...`);
+    // Only add 2 new general comments if below 10
+    if (currentGeneralCount < 10) {
+      const toGenerate = 2;
+      console.log(
+        `Running low on general comments, generating ${toGenerate}...`,
+      );
 
       const generalComments = await generateGeneralComments(
         toGenerate,
@@ -317,19 +319,38 @@ async function syncInkyComments() {
         );
         console.log(`  Added: "${c.comment.slice(0, 50)}..."`);
       }
+    } else {
+      console.log("General comments pool is healthy, skipping generation");
     }
 
-    // Retire old news comments (older than 7 days)
-    const retired = await client.query(
-      `UPDATE inky_comments
-       SET is_active = false
+    // Delete old news comments (older than 7 days)
+    const deleted = await client.query(
+      `DELETE FROM inky_comments
        WHERE source_type != 'general'
          AND created_at < NOW() - INTERVAL '7 days'
-         AND is_active = true
        RETURNING id`,
     );
-    if (retired.rows.length > 0) {
-      console.log(`\nRetired ${retired.rows.length} old news comments`);
+    if (deleted.rows.length > 0) {
+      console.log(
+        `\nDeleted ${deleted.rows.length} old news comments (>7 days)`,
+      );
+    }
+
+    // Delete oldest general comments if we have too many (keep max 30)
+    const excessGeneral = await client.query(
+      `DELETE FROM inky_comments
+       WHERE id IN (
+         SELECT id FROM inky_comments
+         WHERE source_type = 'general'
+         ORDER BY created_at ASC
+         LIMIT GREATEST(0, (SELECT COUNT(*) FROM inky_comments WHERE source_type = 'general') - 15)
+       )
+       RETURNING id`,
+    );
+    if (excessGeneral.rows.length > 0) {
+      console.log(
+        `Deleted ${excessGeneral.rows.length} excess general comments (keeping max 15)`,
+      );
     }
 
     // Summary

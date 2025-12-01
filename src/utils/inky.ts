@@ -51,19 +51,49 @@ export async function getInkyComments(): Promise<InkyComment[]> {
 
     await client.end();
 
-    const allComments = [...newsResult.rows, ...generalResult.rows];
-
-    if (allComments.length === 0) {
-      return getFallbackComments();
-    }
-
-    return allComments.map((row) => ({
+    const newsComments = newsResult.rows.map((row) => ({
       id: row.id,
       comment: row.comment,
       sourceType: row.source_type,
       sourceTitle: row.source_title,
       sourceUrl: row.source_url,
     }));
+
+    const generalComments = generalResult.rows.map((row) => ({
+      id: row.id,
+      comment: row.comment,
+      sourceType: row.source_type,
+      sourceTitle: row.source_title,
+      sourceUrl: row.source_url,
+    }));
+
+    if (newsComments.length === 0 && generalComments.length === 0) {
+      return getFallbackComments();
+    }
+
+    // Interleave: 2-3 news comments, then 1 general, repeat
+    // This keeps news as priority but mixes in general for variety
+    const interleaved: InkyComment[] = [];
+    let newsIndex = 0;
+    let generalIndex = 0;
+
+    while (
+      newsIndex < newsComments.length ||
+      generalIndex < generalComments.length
+    ) {
+      // Add 2-3 news comments
+      const newsToAdd = Math.min(3, newsComments.length - newsIndex);
+      for (let i = 0; i < newsToAdd; i++) {
+        interleaved.push(newsComments[newsIndex++]);
+      }
+
+      // Add 1 general comment
+      if (generalIndex < generalComments.length) {
+        interleaved.push(generalComments[generalIndex++]);
+      }
+    }
+
+    return interleaved;
   } catch (error) {
     console.error("Failed to fetch Inky comments:", error);
     await client.end();
