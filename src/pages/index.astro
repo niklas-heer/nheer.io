@@ -29,6 +29,16 @@ const yesterdayMinutes = yesterdayStats
     ? Math.round(yesterdayStats.timeListened / 60)
     : null;
 
+// Import GitHub data for projects
+import { fetchGitHubData } from "../utils/github";
+
+const githubData = await fetchGitHubData();
+const totalStars =
+    githubData?.pinnedRepos.reduce(
+        (sum, repo) => sum + repo.stargazerCount,
+        0,
+    ) || 0;
+
 function getPostUrl(post: (typeof latestPosts)[0]): string {
     const date = new Date(post.data.date);
     const year = date.getFullYear();
@@ -226,15 +236,34 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
             <a href="/podcasts" class="bento-cta">See listening stats →</a>
         </div>
 
+        <!-- Projects Card -->
+        <div class="bento-card bento-small">
+            <div class="bento-card-header">
+                <span class="bento-icon">💻</span>
+                <h2>Projects</h2>
+            </div>
+            {
+                totalStars > 0 ? (
+                    <div class="bento-projects-stat">
+                        <span class="projects-stat-number">{totalStars}</span>
+                        <span class="projects-stat-label">GitHub stars</span>
+                    </div>
+                ) : (
+                    <p class="bento-text">Open source projects and tools.</p>
+                )
+            }
+            <a href="/projects" class="bento-cta">See projects →</a>
+        </div>
+
         <!-- About Card -->
-        <div class="bento-card bento-wide glass-card">
+        <div class="bento-card bento-small glass-card">
             <div class="bento-card-header">
                 <span class="bento-icon">👋</span>
                 <h2>About</h2>
             </div>
             <p class="bento-text">
-                Engineering Manager for a platform engineering team at
-                Tradebyte, building tools that make developers' lives easier.
+                Engineering Manager building an Internal Developer Platform at
+                Tradebyte.
             </p>
             <a href="/about" class="bento-cta">Learn more →</a>
         </div>
@@ -623,6 +652,36 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
     }
 
     .podcast-stat-label {
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .bento-projects-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        gap: 0.25rem;
+    }
+
+    .projects-stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(
+            135deg,
+            var(--color-accent),
+            var(--color-green)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .projects-stat-label {
         font-size: 0.875rem;
         color: var(--color-muted);
         text-transform: uppercase;
