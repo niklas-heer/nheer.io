@@ -1,12 +1,13 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
 
-const navigation = [
-    { name: "About", href: "/about" },
-    { name: "Blog", href: "/posts" },
-    { name: "Reading", href: "/reading" },
-    { name: "Podcasts", href: "/podcasts" },
-    { name: "Reviews", href: "/reviews" },
+const navItems = [
+    { name: "Blog", href: "/posts", icon: "blog" },
+    { name: "Reading", href: "/reading", icon: "reading" },
+    { name: "Podcasts", href: "/podcasts", icon: "podcasts" },
+    { name: "Projects", href: "/projects", icon: "projects" },
+    { name: "Reviews", href: "/reviews", icon: "reviews" },
+    { name: "About", href: "/about", icon: "about" },
 ];
 ---
 
@@ -24,20 +25,36 @@ const navigation = [
 
     <!-- Desktop Navigation -->
     <nav class="hidden sm:flex items-center gap-6">
-        <ul class="flex items-center gap-4">
-            {
-                navigation.map((link) => (
-                    <li>
-                        <a
-                            href={link.href}
-                            class="text-muted hover:text-foreground transition-colors"
-                        >
-                            {link.name}
+        <div class="nav-menu-container">
+            <button
+                class="nav-menu-trigger text-muted hover:text-foreground transition-colors"
+                aria-expanded="false"
+                aria-haspopup="true"
+            >
+                <span>Menu</span>
+                <svg
+                    class="nav-menu-icon"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path d="M6 9l6 6 6-6"></path>
+                </svg>
+            </button>
+            <div class="nav-dropdown">
+                {
+                    navItems.map((link) => (
+                        <a href={link.href} class="nav-dropdown-item">
+                            <span class="nav-icon" data-icon={link.icon} />
+                            <span>{link.name}</span>
                         </a>
-                    </li>
-                ))
-            }
-        </ul>
+                    ))
+                }
+            </div>
+        </div>
 
         <div class="flex items-center border-l border-border pl-4">
             <ThemeToggle />
@@ -83,21 +100,125 @@ const navigation = [
 
 <!-- Mobile Menu Overlay -->
 <nav id="mobile-menu" class="mobile-menu sm:hidden">
-    <ul class="flex flex-col gap-4 p-6 bg-background border-b border-border">
+    <ul class="flex flex-col gap-2 p-4 bg-background border-b border-border">
         {
-            navigation.map((link) => (
+            navItems.map((link) => (
                 <li>
                     <a
                         href={link.href}
-                        class="block text-lg text-muted hover:text-foreground transition-colors"
+                        class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-lg text-muted hover:text-foreground hover:bg-surface transition-all"
                     >
-                        {link.name}
+                        <span class="nav-icon" data-icon={link.icon} />
+                        <span>{link.name}</span>
                     </a>
                 </li>
             ))
         }
     </ul>
 </nav>
+
+<!-- SVG Icon Templates (hidden, used by JS) -->
+<template id="icon-blog">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+        ></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+        ></path>
+    </svg>
+</template>
+
+<template id="icon-reading">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+        ></path>
+    </svg>
+</template>
+
+<template id="icon-podcasts">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+        <path
+            d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"
+        ></path>
+    </svg>
+</template>
+
+<template id="icon-projects">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+    </svg>
+</template>
+
+<template id="icon-reviews">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+        ></polygon>
+    </svg>
+</template>
+
+<template id="icon-about">
+    <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    >
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+</template>
 
 <style>
     .terminal-text {
@@ -141,6 +262,84 @@ const navigation = [
         animation: blink 0.5s step-end infinite;
     }
 
+    /* Desktop More Dropdown */
+    .nav-menu-container {
+        position: relative;
+    }
+
+    .nav-menu-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: inherit;
+        font-family: inherit;
+        padding: 0;
+    }
+
+    .nav-menu-icon {
+        transition: transform 0.2s ease;
+    }
+
+    .nav-menu-container:hover .nav-menu-icon,
+    .nav-menu-container:focus-within .nav-menu-icon {
+        transform: rotate(180deg);
+    }
+
+    .nav-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        min-width: 160px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: all 0.2s ease;
+        z-index: 100;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-menu-container:hover .nav-dropdown,
+    .nav-menu-container:focus-within .nav-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .nav-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem 0.75rem;
+        border-radius: 0.5rem;
+        color: var(--color-muted);
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+
+    .nav-dropdown-item:hover {
+        background: var(--color-background);
+        color: var(--color-foreground);
+    }
+
+    .nav-dropdown-item .nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-muted);
+    }
+
+    .nav-dropdown-item:hover .nav-icon {
+        color: var(--color-accent);
+    }
+
     /* Mobile menu styles */
     .mobile-menu {
         display: none;
@@ -153,6 +352,19 @@ const navigation = [
 
     .mobile-menu.open {
         display: block;
+    }
+
+    .mobile-nav-link .nav-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        color: var(--color-muted);
+    }
+
+    .mobile-nav-link:hover .nav-icon {
+        color: var(--color-accent);
     }
 </style>
 
@@ -218,4 +430,26 @@ const navigation = [
 
     initMobileMenu();
     document.addEventListener("astro:after-swap", initMobileMenu);
+
+    // Inject SVG icons into nav items
+    function initNavIcons() {
+        const navIcons = document.querySelectorAll(".nav-icon");
+
+        navIcons.forEach((iconContainer) => {
+            const iconName = iconContainer.getAttribute("data-icon");
+            if (!iconName) return;
+
+            const template = document.getElementById(
+                `icon-${iconName}`,
+            ) as HTMLTemplateElement;
+            if (!template) return;
+
+            // Clear and inject icon
+            iconContainer.innerHTML = "";
+            iconContainer.appendChild(template.content.cloneNode(true));
+        });
+    }
+
+    initNavIcons();
+    document.addEventListener("astro:after-swap", initNavIcons);
 </script>
