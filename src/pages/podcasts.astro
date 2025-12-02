@@ -208,10 +208,9 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
                                 {yesterdayStats.episodesCompleted > 0 && (
                                     <span class="stat-yesterday-episodes">
                                         {yesterdayStats.episodesCompleted}{" "}
-                                        episode
-                                        {yesterdayStats.episodesCompleted > 1
-                                            ? "s"
-                                            : ""}{" "}
+                                        {yesterdayStats.episodesCompleted === 1
+                                            ? "episode"
+                                            : "episodes"}{" "}
                                         finished
                                     </span>
                                 )}
@@ -268,7 +267,7 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
                         <span class="stat-mini-value">
                             {daysSinceStart.toLocaleString()}
                         </span>
-                        <span class="stat-mini-label">days tracking</span>
+                        <span class="stat-mini-label">days listening</span>
                     </div>
                 </div>
 
@@ -276,6 +275,17 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
                 <div class="monthly-chart">
                     <h3 class="chart-title">Listening in {monthName}</h3>
                     <div class="chart-container">
+                        <div class="chart-y-axis">
+                            <span class="chart-y-label">
+                                {maxMinutes > 0 ? maxMinutes : ""}
+                            </span>
+                            <span class="chart-y-label">
+                                {maxMinutes > 0
+                                    ? Math.round(maxMinutes / 2)
+                                    : ""}
+                            </span>
+                            <span class="chart-y-label">0</span>
+                        </div>
                         <div class="chart-bars">
                             {chartData.map(({ day, minutes }) => {
                                 const height =
@@ -819,6 +829,24 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
     .chart-container {
         position: relative;
         height: 120px;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .chart-y-axis {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: calc(100% - 20px);
+        padding-bottom: 20px;
+        min-width: 30px;
+    }
+
+    .chart-y-label {
+        font-size: 0.65rem;
+        color: var(--color-text-muted);
+        line-height: 1;
     }
 
     .chart-bars {
@@ -826,6 +854,7 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
         align-items: flex-end;
         height: 100%;
         gap: 2px;
+        flex: 1;
     }
 
     .chart-bar-wrapper {
