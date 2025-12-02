@@ -23,11 +23,15 @@ export default defineConfig({
         limitInputPixels: false,
       },
     },
-    // Allow remote images from Pocket Casts CDN
+    // Allow remote images from external sources
     remotePatterns: [
       {
         protocol: "https",
         hostname: "static.pocketcasts.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ghchart.rshah.org",
       },
     ],
   },
