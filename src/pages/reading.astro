@@ -1,6 +1,14 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { fetchReadingData, getAuthors, getBookUrl, getLatestRead, getDaysReading, getReviewUrl, type UserBook } from '../utils/hardcover';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+    fetchReadingData,
+    getAuthors,
+    getBookUrl,
+    getLatestRead,
+    getDaysReading,
+    getReviewUrl,
+    type UserBook,
+} from "../utils/hardcover";
 
 const readingData = await fetchReadingData();
 const profile = readingData?.profile;
@@ -10,10 +18,10 @@ const recentlyRead = readingData?.recentlyRead || [];
 // Calculate stats for current year
 const currentYear = new Date().getFullYear();
 const booksThisYear = recentlyRead.filter((item) => {
-  const read = getLatestRead(item);
-  const finishedDate = read?.finished_at || item.last_read_date;
-  if (!finishedDate) return false;
-  return new Date(finishedDate).getFullYear() === currentYear;
+    const read = getLatestRead(item);
+    const finishedDate = read?.finished_at || item.last_read_date;
+    if (!finishedDate) return false;
+    return new Date(finishedDate).getFullYear() === currentYear;
 });
 
 const activeGoal = profile?.goals?.[0];
@@ -23,36 +31,45 @@ const goalProgress = (booksRead / goalTarget) * 100;
 
 // Calculate pages read this year and pages per day
 const pagesThisYear = booksThisYear.reduce((total, item) => {
-  return total + (item.book.pages || 0);
+    return total + (item.book.pages || 0);
 }, 0);
 
 const startOfYear = new Date(currentYear, 0, 1);
 const today = new Date();
-const daysIntoYear = Math.ceil((today.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24));
-const pagesPerDay = daysIntoYear > 0 ? Math.round(pagesThisYear / daysIntoYear) : 0;
+const daysIntoYear = Math.ceil(
+    (today.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24),
+);
+const pagesPerDay =
+    daysIntoYear > 0 ? Math.round(pagesThisYear / daysIntoYear) : 0;
 
 // Calculate average days per book this year (only for books with both start and end dates)
 const booksWithDuration = booksThisYear.filter((item) => {
-  const read = getLatestRead(item);
-  return read?.started_at && read?.finished_at;
+    const read = getLatestRead(item);
+    return read?.started_at && read?.finished_at;
 });
 const totalDaysReading = booksWithDuration.reduce((total, item) => {
-  const read = getLatestRead(item);
-  if (!read?.started_at || !read?.finished_at) return total;
-  const start = new Date(read.started_at);
-  const end = new Date(read.finished_at);
-  return total + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const read = getLatestRead(item);
+    if (!read?.started_at || !read?.finished_at) return total;
+    const start = new Date(read.started_at);
+    const end = new Date(read.finished_at);
+    return (
+        total +
+        Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    );
 }, 0);
-const avgDaysPerBook = booksWithDuration.length > 0 ? Math.round(totalDaysReading / booksWithDuration.length) : null;
+const avgDaysPerBook =
+    booksWithDuration.length > 0
+        ? Math.round(totalDaysReading / booksWithDuration.length)
+        : null;
 
 // Calculate books per year for the chart
 const booksByYear = new Map<number, number>();
 recentlyRead.forEach((item) => {
-  const read = getLatestRead(item);
-  const finishedDate = read?.finished_at || item.last_read_date;
-  if (!finishedDate) return;
-  const year = new Date(finishedDate).getFullYear();
-  booksByYear.set(year, (booksByYear.get(year) || 0) + 1);
+    const read = getLatestRead(item);
+    const finishedDate = read?.finished_at || item.last_read_date;
+    if (!finishedDate) return;
+    const year = new Date(finishedDate).getFullYear();
+    booksByYear.set(year, (booksByYear.get(year) || 0) + 1);
 });
 
 // Sort years and get max for scaling
@@ -60,804 +77,1006 @@ const yearsData = Array.from(booksByYear.entries()).sort((a, b) => a[0] - b[0]);
 const maxBooks = Math.max(...yearsData.map(([_, count]) => count), 1);
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '';
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(new Date(dateStr));
+    if (!dateStr) return "";
+    return new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(dateStr));
 }
 
 function formatMonthYear(dateStr: string): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    year: 'numeric'
-  }).format(new Date(dateStr));
+    return new Intl.DateTimeFormat("en-US", {
+        month: "long",
+        year: "numeric",
+    }).format(new Date(dateStr));
 }
 
 // Group books by year and month
-function groupByYearMonth(books: UserBook[]): Map<string, Map<string, UserBook[]>> {
-  const grouped = new Map<string, Map<string, UserBook[]>>();
+function groupByYearMonth(
+    books: UserBook[],
+): Map<string, Map<string, UserBook[]>> {
+    const grouped = new Map<string, Map<string, UserBook[]>>();
 
-  books.forEach((item) => {
-    const read = getLatestRead(item);
-    const finishedDate = read?.finished_at || item.last_read_date;
-    if (!finishedDate) return;
+    books.forEach((item) => {
+        const read = getLatestRead(item);
+        const finishedDate = read?.finished_at || item.last_read_date;
+        if (!finishedDate) return;
 
-    const date = new Date(finishedDate);
-    const year = date.getFullYear().toString();
-    const monthKey = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const date = new Date(finishedDate);
+        const year = date.getFullYear().toString();
+        const monthKey = `${year}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-    if (!grouped.has(year)) {
-      grouped.set(year, new Map());
-    }
-    const yearMap = grouped.get(year)!;
+        if (!grouped.has(year)) {
+            grouped.set(year, new Map());
+        }
+        const yearMap = grouped.get(year)!;
 
-    if (!yearMap.has(monthKey)) {
-      yearMap.set(monthKey, []);
-    }
-    yearMap.get(monthKey)!.push(item);
-  });
+        if (!yearMap.has(monthKey)) {
+            yearMap.set(monthKey, []);
+        }
+        yearMap.get(monthKey)!.push(item);
+    });
 
-  return grouped;
+    return grouped;
 }
 
 const groupedBooks = groupByYearMonth(recentlyRead);
-const sortedYears = Array.from(groupedBooks.keys()).sort((a, b) => Number(b) - Number(a));
+const sortedYears = Array.from(groupedBooks.keys()).sort(
+    (a, b) => Number(b) - Number(a),
+);
 ---
 
-<BaseLayout title="Reading" description="What I'm currently reading and recently finished books">
-  <h1 class="text-3xl font-bold mb-2" style="view-transition-name: page-title;">
-    Reading
-  </h1>
-  <p class="text-muted mb-8">
-    My reading journey, tracked with <a href="https://hardcover.app" target="_blank" rel="noopener">Hardcover</a>.
-  </p>
-
-  {!readingData && (
-    <div class="text-muted italic">
-      Reading data unavailable. Check back later!
-    </div>
-  )}
-
-  {/* Stats Section */}
-  {readingData && (
-    <section class="mb-12">
-      <div class="stats-grid">
-        {/* Profile Card */}
-        {profile && (
-          <a
-            href={`https://hardcover.app/@${profile.username}`}
+<BaseLayout
+    title="Reading"
+    description="What I'm currently reading and recently finished books"
+>
+    <h1
+        class="text-3xl font-bold mb-2"
+        style="view-transition-name: page-title;"
+    >
+        Reading
+    </h1>
+    <p class="text-muted mb-8">
+        My reading journey, tracked with <a
+            href="https://hardcover.app"
             target="_blank"
-            rel="noopener"
-            class="stat-card profile-card"
-          >
-            {profile.image?.url && (
-              <img
-                src={profile.image.url}
-                alt={profile.name}
-                class="profile-avatar"
-              />
-            )}
-            <div class="profile-info">
-              <span class="profile-name">{profile.name}</span>
-              <span class="profile-username">@{profile.username}</span>
+            rel="noopener">Hardcover</a
+        >.
+    </p>
+
+    {
+        !readingData && (
+            <div class="text-muted italic">
+                Reading data unavailable. Check back later!
             </div>
-            <svg class="profile-link-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-        )}
+        )
+    }
 
-        {/* Reading Goal */}
-        <div class="stat-card goal-card">
-          <div class="stat-header">
-            <span class="stat-label">{currentYear} Goal</span>
-            <span class="stat-value">{booksRead}/{goalTarget}</span>
-          </div>
-          <div class="goal-progress-bar">
-            <div
-              class="goal-progress-fill"
-              style={`width: ${Math.min(goalProgress, 100)}%`}
-            />
-          </div>
-          <p class="stat-detail">
-            {goalProgress >= 100
-              ? 'Goal completed! 🎉'
-              : `${Math.round(goalProgress)}% complete`}
-          </p>
-        </div>
-
-        {/* Pages Per Day - Icon left, text right */}
-        <div class="stat-card stat-icon-left">
-          <div class="stat-icon-circle">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 6v6l4 2" stroke-linecap="round"/>
-              <circle cx="12" cy="12" r="10"/>
-            </svg>
-          </div>
-          <div class="stat-icon-text">
-            <span class="stat-number-small">{pagesPerDay}</span>
-            <span class="stat-label-small">pages/day</span>
-          </div>
-        </div>
-
-        {/* Total Read - Horizontal with book stack visual */}
-        <div class="stat-card stat-books-stack">
-          <div class="books-visual">
-            {[...Array(Math.min(5, Math.ceil(recentlyRead.length / 20)))].map((_, i) => (
-              <div class="book-spine" style={`--delay: ${i * 0.1}s`}></div>
-            ))}
-          </div>
-          <div class="stat-books-text">
-            <span class="stat-number-inline">{recentlyRead.length}</span>
-            <span class="stat-label-inline">books finished</span>
-          </div>
-        </div>
-
-        {/* Pages This Year - Countdown style like Avg Days */}
-        <div class="stat-card stat-countdown">
-          <div class="countdown-display">
-            <span class="countdown-number">{(pagesThisYear / 1000).toFixed(1)}</span>
-            <span class="countdown-unit">k pages</span>
-          </div>
-          <span class="stat-label-bottom">read in {currentYear}</span>
-        </div>
-
-        {/* Avg Days Per Book - Countdown style */}
-        <div class="stat-card stat-countdown">
-          <div class="countdown-display">
-            <span class="countdown-number">{avgDaysPerBook !== null ? avgDaysPerBook : '—'}</span>
-            <span class="countdown-unit">days</span>
-          </div>
-          <span class="stat-label-bottom">avg per book</span>
-        </div>
-      </div>
-
-      {/* Books per Year Chart */}
-      {yearsData.length > 0 && (
-        <div class="year-chart">
-          <h3 class="chart-title">Books Per Year</h3>
-          <div class="chart-container">
-            {yearsData.map(([year, count]) => (
-              <div class="chart-bar-group">
-                <div class="chart-bar-wrapper">
-                  <span class="chart-count">{count}</span>
-                  <div
-                    class="chart-bar"
-                    style={`height: ${(count / maxBooks) * 100}%`}
-                    data-current={year === currentYear ? "true" : "false"}
-                  />
-                </div>
-                <span class="chart-year">{year}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
-  )}
-
-  {currentlyReading.length > 0 && (
-    <section class="mb-12">
-      <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
-        <span class="inline-block w-3 h-3 bg-green rounded-full animate-pulse"></span>
-        Currently Reading
-      </h2>
-
-      <div class="grid gap-4">
-        {currentlyReading.map((item) => {
-          const read = getLatestRead(item);
-          const journal = item.reading_journals?.[0];
-          const startDate = read?.started_at || item.first_started_reading_date;
-          const daysReading = getDaysReading(startDate || null);
-          const progress = (read?.progress && read.progress > 0) ? read.progress : (journal?.metadata?.progress || 0);
-          const progressPages = (read?.progress_pages && read.progress_pages > 0) ? read.progress_pages : (journal?.metadata?.progress_pages || 0);
-
-          return (
-            <a
-              href={getBookUrl(item.book)}
-              target="_blank"
-              rel="noopener"
-              class="book-card flex gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface transition-all duration-300 group"
-            >
-              {item.book.image?.url ? (
-                <img
-                  src={item.book.image.url}
-                  alt={`Cover of ${item.book.title}`}
-                  class="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
-                />
-              ) : (
-                <div class="w-16 h-24 bg-border rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span class="text-muted text-xs">No cover</span>
-                </div>
-              )}
-
-              <div class="flex flex-col justify-center min-w-0 flex-1">
-                <h3 class="font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2">
-                  {item.book.title}
-                </h3>
-                <p class="text-sm text-muted truncate">
-                  {getAuthors(item.book)}
-                </p>
-
-                {progress > 0 && (
-                  <div class="mt-2">
-                    <div class="flex justify-between text-xs text-muted mb-1">
-                      <span>{Math.round(progress)}%{progressPages > 0 && item.book.pages && ` (${progressPages}/${item.book.pages} pages)`}</span>
-                    </div>
-                    <div class="h-1.5 bg-border rounded-full overflow-hidden">
-                      <div
-                        class="h-full bg-gradient-to-r from-accent to-pink rounded-full transition-all"
-                        style={`width: ${progress}%`}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {startDate && (
-                  <p class="text-xs text-muted mt-2">
-                    Started {formatDate(startDate)}
-                    {daysReading && daysReading > 0 && (
-                      <span class="ml-1">({daysReading} day{daysReading !== 1 ? 's' : ''})</span>
-                    )}
-                  </p>
-                )}
-              </div>
-            </a>
-          );
-        })}
-      </div>
-    </section>
-  )}
-
-  {recentlyRead.length > 0 && (
-    <section>
-      <h2 class="text-xl font-semibold mb-6">
-        Reading Timeline
-      </h2>
-
-      <div class="timeline">
-        {sortedYears.map((year) => {
-          const yearMap = groupedBooks.get(year)!;
-          const sortedMonths = Array.from(yearMap.keys()).sort((a, b) => b.localeCompare(a));
-
-          return (
-            <div class="year-group">
-              <div class="year-label">
-                <span class="year-pill">{year}</span>
-              </div>
-
-              {sortedMonths.map((monthKey) => {
-                const books = yearMap.get(monthKey)!;
-                const monthLabel = formatMonthYear(monthKey + '-01');
-
-                return (
-                  <div class="month-group">
-                    <div class="month-label">{monthLabel.split(' ')[0]}</div>
-
-                    <div class="month-books">
-                      {books.map((item) => {
-                        const read = getLatestRead(item);
-                        const finishedDate = read?.finished_at || item.last_read_date;
-                        const startedDate = read?.started_at;
-
-                        let daysToRead: number | null = null;
-                        if (startedDate && finishedDate) {
-                          const start = new Date(startedDate);
-                          const end = new Date(finishedDate);
-                          daysToRead = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                        }
-
-                        const cardUrl = item.has_review && profile
-                          ? getReviewUrl(profile.username, item.book.slug)
-                          : getBookUrl(item.book);
-
-                        return (
-                          <a
-                            href={cardUrl}
+    {/* Stats Section */}
+    {
+        readingData && (
+            <section class="mb-12">
+                <div class="stats-grid">
+                    {/* Profile Card */}
+                    {profile && (
+                        <a
+                            href={`https://hardcover.app/@${profile.username}`}
                             target="_blank"
                             rel="noopener"
-                            class="book-card flex gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface transition-all duration-300 group"
-                          >
-                            {item.book.image?.url ? (
-                              <img
-                                src={item.book.image.url}
-                                alt={`Cover of ${item.book.title}`}
-                                class="w-14 h-20 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
-                              />
-                            ) : (
-                              <div class="w-14 h-20 bg-border rounded-lg flex items-center justify-center flex-shrink-0">
-                                <span class="text-muted text-xs">No cover</span>
-                              </div>
+                            class="stat-card profile-card"
+                        >
+                            {profile.image?.url && (
+                                <img
+                                    src={profile.image.url}
+                                    alt={profile.name}
+                                    class="profile-avatar"
+                                />
                             )}
-
-                            <div class="flex flex-col justify-center min-w-0 flex-1">
-                              <h3 class="font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2 text-sm">
-                                {item.book.title}
-                              </h3>
-                              <p class="text-xs text-muted truncate">
-                                {getAuthors(item.book)}
-                              </p>
-                              <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                {item.rating && (
-                                  <span class="text-yellow text-xs">
-                                    {'★'.repeat(Math.round(item.rating))}{'☆'.repeat(5 - Math.round(item.rating))}
-                                  </span>
-                                )}
-                                {daysToRead !== null && daysToRead > 0 && (
-                                  <span class="text-xs text-muted">
-                                    {daysToRead} day{daysToRead !== 1 ? 's' : ''}
-                                  </span>
-                                )}
-                                {item.has_review && (
-                                  <span class="review-badge">Review</span>
-                                )}
-                              </div>
+                            <div class="profile-info">
+                                <span class="profile-name">{profile.name}</span>
+                                <span class="profile-username">
+                                    @{profile.username}
+                                </span>
                             </div>
-                          </a>
-                        );
-                      })}
+                            <svg
+                                class="profile-link-icon"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
+                        </a>
+                    )}
+
+                    {/* Reading Goal */}
+                    <div class="stat-card goal-card">
+                        <div class="stat-header">
+                            <span class="stat-label">{currentYear} Goal</span>
+                            <span class="stat-value">
+                                {booksRead}/{goalTarget}
+                            </span>
+                        </div>
+                        <div class="goal-progress-bar">
+                            <div
+                                class="goal-progress-fill"
+                                style={`width: ${Math.min(goalProgress, 100)}%`}
+                            />
+                        </div>
+                        <p class="stat-detail">
+                            {goalProgress >= 100
+                                ? "Goal completed! 🎉"
+                                : `${Math.round(goalProgress)}% complete`}
+                        </p>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  )}
+
+                    {/* Pages Per Day - Icon left, text right */}
+                    <div class="stat-card stat-icon-left">
+                        <div class="stat-icon-circle">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path d="M12 6v6l4 2" stroke-linecap="round" />
+                                <circle cx="12" cy="12" r="10" />
+                            </svg>
+                        </div>
+                        <div class="stat-icon-text">
+                            <span class="stat-number-small">{pagesPerDay}</span>
+                            <span class="stat-label-small">pages/day</span>
+                        </div>
+                    </div>
+
+                    {/* Total Read - Horizontal with book stack visual */}
+                    <div class="stat-card stat-books-stack">
+                        <div class="books-visual">
+                            {[
+                                ...Array(
+                                    Math.min(
+                                        5,
+                                        Math.ceil(recentlyRead.length / 20),
+                                    ),
+                                ),
+                            ].map((_, i) => (
+                                <div
+                                    class="book-spine"
+                                    style={`--delay: ${i * 0.1}s`}
+                                />
+                            ))}
+                        </div>
+                        <div class="stat-books-text">
+                            <span class="stat-number-inline">
+                                {recentlyRead.length}
+                            </span>
+                            <span class="stat-label-inline">
+                                books finished
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Pages This Year - Countdown style like Avg Days */}
+                    <div class="stat-card stat-countdown">
+                        <div class="countdown-display">
+                            <span class="countdown-number">
+                                {(pagesThisYear / 1000).toFixed(1)}
+                            </span>
+                            <span class="countdown-unit">k pages</span>
+                        </div>
+                        <span class="stat-label-bottom">
+                            read in {currentYear}
+                        </span>
+                    </div>
+
+                    {/* Avg Days Per Book - Countdown style */}
+                    <div class="stat-card stat-countdown">
+                        <div class="countdown-display">
+                            <span class="countdown-number">
+                                {avgDaysPerBook !== null ? avgDaysPerBook : "—"}
+                            </span>
+                            <span class="countdown-unit">days</span>
+                        </div>
+                        <span class="stat-label-bottom">avg per book</span>
+                    </div>
+                </div>
+
+                {/* Books per Year Chart */}
+                {yearsData.length > 0 && (
+                    <div class="year-chart">
+                        <h3 class="chart-title">Books Per Year</h3>
+                        <div class="chart-container">
+                            {yearsData.map(([year, count]) => (
+                                <div class="chart-bar-group">
+                                    <div class="chart-bar-wrapper">
+                                        <span class="chart-count">{count}</span>
+                                        <div
+                                            class="chart-bar"
+                                            style={`height: ${(count / maxBooks) * 100}%`}
+                                            data-current={
+                                                year === currentYear
+                                                    ? "true"
+                                                    : "false"
+                                            }
+                                        />
+                                    </div>
+                                    <span class="chart-year">{year}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </section>
+        )
+    }
+
+    {
+        currentlyReading.length > 0 && (
+            <section class="mb-12">
+                <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                    <span class="inline-block w-3 h-3 bg-green rounded-full animate-pulse" />
+                    Currently Reading
+                </h2>
+
+                <div class="grid gap-4">
+                    {currentlyReading.map((item) => {
+                        const read = getLatestRead(item);
+                        const journal = item.reading_journals?.[0];
+                        const startDate =
+                            read?.started_at || item.first_started_reading_date;
+                        const daysReading = getDaysReading(startDate || null);
+                        const progress =
+                            read?.progress && read.progress > 0
+                                ? read.progress
+                                : journal?.metadata?.progress || 0;
+                        const progressPages =
+                            read?.progress_pages && read.progress_pages > 0
+                                ? read.progress_pages
+                                : journal?.metadata?.progress_pages || 0;
+
+                        return (
+                            <a
+                                href={getBookUrl(item.book)}
+                                target="_blank"
+                                rel="noopener"
+                                class="book-card flex gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface transition-all duration-300 group"
+                            >
+                                {item.book.image?.url ? (
+                                    <img
+                                        src={item.book.image.url}
+                                        alt={`Cover of ${item.book.title}`}
+                                        class="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
+                                    />
+                                ) : (
+                                    <div class="w-16 h-24 bg-border rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span class="text-muted text-xs">
+                                            No cover
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div class="flex flex-col justify-center min-w-0 flex-1">
+                                    <h3 class="font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2">
+                                        {item.book.title}
+                                    </h3>
+                                    <p class="text-sm text-muted truncate">
+                                        {getAuthors(item.book)}
+                                    </p>
+
+                                    {progress > 0 && (
+                                        <div class="mt-2">
+                                            <div class="flex justify-between text-xs text-muted mb-1">
+                                                <span>
+                                                    {Math.round(progress)}%
+                                                    {progressPages > 0 &&
+                                                        item.book.pages &&
+                                                        ` (${progressPages}/${item.book.pages} pages)`}
+                                                </span>
+                                            </div>
+                                            <div class="h-1.5 bg-border rounded-full overflow-hidden">
+                                                <div
+                                                    class="h-full bg-gradient-to-r from-accent to-pink rounded-full transition-all"
+                                                    style={`width: ${progress}%`}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {startDate && (
+                                        <p class="text-xs text-muted mt-2">
+                                            Started {formatDate(startDate)}
+                                            {daysReading && daysReading > 0 && (
+                                                <span class="ml-1">
+                                                    ({daysReading} day
+                                                    {daysReading !== 1
+                                                        ? "s"
+                                                        : ""}
+                                                    )
+                                                </span>
+                                            )}
+                                        </p>
+                                    )}
+                                </div>
+                            </a>
+                        );
+                    })}
+                </div>
+            </section>
+        )
+    }
+
+    {
+        recentlyRead.length > 0 && (
+            <section>
+                <h2 class="text-xl font-semibold mb-6">Reading Timeline</h2>
+
+                <div class="timeline">
+                    {sortedYears.map((year) => {
+                        const yearMap = groupedBooks.get(year)!;
+                        const sortedMonths = Array.from(yearMap.keys()).sort(
+                            (a, b) => b.localeCompare(a),
+                        );
+
+                        return (
+                            <div class="year-group">
+                                <div class="year-label">
+                                    <span class="year-pill">{year}</span>
+                                </div>
+
+                                {sortedMonths.map((monthKey) => {
+                                    const books = yearMap.get(monthKey)!;
+                                    const monthLabel = formatMonthYear(
+                                        monthKey + "-01",
+                                    );
+
+                                    return (
+                                        <div class="month-group">
+                                            <div class="month-label">
+                                                {monthLabel.split(" ")[0]}
+                                            </div>
+
+                                            <div class="month-books">
+                                                {books.map((item) => {
+                                                    const read =
+                                                        getLatestRead(item);
+                                                    const finishedDate =
+                                                        read?.finished_at ||
+                                                        item.last_read_date;
+                                                    const startedDate =
+                                                        read?.started_at;
+
+                                                    let daysToRead:
+                                                        | number
+                                                        | null = null;
+                                                    if (
+                                                        startedDate &&
+                                                        finishedDate
+                                                    ) {
+                                                        const start = new Date(
+                                                            startedDate,
+                                                        );
+                                                        const end = new Date(
+                                                            finishedDate,
+                                                        );
+                                                        daysToRead = Math.ceil(
+                                                            (end.getTime() -
+                                                                start.getTime()) /
+                                                                (1000 *
+                                                                    60 *
+                                                                    60 *
+                                                                    24),
+                                                        );
+                                                    }
+
+                                                    const cardUrl =
+                                                        item.has_review &&
+                                                        profile
+                                                            ? getReviewUrl(
+                                                                  profile.username,
+                                                                  item.book
+                                                                      .slug,
+                                                              )
+                                                            : getBookUrl(
+                                                                  item.book,
+                                                              );
+
+                                                    return (
+                                                        <a
+                                                            href={cardUrl}
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                            class="book-card flex gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface transition-all duration-300 group"
+                                                        >
+                                                            {item.book.image
+                                                                ?.url ? (
+                                                                <img
+                                                                    src={
+                                                                        item
+                                                                            .book
+                                                                            .image
+                                                                            .url
+                                                                    }
+                                                                    alt={`Cover of ${item.book.title}`}
+                                                                    class="w-14 h-20 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
+                                                                />
+                                                            ) : (
+                                                                <div class="w-14 h-20 bg-border rounded-lg flex items-center justify-center flex-shrink-0">
+                                                                    <span class="text-muted text-xs">
+                                                                        No cover
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            <div class="flex flex-col justify-center min-w-0 flex-1">
+                                                                <h3 class="font-semibold text-foreground group-hover:text-accent transition-colors line-clamp-2 text-sm">
+                                                                    {
+                                                                        item
+                                                                            .book
+                                                                            .title
+                                                                    }
+                                                                </h3>
+                                                                <p class="text-xs text-muted truncate">
+                                                                    {getAuthors(
+                                                                        item.book,
+                                                                    )}
+                                                                </p>
+                                                                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                                                    {item.rating && (
+                                                                        <span class="text-yellow text-xs">
+                                                                            {"★".repeat(
+                                                                                Math.round(
+                                                                                    item.rating,
+                                                                                ),
+                                                                            )}
+                                                                            {"☆".repeat(
+                                                                                5 -
+                                                                                    Math.round(
+                                                                                        item.rating,
+                                                                                    ),
+                                                                            )}
+                                                                        </span>
+                                                                    )}
+                                                                    {daysToRead !==
+                                                                        null &&
+                                                                        daysToRead >
+                                                                            0 && (
+                                                                            <span class="text-xs text-muted">
+                                                                                {
+                                                                                    daysToRead
+                                                                                }{" "}
+                                                                                day
+                                                                                {daysToRead !==
+                                                                                1
+                                                                                    ? "s"
+                                                                                    : ""}
+                                                                            </span>
+                                                                        )}
+                                                                    {item.has_review && (
+                                                                        <span class="review-badge">
+                                                                            Review
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+        )
+    }
 </BaseLayout>
 
 <style>
-  .book-card {
-    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
-  }
+    .book-card {
+        border: 1px solid
+            color-mix(in srgb, var(--color-border) 50%, transparent);
+    }
 
-  .book-card:hover {
-    border-color: var(--color-border);
-    transform: translateX(4px);
-  }
+    .book-card:hover {
+        border-color: var(--color-border);
+        transform: translateX(4px);
+    }
 
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 
-  .timeline {
-    position: relative;
-    padding-left: 1rem;
-  }
+    .timeline {
+        position: relative;
+        padding-left: 1rem;
+    }
 
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--color-accent), var(--color-pink));
-    border-radius: 1px;
-  }
+    .timeline::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(
+            to bottom,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        border-radius: 1px;
+    }
 
-  .year-group {
-    position: relative;
-    margin-bottom: 2rem;
-  }
+    .year-group {
+        position: relative;
+        margin-bottom: 2rem;
+    }
 
-  .year-label {
-    position: relative;
-    margin-bottom: 1rem;
-    margin-left: -1rem;
-    padding-left: 1.5rem;
-  }
+    .year-label {
+        position: relative;
+        margin-bottom: 1rem;
+        margin-left: -1rem;
+        padding-left: 1.5rem;
+    }
 
-  .year-label::before {
-    content: '';
-    position: absolute;
-    left: -5px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 12px;
-    height: 12px;
-    background: var(--color-accent);
-    border-radius: 50%;
-    border: 2px solid var(--color-background);
-  }
+    .year-label::before {
+        content: "";
+        position: absolute;
+        left: -5px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 12px;
+        height: 12px;
+        background: var(--color-accent);
+        border-radius: 50%;
+        border: 2px solid var(--color-background);
+    }
 
-  .year-pill {
-    display: inline-block;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-pink));
-    color: white;
-    font-weight: 700;
-    font-size: 1.25rem;
-    padding: 0.25rem 1rem;
-    border-radius: 9999px;
-  }
+    .year-pill {
+        display: inline-block;
+        background: linear-gradient(
+            135deg,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        color: white;
+        font-weight: 700;
+        font-size: 1.25rem;
+        padding: 0.25rem 1rem;
+        border-radius: 9999px;
+    }
 
-  .month-group {
-    margin-left: 0.5rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-  }
+    .month-group {
+        margin-left: 0.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
 
-  .month-group::before {
-    content: '';
-    position: absolute;
-    left: -1.5rem;
-    top: 0.6rem;
-    width: 8px;
-    height: 8px;
-    background: var(--color-surface);
-    border: 2px solid var(--color-accent);
-    border-radius: 50%;
-  }
+    .month-group::before {
+        content: "";
+        position: absolute;
+        left: -1.5rem;
+        top: 0.6rem;
+        width: 8px;
+        height: 8px;
+        background: var(--color-surface);
+        border: 2px solid var(--color-accent);
+        border-radius: 50%;
+    }
 
-  .month-label {
-    font-weight: 600;
-    color: var(--color-muted);
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
+    .month-label {
+        font-weight: 600;
+        color: var(--color-muted);
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
 
-  .month-books {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+    .month-books {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
-  /* Stats Grid */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  @media (min-width: 640px) {
+    /* Stats Grid */
     .stats-grid {
-      grid-template-columns: repeat(4, 1fr);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
-  }
 
-  .stat-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+    @media (min-width: 640px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
 
-  .profile-card {
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
+    .stat-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
 
-  .profile-card:hover {
-    border-color: var(--color-accent);
-    transform: translateY(-2px);
-  }
-
-  .profile-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
-  }
-
-  .profile-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .profile-name {
-    font-weight: 600;
-    color: var(--color-foreground);
-    font-size: 1rem;
-  }
-
-  .profile-username {
-    font-size: 0.875rem;
-    color: var(--color-muted);
-  }
-
-  .profile-link-icon {
-    width: 1rem;
-    height: 1rem;
-    color: var(--color-muted);
-    flex-shrink: 0;
-  }
-
-  .profile-card:hover .profile-link-icon {
-    color: var(--color-accent);
-  }
-
-  .goal-card {
-    grid-column: span 2;
-  }
-
-  @media (min-width: 640px) {
     .profile-card {
-      grid-column: span 2;
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        grid-column: span 2;
     }
-  }
 
-  .stat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+    .profile-card:hover {
+        border-color: var(--color-accent);
+        transform: translateY(-2px);
+    }
 
-  .stat-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    font-weight: 600;
-  }
+    .profile-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
 
-  .stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--color-accent);
-  }
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        flex: 1;
+        min-width: 0;
+    }
 
-  .stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-pink));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+    .profile-name {
+        font-weight: 600;
+        color: var(--color-foreground);
+        font-size: 1rem;
+    }
 
-  /* Pages Per Day - Icon Left Style */
-  .stat-icon-left {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-  }
+    .profile-username {
+        font-size: 0.875rem;
+        color: var(--color-muted);
+    }
 
-  .stat-icon-circle {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-pink));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
+    .profile-link-icon {
+        width: 1rem;
+        height: 1rem;
+        color: var(--color-muted);
+        flex-shrink: 0;
+    }
 
-  .stat-icon-circle svg {
-    width: 24px;
-    height: 24px;
-    color: white;
-  }
+    .profile-card:hover .profile-link-icon {
+        color: var(--color-accent);
+    }
 
-  .stat-icon-text {
-    display: flex;
-    flex-direction: column;
-  }
+    .goal-card {
+        grid-column: span 2;
+    }
 
-  .stat-number-small {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-foreground);
-    line-height: 1;
-  }
+    @media (min-width: 640px) {
+        .profile-card {
+            grid-column: span 2;
+        }
+    }
 
-  .stat-label-small {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    font-weight: 500;
-  }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-  /* Total Read - Books Stack Style */
-  .stat-books-stack {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-  }
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+        font-weight: 600;
+    }
 
-  .books-visual {
-    display: flex;
-    gap: 3px;
-    align-items: flex-end;
-    height: 40px;
-  }
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-accent);
+    }
 
-  .book-spine {
-    width: 8px;
-    background: linear-gradient(to bottom, var(--color-accent), var(--color-pink));
-    border-radius: 2px;
-    animation: book-grow 0.5s ease-out forwards;
-    animation-delay: var(--delay, 0s);
-    transform-origin: bottom;
-  }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(
+            135deg,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-  .book-spine:nth-child(1) { height: 32px; }
-  .book-spine:nth-child(2) { height: 38px; }
-  .book-spine:nth-child(3) { height: 28px; }
-  .book-spine:nth-child(4) { height: 36px; }
-  .book-spine:nth-child(5) { height: 30px; }
+    /* Pages Per Day - Icon Left Style */
+    .stat-icon-left {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
 
-  @keyframes book-grow {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-  }
+    .stat-icon-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(
+            135deg,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
 
-  .stat-books-text {
-    display: flex;
-    flex-direction: column;
-  }
+    .stat-icon-circle svg {
+        width: 24px;
+        height: 24px;
+        color: white;
+    }
 
-  .stat-number-inline {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-foreground);
-    line-height: 1;
-  }
+    .stat-icon-text {
+        display: flex;
+        flex-direction: column;
+    }
 
-  .stat-label-inline {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    font-weight: 500;
-  }
+    .stat-number-small {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-foreground);
+        line-height: 1;
+    }
 
-  .stat-label-bottom {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    font-weight: 500;
-    text-align: center;
-  }
+    .stat-label-small {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+        font-weight: 500;
+    }
 
-  /* Avg Days Per Book - Countdown Style */
-  .stat-countdown {
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-  }
+    /* Total Read - Books Stack Style */
+    .stat-books-stack {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
 
-  .countdown-display {
-    display: flex;
-    align-items: baseline;
-    gap: 0.25rem;
-  }
+    .books-visual {
+        display: flex;
+        gap: 3px;
+        align-items: flex-end;
+        height: 40px;
+    }
 
-  .countdown-number {
-    font-size: 2.5rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-pink));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1;
-  }
+    .book-spine {
+        width: 8px;
+        background: linear-gradient(
+            to bottom,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        border-radius: 2px;
+        animation: book-grow 0.5s ease-out forwards;
+        animation-delay: var(--delay, 0s);
+        transform-origin: bottom;
+    }
 
-  .countdown-unit {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-muted);
-    text-transform: uppercase;
-  }
+    .book-spine:nth-child(1) {
+        height: 32px;
+    }
+    .book-spine:nth-child(2) {
+        height: 38px;
+    }
+    .book-spine:nth-child(3) {
+        height: 28px;
+    }
+    .book-spine:nth-child(4) {
+        height: 36px;
+    }
+    .book-spine:nth-child(5) {
+        height: 30px;
+    }
 
-  .stat-detail {
-    font-size: 0.875rem;
-    color: var(--color-muted);
-  }
+    @keyframes book-grow {
+        from {
+            transform: scaleY(0);
+        }
+        to {
+            transform: scaleY(1);
+        }
+    }
 
-  .goal-progress-bar {
-    height: 0.5rem;
-    background: var(--color-border);
-    border-radius: 9999px;
-    overflow: hidden;
-  }
+    .stat-books-text {
+        display: flex;
+        flex-direction: column;
+    }
 
-  .goal-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
-    border-radius: 9999px;
-    transition: width 0.5s ease;
-  }
+    .stat-number-inline {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-foreground);
+        line-height: 1;
+    }
 
-  /* Year Chart */
-  .year-chart {
-    margin-top: 1.5rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    padding: 1.5rem;
-  }
+    .stat-label-inline {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+        font-weight: 500;
+    }
 
-  .chart-title {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-muted);
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
+    .stat-label-bottom {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+        font-weight: 500;
+        text-align: center;
+    }
 
-  .chart-container {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    gap: 0.5rem;
-    height: 120px;
-  }
+    /* Avg Days Per Book - Countdown Style */
+    .stat-countdown {
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
 
-  .chart-bar-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    max-width: 60px;
-  }
+    .countdown-display {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+    }
 
-  .chart-bar-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    height: 100px;
-    width: 100%;
-  }
+    .countdown-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(
+            135deg,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
 
-  .chart-count {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-foreground);
-    margin-bottom: 0.25rem;
-  }
+    .countdown-unit {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-muted);
+        text-transform: uppercase;
+    }
 
-  .chart-bar {
-    width: 100%;
-    max-width: 40px;
-    background: linear-gradient(to top, var(--color-accent), var(--color-pink));
-    border-radius: 0.25rem 0.25rem 0 0;
-    min-height: 4px;
-    transition: height 0.5s ease;
-  }
+    .stat-detail {
+        font-size: 0.875rem;
+        color: var(--color-muted);
+    }
 
-  .chart-bar[data-current="true"] {
-    box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent) 50%, transparent);
-  }
+    .goal-progress-bar {
+        height: 0.5rem;
+        background: var(--color-border);
+        border-radius: 9999px;
+        overflow: hidden;
+    }
 
-  .chart-year {
-    font-size: 0.7rem;
-    color: var(--color-muted);
-    font-weight: 500;
-  }
+    .goal-progress-fill {
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        border-radius: 9999px;
+        transition: width 0.5s ease;
+    }
 
-  .review-badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-  }
+    /* Year Chart */
+    .year-chart {
+        margin-top: 1.5rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-muted);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .chart-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+        gap: 0.5rem;
+        height: 120px;
+    }
+
+    .chart-bar-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        max-width: 60px;
+    }
+
+    .chart-bar-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100px;
+        width: 100%;
+    }
+
+    .chart-count {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-foreground);
+        margin-bottom: 0.25rem;
+    }
+
+    .chart-bar {
+        width: 100%;
+        max-width: 40px;
+        background: linear-gradient(
+            to top,
+            var(--color-accent),
+            var(--color-pink)
+        );
+        border-radius: 0.25rem 0.25rem 0 0;
+        min-height: 4px;
+        transition: height 0.5s ease;
+    }
+
+    .chart-bar[data-current="true"] {
+        box-shadow: 0 0 12px
+            color-mix(in srgb, var(--color-accent) 50%, transparent);
+    }
+
+    .chart-year {
+        font-size: 0.7rem;
+        color: var(--color-muted);
+        font-weight: 500;
+    }
+
+    .review-badge {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--color-accent);
+        background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+    }
 </style>
