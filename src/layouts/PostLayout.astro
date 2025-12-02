@@ -1,12 +1,12 @@
 ---
-import BaseLayout from './BaseLayout.astro';
-import ReadingProgress from '../components/ReadingProgress.astro';
-import OptimizedContent from '../components/OptimizedContent.astro';
-import type { CollectionEntry } from 'astro:content';
-import { parseText } from '../utils/emoji';
+import BaseLayout from "./BaseLayout.astro";
+import ReadingProgress from "../components/ReadingProgress.astro";
+import OptimizedContent from "../components/OptimizedContent.astro";
+import type { CollectionEntry } from "astro:content";
+import { parseText } from "../utils/emoji";
 
 interface Props {
-  post: CollectionEntry<'posts'>;
+    post: CollectionEntry<"posts">;
 }
 
 const { post } = Astro.props;
@@ -15,151 +15,271 @@ const parsedTitle = parseText(title);
 const parsedIcon = icon ? parseText(icon) : null;
 
 function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(date);
+    return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    }).format(date);
 }
 
 // Calculate reading time
-const content = post.body || '';
+const content = post.body || "";
 const words = content.split(/\s+/).length;
 const readingTime = Math.ceil(words / 200);
 ---
 
 <BaseLayout title={title} description={description} lang={post.data.lang}>
-  <ReadingProgress />
-  <a href="/posts" class="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors mb-6 text-sm">
-    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-    Back to posts
-  </a>
+    <ReadingProgress />
+    <a
+        href="/posts"
+        class="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors mb-6 text-sm"
+    >
+        <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back to posts
+    </a>
 
-  <article>
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold mb-4" style="view-transition-name: page-title;">
-        {parsedIcon && <span class="mr-2">{parsedIcon}</span>}
-        <span set:html={parsedTitle} />
-      </h1>
+    <article>
+        <header class="mb-8">
+            <h1
+                class="text-3xl font-bold mb-4"
+                style="view-transition-name: page-title;"
+            >
+                {parsedIcon && <span class="mr-2">{parsedIcon}</span>}
+                <span set:html={parsedTitle} />
+            </h1>
 
-      <div class="flex flex-wrap items-center gap-4 text-sm text-muted">
-        <time datetime={date.toISOString()}>
-          {formatDate(new Date(date))}
-        </time>
+            <div class="flex flex-wrap items-center gap-4 text-sm text-muted">
+                <time datetime={date.toISOString()}>
+                    {formatDate(new Date(date))}
+                </time>
 
-        <span>&middot;</span>
+                <span>&middot;</span>
 
-        <span>{readingTime} min read</span>
+                <span>{readingTime} min read</span>
 
-        {author && (
-          <>
-            <span>&middot;</span>
-            <span>by {author}</span>
-          </>
-        )}
-      </div>
+                {
+                    author && (
+                        <>
+                            <span>&middot;</span>
+                            <span>by {author}</span>
+                        </>
+                    )
+                }
+            </div>
 
-      {tags && tags.length > 0 && (
-        <div class="flex flex-wrap gap-2 mt-4">
-          {tags.map((tag) => (
-            <span class="tag">{tag}</span>
-          ))}
-        </div>
-      )}
-    </header>
+            {
+                tags && tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        {tags.map((tag) => (
+                            <span class="tag">{tag}</span>
+                        ))}
+                    </div>
+                )
+            }
+        </header>
 
-    <OptimizedContent class="prose">
-      <slot />
-    </OptimizedContent>
+        <OptimizedContent class="prose">
+            <slot />
+        </OptimizedContent>
 
-    <footer class="mt-12 pt-8 border-t border-border">
-      <a href="/posts" class="text-accent hover:underline">
-        &larr; Back to all posts
-      </a>
-    </footer>
-  </article>
+        <footer class="mt-12 pt-8 border-t border-border">
+            <a href="/posts" class="text-accent hover:underline">
+                &larr; Back to all posts
+            </a>
+        </footer>
+    </article>
+
+    <!-- Back to top button -->
+    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+        <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path d="M18 15l-6-6-6 6"></path>
+        </svg>
+    </button>
 </BaseLayout>
 
+<style>
+    .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        color: var(--color-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(1rem);
+        transition: all 0.3s ease;
+        z-index: 50;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-to-top:hover {
+        color: var(--color-accent);
+        border-color: var(--color-accent);
+        transform: translateY(-2px);
+    }
+
+    .back-to-top.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    @media (max-width: 640px) {
+        .back-to-top {
+            bottom: 1rem;
+            right: 1rem;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    }
+</style>
+
 <script>
-  // Initialize medium-zoom for images
-  import mediumZoom from 'medium-zoom';
-  import type { Zoom } from 'medium-zoom';
+    // Back to top button
+    function initBackToTop() {
+        const button = document.getElementById("back-to-top");
+        if (!button) return;
 
-  declare global {
-    interface Window {
-      __zoomInstance?: Zoom | null;
+        const toggleVisibility = () => {
+            if (window.scrollY > 300) {
+                button.classList.add("visible");
+            } else {
+                button.classList.remove("visible");
+            }
+        };
+
+        window.addEventListener("scroll", toggleVisibility, { passive: true });
+        toggleVisibility();
+
+        button.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
     }
-  }
 
-  function cleanupZoom() {
-    if (window.__zoomInstance) {
-      window.__zoomInstance.close();
-      window.__zoomInstance.detach();
-      window.__zoomInstance = null;
+    // Initialize medium-zoom for images
+    import mediumZoom from "medium-zoom";
+    import type { Zoom } from "medium-zoom";
+
+    declare global {
+        interface Window {
+            __zoomInstance?: Zoom | null;
+        }
     }
-    // Remove any leftover medium-zoom elements
-    document.querySelectorAll('.medium-zoom-overlay, .medium-zoom-image--opened').forEach(el => el.remove());
-  }
 
-  function initProgressiveImages() {
-    const images = document.querySelectorAll('.prose img') as NodeListOf<HTMLImageElement>;
+    function cleanupZoom() {
+        if (window.__zoomInstance) {
+            window.__zoomInstance.close();
+            window.__zoomInstance.detach();
+            window.__zoomInstance = null;
+        }
+        // Remove any leftover medium-zoom elements
+        document
+            .querySelectorAll(
+                ".medium-zoom-overlay, .medium-zoom-image--opened",
+            )
+            .forEach((el) => el.remove());
+    }
 
-    images.forEach((img) => {
-      // Skip if already processed
-      if (img.classList.contains('loaded') || img.classList.contains('loading')) return;
+    function initProgressiveImages() {
+        const images = document.querySelectorAll(
+            ".prose img",
+        ) as NodeListOf<HTMLImageElement>;
 
-      if (img.complete && img.naturalHeight !== 0) {
-        // Image already loaded (cached)
-        img.classList.add('loaded');
-      } else {
-        // Image still loading
-        img.classList.add('loading');
-        img.addEventListener('load', () => {
-          img.classList.remove('loading');
-          img.classList.add('loaded');
-        }, { once: true });
-        img.addEventListener('error', () => {
-          img.classList.remove('loading');
-        }, { once: true });
-      }
-    });
-  }
+        images.forEach((img) => {
+            // Skip if already processed
+            if (
+                img.classList.contains("loaded") ||
+                img.classList.contains("loading")
+            )
+                return;
 
-  function initZoom() {
-    cleanupZoom();
+            if (img.complete && img.naturalHeight !== 0) {
+                // Image already loaded (cached)
+                img.classList.add("loaded");
+            } else {
+                // Image still loading
+                img.classList.add("loading");
+                img.addEventListener(
+                    "load",
+                    () => {
+                        img.classList.remove("loading");
+                        img.classList.add("loaded");
+                    },
+                    { once: true },
+                );
+                img.addEventListener(
+                    "error",
+                    () => {
+                        img.classList.remove("loading");
+                    },
+                    { once: true },
+                );
+            }
+        });
+    }
 
-    const images = document.querySelectorAll('.prose img');
-    if (images.length === 0) return;
+    function initZoom() {
+        cleanupZoom();
 
-    const theme = document.documentElement.getAttribute('data-theme');
-    const bgColor = theme === 'dark' ? '#181822' : '#fff';
+        const images = document.querySelectorAll(".prose img");
+        if (images.length === 0) return;
 
-    window.__zoomInstance = mediumZoom('.prose img', {
-      margin: 24,
-      background: bgColor,
-    });
-  }
+        const theme = document.documentElement.getAttribute("data-theme");
+        const bgColor = theme === "dark" ? "#181822" : "#fff";
 
-  function initAll() {
-    initProgressiveImages();
-    initZoom();
-  }
+        window.__zoomInstance = mediumZoom(".prose img", {
+            margin: 24,
+            background: bgColor,
+        });
+    }
 
-  // Run when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAll);
-  } else {
-    initAll();
-  }
+    function initAll() {
+        initProgressiveImages();
+        initZoom();
+        initBackToTop();
+    }
 
-  // Clean up before page transition starts
-  document.addEventListener('astro:before-swap', cleanupZoom);
+    // Run when DOM is ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initAll);
+    } else {
+        initAll();
+    }
 
-  // Re-initialize after page transition completes
-  document.addEventListener('astro:after-swap', initAll);
+    // Clean up before page transition starts
+    document.addEventListener("astro:before-swap", cleanupZoom);
 
-  // Also listen for astro:page-load for full page loads
-  document.addEventListener('astro:page-load', initAll);
+    // Re-initialize after page transition completes
+    document.addEventListener("astro:after-swap", initAll);
+
+    // Also listen for astro:page-load for full page loads
+    document.addEventListener("astro:page-load", initAll);
 </script>
