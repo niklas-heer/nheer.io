@@ -10,6 +10,10 @@ import { remarkOptimizeImages } from "./src/utils/remark-optimize-images.mjs";
 
 // https://astro.build/config
 export default defineConfig({
+  prefetch: {
+    prefetchAll: false,
+    defaultStrategy: "hover",
+  },
   image: {
     // Enable image optimization with responsive layout
     experimentalLayout: "responsive",
