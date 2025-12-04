@@ -550,11 +550,10 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                                                                 {
                                                                                     daysToRead
                                                                                 }{" "}
-                                                                                day
-                                                                                {daysToRead !==
+                                                                                {daysToRead ===
                                                                                 1
-                                                                                    ? "s"
-                                                                                    : ""}
+                                                                                    ? "day"
+                                                                                    : "days"}
                                                                             </span>
                                                                         )}
                                                                     {item.has_review && (
