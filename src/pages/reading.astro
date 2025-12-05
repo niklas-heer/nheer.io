@@ -391,15 +391,9 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                     {startDate && (
                                         <p class="text-xs text-muted mt-2">
                                             Started {formatDate(startDate)}
-                                            {daysReading && daysReading > 0 && (
-                                                <span class="ml-1">
-                                                    ({daysReading} day
-                                                    {daysReading !== 1
-                                                        ? "s"
-                                                        : ""}
-                                                    )
-                                                </span>
-                                            )}
+                                            {daysReading &&
+                                                daysReading > 0 &&
+                                                ` (${daysReading} ${daysReading === 1 ? "day" : "days"})`}
                                         </p>
                                     )}
                                 </div>
