@@ -9,14 +9,18 @@ interface Props {
     title: string;
     description?: string;
     lang?: "en" | "de";
+    image?: string;
 }
 
 const {
     title,
     description = "Homepage and blog by Niklas Heer",
     lang = "en",
+    image = "/assets/images/nheer_logo.png",
 } = Astro.props;
 const fullTitle = title === "Home" ? "Niklas Heer" : `${title} | Niklas Heer`;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
 ---
 
 <!doctype html>
@@ -28,14 +32,25 @@ const fullTitle = title === "Home" ? "Niklas Heer" : `${title} | Niklas Heer`;
         <meta name="author" content="Niklas Heer" />
         <meta name="generator" content={Astro.generator} />
 
+        <!-- Canonical URL -->
+        <link rel="canonical" href={canonicalURL} />
+
         <!-- Open Graph -->
         <meta property="og:title" content={fullTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalURL} />
+        <meta property="og:image" content={ogImage} />
         <meta
             property="og:locale"
             content={lang === "de" ? "de_DE" : "en_US"}
         />
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={fullTitle} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
 
         <link
             rel="icon"
@@ -63,11 +78,15 @@ const fullTitle = title === "Home" ? "Niklas Heer" : `${title} | Niklas Heer`;
     <body
         class="min-h-screen bg-background text-foreground transition-colors duration-300"
     >
+        <!-- Skip to main content link for accessibility -->
+        <a href="#main-content" class="skip-to-content">
+            Skip to main content
+        </a>
         <div class="mx-auto max-w-3xl px-4 py-8">
             <div class="relative">
                 <Header lang={lang} />
             </div>
-            <main class="mt-8">
+            <main id="main-content" class="mt-8">
                 <slot />
             </main>
             <Footer />

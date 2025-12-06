@@ -2,6 +2,7 @@
 import BaseLayout from "./BaseLayout.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import OptimizedContent from "../components/OptimizedContent.astro";
+import BackToTop from "../components/BackToTop.astro";
 import type { CollectionEntry } from "astro:content";
 import { parseText } from "../utils/emoji";
 
@@ -100,90 +101,10 @@ const readingTime = Math.ceil(words / 200);
         </footer>
     </article>
 
-    <!-- Back to top button -->
-    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-        <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path d="M18 15l-6-6-6 6"></path>
-        </svg>
-    </button>
+    <BackToTop />
 </BaseLayout>
 
-<style>
-    .back-to-top {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: 3rem;
-        height: 3rem;
-        border-radius: 50%;
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        color: var(--color-muted);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(1rem);
-        transition: all 0.3s ease;
-        z-index: 50;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .back-to-top:hover {
-        color: var(--color-accent);
-        border-color: var(--color-accent);
-        transform: translateY(-2px);
-    }
-
-    .back-to-top.visible {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    @media (max-width: 640px) {
-        .back-to-top {
-            bottom: 1rem;
-            right: 1rem;
-            width: 2.5rem;
-            height: 2.5rem;
-        }
-    }
-</style>
-
 <script>
-    // Back to top button
-    function initBackToTop() {
-        const button = document.getElementById("back-to-top");
-        if (!button) return;
-
-        const toggleVisibility = () => {
-            if (window.scrollY > 300) {
-                button.classList.add("visible");
-            } else {
-                button.classList.remove("visible");
-            }
-        };
-
-        window.addEventListener("scroll", toggleVisibility, { passive: true });
-        toggleVisibility();
-
-        button.addEventListener("click", () => {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-    }
-
     // Initialize medium-zoom for images
     import mediumZoom from "medium-zoom";
     import type { Zoom } from "medium-zoom";
@@ -264,7 +185,6 @@ const readingTime = Math.ceil(words / 200);
     function initAll() {
         initProgressiveImages();
         initZoom();
-        initBackToTop();
     }
 
     // Run when DOM is ready

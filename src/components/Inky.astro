@@ -70,9 +70,17 @@ const comments = await getInkyComments(5);
 </script>
 
 <script>
-    import lottie from "lottie-web";
+    // Lazy-load lottie-web only when needed (on desktop screens > 1200px)
+    let lottieModule: typeof import("lottie-web") | null = null;
 
-    function initInky() {
+    async function loadLottie() {
+        if (!lottieModule) {
+            lottieModule = await import("lottie-web");
+        }
+        return lottieModule.default;
+    }
+
+    async function initInky() {
         const container = document.getElementById("inky-container");
         const mascot = document.getElementById("inky-mascot");
         const lottieContainer = document.getElementById("inky-lottie");
@@ -82,14 +90,18 @@ const comments = await getInkyComments(5);
             "inky-source",
         ) as HTMLAnchorElement;
 
-        // Skip if elements not found
+        // Skip if elements not found or not visible (desktop only)
         if (!mascot || !bubble || !text || !lottieContainer) return;
+        if (window.innerWidth < 1200) return;
+
+        // Lazy-load Lottie
+        const lottie = await loadLottie();
 
         // Clean up previous Lottie instance if exists
         lottie.destroy("inky-animation");
 
         // Initialize Lottie animation
-        const anim = lottie.loadAnimation({
+        lottie.loadAnimation({
             container: lottieContainer,
             renderer: "svg",
             loop: true,
