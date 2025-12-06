@@ -458,80 +458,126 @@ p.info a {
     background: var(--color-muted);
 }
 
-/* View Transitions */
+/* View Transitions - Modern, smooth, and fast */
+
+/* Disable transitions for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+/* Default page transition - quick crossfade */
+::view-transition-old(root) {
+    animation: fade-out 150ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+::view-transition-new(root) {
+    animation: fade-in 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
 @keyframes fade-in {
     from {
         opacity: 0;
-        transform: translateY(10px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
 @keyframes fade-out {
     from {
         opacity: 1;
-        transform: translateY(0);
     }
     to {
         opacity: 0;
-        transform: translateY(-10px);
     }
 }
 
-@keyframes slide-from-right {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slide-to-left {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-}
-
-/* Default page transition */
-::view-transition-old(root) {
-    animation: fade-out 0.2s ease-out;
-}
-
-::view-transition-new(root) {
-    animation: fade-in 0.25s ease-out;
-}
-
-/* Logo stays in place and morphs */
-::view-transition-group(site-logo) {
-    animation-duration: 0.3s;
-}
-
-::view-transition-group(site-title) {
-    animation-duration: 0.3s;
-}
-
-/* Page title morphs/slides between pages */
+/* Page title - subtle slide */
 ::view-transition-old(page-title) {
-    animation: slide-to-left 0.25s ease-out;
+    animation: slide-out 150ms cubic-bezier(0.4, 0, 1, 1);
 }
 
 ::view-transition-new(page-title) {
-    animation: slide-from-right 0.3s ease-out;
+    animation: slide-in 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-/* Profile image scales in smoothly */
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+/* Header elements stay fixed - no animation */
+::view-transition-group(site-logo),
+::view-transition-group(site-title) {
+    animation: none;
+}
+
+::view-transition-old(site-logo),
+::view-transition-new(site-logo),
+::view-transition-old(site-title),
+::view-transition-new(site-title) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Profile image - smooth morph */
 ::view-transition-group(profile-image) {
-    animation-duration: 0.4s;
+    animation-duration: 250ms;
     animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Navigation loading indicator */
+.nav-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+    z-index: 9999;
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 0.1s ease-out;
+}
+
+.nav-loading-bar.loading {
+    animation: loading-progress 1s ease-out forwards;
+}
+
+.nav-loading-bar.complete {
+    transform: scaleX(1);
+    transition: transform 0.1s ease-out, opacity 0.2s ease-out 0.1s;
+    opacity: 0;
+}
+
+@keyframes loading-progress {
+    0% {
+        transform: scaleX(0);
+    }
+    50% {
+        transform: scaleX(0.7);
+    }
+    100% {
+        transform: scaleX(0.9);
+    }
 }

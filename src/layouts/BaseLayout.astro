@@ -73,10 +73,44 @@ const ogImage = new URL(image, Astro.site);
             const theme = localStorage.getItem("theme") || "dark";
             document.documentElement.setAttribute("data-theme", theme);
         </script>
+
+        <!-- Navigation loading indicator script -->
+        <script>
+            function initLoadingBar() {
+                const bar = document.getElementById("nav-loading-bar");
+                if (!bar) return;
+
+                // Show loading bar when navigation starts
+                document.addEventListener("astro:before-preparation", () => {
+                    bar.classList.remove("complete");
+                    bar.classList.add("loading");
+                });
+
+                // Complete the loading bar when page is ready
+                document.addEventListener("astro:after-swap", () => {
+                    bar.classList.remove("loading");
+                    bar.classList.add("complete");
+                });
+
+                // Reset after transition completes
+                document.addEventListener("astro:page-load", () => {
+                    setTimeout(() => {
+                        bar.classList.remove("loading", "complete");
+                    }, 300);
+                });
+            }
+
+            // Initialize on first load
+            initLoadingBar();
+            document.addEventListener("astro:page-load", initLoadingBar);
+        </script>
     </head>
     <body
         class="min-h-screen bg-background text-foreground transition-colors duration-300"
     >
+        <!-- Navigation loading indicator -->
+        <div class="nav-loading-bar" id="nav-loading-bar"></div>
+
         <!-- Skip to main content link for accessibility -->
         <a href="#main-content" class="skip-to-content">
             Skip to main content
