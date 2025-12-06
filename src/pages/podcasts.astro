@@ -430,11 +430,10 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
                                             style={`width: ${progress}%`}
                                         />
                                     </div>
-                                    <p class="episode-progress-text">
-                                        {formatDuration(episode.playedUpTo)} /{" "}
-                                        {formatDuration(episode.duration)} (
-                                        {progress}%)
-                                    </p>
+                                                    <p class="episode-progress-text">
+                                                        {formatDuration(episode.playedUpTo)} /{" "}
+                                                        {formatDuration(episode.duration)} ({progress}%)
+                                                    </p>
                                 </div>
                             </a>
                         );
