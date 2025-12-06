@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { parseEmoji } from "../utils/emoji";
+import { siteConfig } from "../config";
 
 // Get latest posts
 const allPosts = await getCollection("posts", ({ data }) => {
@@ -66,11 +67,11 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
 
             <h1 class="hero-title">
                 <span class="hero-greeting">👋 Hey, I'm</span>
-                <span class="hero-name">Niklas Heer</span>
+                <span class="hero-name">{siteConfig.author.name}</span>
             </h1>
 
             <p class="hero-tagline">
-                Working on open source software and empowering developers.
+                {siteConfig.author.tagline}
             </p>
 
             <div class="hero-badges">
@@ -86,7 +87,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
 
             <div class="hero-socials">
                 <a
-                    href="https://github.com/niklas-heer"
+                    href={siteConfig.social.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="GitHub"
@@ -102,7 +103,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
                     </svg>
                 </a>
                 <a
-                    href="https://linkedin.com/in/niklas-heer-b89364b8"
+                    href={siteConfig.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="LinkedIn"
@@ -118,7 +119,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
                     </svg>
                 </a>
                 <a
-                    href="https://twitter.com/niklas_heer"
+                    href={siteConfig.social.twitter}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Twitter"
@@ -133,7 +134,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
                         ></path>
                     </svg>
                 </a>
-                <a href="mailto:me@nheer.io" aria-label="Email">
+                <a href={`mailto:${siteConfig.author.email}`} aria-label="Email">
                     <svg
                         class="h-5 w-5"
                         fill="none"

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { siteConfig } from "../config";
 
 const tradebbyteStartDate = new Date(2015, 8, 1); // September 2015
 const now = new Date();
@@ -242,7 +243,7 @@ const yearsAtTradebyte = Math.floor(
             </h2>
             <div class="connect-grid">
                 <a
-                    href="https://linkedin.com/in/niklas-heer-b89364b8"
+                    href={siteConfig.social.linkedin}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="connect-card"
@@ -259,7 +260,7 @@ const yearsAtTradebyte = Math.floor(
                     <span>LinkedIn</span>
                 </a>
                 <a
-                    href="https://github.com/niklas-heer"
+                    href={siteConfig.social.github}
                     target="_blank"
                     rel="noopener noreferrer"
                     class="connect-card"
@@ -275,7 +276,7 @@ const yearsAtTradebyte = Math.floor(
                     </svg>
                     <span>GitHub</span>
                 </a>
-                <a href="mailto:me@nheer.io" class="connect-card">
+                <a href={`mailto:${siteConfig.author.email}`} class="connect-card">
                     <svg
                         class="connect-icon"
                         fill="none"
