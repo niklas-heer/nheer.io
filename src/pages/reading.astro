@@ -31,8 +31,9 @@ const booksRead = booksThisYear.length;
 const goalProgress = (booksRead / goalTarget) * 100;
 
 // Calculate pages read this year and pages per day
+// Prefer edition pages over book pages (edition is the specific version, book is the canonical/aggregate)
 const pagesThisYear = booksThisYear.reduce((total, item) => {
-    return total + (item.book.pages || 0);
+    return total + (item.edition?.pages || item.book.pages || 0);
 }, 0);
 
 const startOfYear = new Date(currentYear, 0, 1);
@@ -376,8 +377,9 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                                 <span>
                                                     {Math.round(progress)}%
                                                     {progressPages > 0 &&
-                                                        item.book.pages &&
-                                                        ` (${progressPages}/${item.book.pages} pages)`}
+                                                        (item.edition?.pages ||
+                                                            item.book.pages) &&
+                                                        ` (${progressPages}/${item.edition?.pages || item.book.pages} pages)`}
                                                 </span>
                                             </div>
                                             <div class="h-1.5 bg-border rounded-full overflow-hidden">
@@ -1073,7 +1075,6 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
         padding: 0.125rem 0.5rem;
         border-radius: 9999px;
     }
-
 </style>
 
 <BackToTop />

@@ -3,6 +3,15 @@
 
 const HARDCOVER_API_URL = "https://api.hardcover.app/v1/graphql";
 
+export interface Edition {
+  id: number;
+  title?: string;
+  pages?: number;
+  image?: {
+    url: string;
+  };
+}
+
 export interface Book {
   id: number;
   title: string;
@@ -40,6 +49,7 @@ export interface UserBook {
   reading_journals?: ReadingJournal[];
   first_started_reading_date?: string | null;
   last_read_date?: string | null;
+  edition?: Edition | null;
   book: Book;
 }
 
@@ -109,6 +119,13 @@ const READING_QUERY = `
         ) {
           metadata
         }
+        edition {
+          id
+          pages
+          image {
+            url
+          }
+        }
         book {
           id
           title
@@ -136,6 +153,13 @@ const READING_QUERY = `
         user_book_reads(limit: 1) {
           started_at
           finished_at
+        }
+        edition {
+          id
+          pages
+          image {
+            url
+          }
         }
         book {
           id
