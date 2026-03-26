@@ -12,7 +12,7 @@
     "@astrojs/mdx": "^4.3.12",
     "@astrojs/rss": "^4.0.14",
     "@tailwindcss/vite": "^4.1.17",
-    "astro": "^5.16.2",
+    "astro": "^5.18.1",
     "astro-expressive-code": "^0.41.3",
     "lottie-web": "^5.13.0",
     "medium-zoom": "^1.1.0",
