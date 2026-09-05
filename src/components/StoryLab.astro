@@ -1,4 +1,5 @@
 ---
+import ArticleExperiment from './ArticleExperiment.astro';
 interface Props { kind: 'diagram' | 'packing' | 'shell' | 'saving' | 'racing' | 'benchmark'; }
 const { kind } = Astro.props;
 const stories = {
@@ -36,7 +37,7 @@ const stories = {
 const story = stories[kind];
 ---
 <story-lab class="story-lab" data-kind={kind}>
-  <figure>
+  {kind === 'benchmark' || kind === 'saving' ? <ArticleExperiment kind={kind} /> : <figure>
     <div class="lab-heading"><span>{story.eyebrow}</span><h3>{story.title}</h3></div>
     <div class="lab-controls" role="group" aria-label={story.title}>
       {story.states.map(([label], i) => <button type="button" data-step={i} aria-pressed={i === 0}><span>0{i + 1}</span>{label}</button>)}
@@ -93,7 +94,7 @@ const story = stories[kind];
       </div>
     ))}
     <noscript><p class="lab-note">The first view is shown. Enable JavaScript to explore the other views.</p></noscript>
-  </figure>
+  </figure>}
 </story-lab>
 <script>
   class StoryLab extends HTMLElement {

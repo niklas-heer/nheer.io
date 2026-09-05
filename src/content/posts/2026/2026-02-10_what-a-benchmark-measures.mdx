@@ -42,7 +42,9 @@ Startup is another source of confusion. For a tiny command, interpreter or runti
 
 <StoryLab kind="benchmark" />
 
-These are teaching numbers, not repository measurements. Both bars fill the available width because each represents 100% of its own run. The proportion changes dramatically even though the startup time stays the same.
+These are teaching numbers, not repository measurements. Both bars share the same time scale. At twenty units of work, the two implementations tie. Beyond that, the one with the slower start wins: its cheaper work has finally repaid the entrance fee.
+
+Try nudging the slider back across that boundary. Neither implementation changed. The question did.
 
 This is why I would not use a long arithmetic benchmark to choose the snappiest interactive CLI. Conversely, timing an almost-empty command tells you very little about sustained numerical work.
 

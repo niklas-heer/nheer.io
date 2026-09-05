@@ -1,0 +1,160 @@
+---
+interface Props { kind: 'benchmark' | 'saving'; }
+const { kind } = Astro.props;
+---
+<article-experiment data-kind={kind}>
+  <figure>
+    <header>
+      <span class="eyebrow">{kind === 'benchmark' ? '01 / CHANGE THE WORKLOAD' : '01 / FOLLOW THE FILE'}</span>
+      <h3>{kind === 'benchmark' ? 'Can you make the winner change?' : 'Two editors. One file. Your move.'}</h3>
+      <p>{kind === 'benchmark' ? 'A starts quickly. B does each unit of work faster. Before moving the slider, pick your winner.' : 'You ticked a task in the app. Meanwhile, your other editor is perfectly capable of having opinions.'}</p>
+    </header>
+    {kind === 'benchmark' ? <>
+      <div class="presets" role="group" aria-label="Example workloads">
+        <button type="button" data-work="1" aria-pressed="true">Tiny command</button>
+        <button type="button" data-work="20" aria-pressed="false">Find the crossover</button>
+        <button type="button" data-work="200" aria-pressed="false">Long calculation</button>
+      </div>
+      <label class="slider-label">Units of work <output data-units>1</output>
+        <input type="range" min="1" max="200" value="1" step="1" aria-label="Units of work" />
+      </label>
+      <div class="chart" role="img" aria-label="At 1 unit: A takes 25 milliseconds. B takes 82 milliseconds." data-chart>
+        <div class="bar-label"><strong>A · quick start</strong><span data-total-a>25 ms</span></div>
+        <div class="bar-track"><div class="segment startup" data-a-start style="width:24.3902%"></div><div class="segment work" data-a-work style="width:6.0976%"></div></div>
+        <div class="bar-label"><strong>B · quick work</strong><span data-total-b>82 ms</span></div>
+        <div class="bar-track"><div class="segment startup" data-b-start style="width:97.561%"></div><div class="segment work" data-b-work style="width:2.439%"></div></div>
+        <div class="axis"><span>0 ms</span><span data-axis>82 ms</span></div>
+      </div>
+      <div class="legend"><span><i class="startup"></i>Startup</span><span><i class="work"></i>Useful work</span><span>Same time scale for both bars</span></div>
+      <div class="equations"><code>A = 20 + 5 × <span data-n-a>1</span></code><code>B = 80 + 2 × <span data-n-b>1</span></code></div>
+      <p class="result" data-result role="status">A finishes 57 ms sooner. Getting out of bed is most of B’s job here.</p>
+      <figcaption>Invented teaching numbers, in milliseconds. Move the slider with your mouse, touch, or arrow keys. These are two hypothetical implementations, not measured languages.</figcaption>
+    </> : <>
+      <div class="file-grid">
+        <section class="file app-file" aria-label="In the app"><span class="file-label">IN THE APP <small>your pending edit</small></span><pre>[x] Ship the thing<span data-app-note></span></pre><span class="version" data-app-version>Opened disk version 1</span></section>
+        <div class="save-bridge" aria-hidden="true"><span data-bridge data-direction="arrow">→</span></div>
+        <section class="file disk-file" aria-label="On disk"><span class="file-label">ON DISK <small>tasks.md</small></span><pre data-disk>[ ] Ship the thing</pre><span class="version" data-disk-version>Version 1</span></section>
+      </div>
+      <div class="snapshot"><span class="file-label">RECOVERY SNAPSHOT</span><code data-snapshot>No write yet. No snapshot in this example.</code></div>
+      <div class="presets" role="group" aria-label="Try a file conflict">
+        <button type="button" data-action="external">1. Add a note elsewhere</button>
+        <button type="button" data-action="save">2. Try saving</button>
+        <button type="button" data-action="resolve" disabled>3. Keep both edits</button>
+        <button type="button" data-action="reset">Reset</button>
+      </div>
+      <p class="result" data-result role="status">Try adding a note in the other editor, then save. Or save first to see the uncomplicated version.</p>
+      <figcaption>A simplified model of conflict detection, review, and recovery. “Keep both edits” represents your deliberate resolution after inspection; it does not claim that tdx automatically merges arbitrary changes.</figcaption>
+    </>}
+    <noscript><p>The starting example is visible. Enable JavaScript to try the controls.</p></noscript>
+  </figure>
+</article-experiment>
+<script>
+  class ArticleExperiment extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      const text = (selector: string, value: string) => { this.querySelector(selector)!.textContent = value; };
+      if (this.dataset.kind === 'benchmark') {
+        const slider = this.querySelector<HTMLInputElement>('input')!;
+        const update = (n: number) => {
+          slider.value = String(n);
+          const a = 20 + 5 * n, b = 80 + 2 * n, max = Math.max(a, b);
+          text('[data-units]', String(n));
+          text('[data-n-a]', String(n)); text('[data-n-b]', String(n));
+          text('[data-total-a]', `${a.toLocaleString('en')} ms`); text('[data-total-b]', `${b.toLocaleString('en')} ms`);
+          text('[data-axis]', `${max.toLocaleString('en')} ms`);
+          for (const [key, value] of Object.entries({ 'a-start': 20, 'a-work': 5 * n, 'b-start': 80, 'b-work': 2 * n })) {
+            this.querySelector<HTMLElement>(`[data-${key}]`)!.style.width = `${value / max * 100}%`;
+          }
+          this.querySelector('[data-chart]')!.setAttribute('aria-label', `At ${n} units: A takes ${a} milliseconds. B takes ${b} milliseconds.`);
+          text('[data-result]', a === b ? 'A tie at 120 ms. Twenty units is exactly where the startup advantage runs out.' : `${a < b ? 'A' : 'B'} finishes ${Math.abs(a - b)} ms sooner. ${a < b ? 'Getting out of bed is most of B’s job here.' : 'Faster work has paid back B’s slower start.'}`);
+          for (const button of this.querySelectorAll<HTMLButtonElement>('[data-work]')) button.setAttribute('aria-pressed', String(Number(button.dataset.work) === n));
+        };
+        slider.addEventListener('input', () => update(Number(slider.value)));
+        this.addEventListener('click', event => {
+          const button = (event.target as Element).closest<HTMLButtonElement>('[data-work]');
+          if (button) update(Number(button.dataset.work));
+        });
+      } else {
+        let state: 'ready' | 'external' | 'blocked' | 'saved' = 'ready';
+        let hasNote = false;
+        const render = (message: string) => {
+          const saved = state === 'saved';
+          text('[data-disk]', `${saved ? '[x]' : '[ ]'} Ship the thing${hasNote ? '\nNote: Review it first' : ''}`);
+          text('[data-app-note]', saved && hasNote ? '\nNote: Review it first' : '');
+          text('[data-disk-version]', `Version ${saved ? hasNote ? 3 : 2 : hasNote ? 2 : 1}`);
+          text('[data-app-version]', saved ? 'Saved. Both views agree.' : 'Opened disk version 1');
+          text('[data-bridge]', state === 'blocked' ? '≠' : saved ? '=' : '→');
+          this.querySelector<HTMLElement>('[data-bridge]')!.dataset.direction = state === 'blocked' || saved ? 'comparison' : 'arrow';
+          text('[data-snapshot]', saved ? `[ ] Ship the thing${hasNote ? '\nNote: Review it first' : ''}` : 'No write yet. No snapshot in this example.');
+          text('[data-result]', message);
+          this.dataset.state = state;
+          this.querySelector<HTMLButtonElement>('[data-action="external"]')!.disabled = state !== 'ready';
+          this.querySelector<HTMLButtonElement>('[data-action="save"]')!.disabled = saved || state === 'blocked';
+          this.querySelector<HTMLButtonElement>('[data-action="resolve"]')!.disabled = state !== 'blocked';
+        };
+        this.addEventListener('click', event => {
+          const button = (event.target as Element).closest<HTMLButtonElement>('[data-action]');
+          if (!button || button.disabled) return;
+          switch (button.dataset.action) {
+            case 'external': hasNote = true; state = 'external'; render('The other editor added a note. Disk is now version 2; the app still remembers version 1.'); break;
+            case 'save':
+              if (hasNote) { state = 'blocked'; render('Save paused: disk changed since you opened it. Your tick and the new note are both still intact. Inspect the two views before choosing.'); }
+              else { state = 'saved'; render('Saved. Disk still matched the opened version, so the pending tick could be written. The previous contents are in the recovery snapshot.'); }
+              break;
+            case 'resolve': state = 'saved'; render('Both edits kept: the task is ticked and the note survived. The snapshot preserves the disk contents from before this write. Bureaucracy, with a happy ending.'); break;
+            case 'reset': state = 'ready'; hasNote = false; render('Back at the beginning. Try the other order: save before making an external edit.'); break;
+          }
+        });
+      }
+    }
+  }
+  if (!customElements.get('article-experiment')) customElements.define('article-experiment', ArticleExperiment);
+</script>
+<style>
+  article-experiment { display: block; color: #eee9fc; }
+  figure { text-align: left; margin: 0; padding: clamp(1rem, 3vw, 1.7rem); background: #191527; border: 1px solid #554477; border-radius: 20px; }
+  .eyebrow, .file-label, .version, .axis { font: 600 .68rem/1.5 ui-monospace, monospace; letter-spacing: .04em; }
+  .eyebrow { color: #c2aaff; }
+  h3 { color: #eee9fc; font-size: clamp(1.3rem, 3vw, 1.8rem); margin: .6rem 0; line-height: 1.2; }
+  p, figcaption { text-align: left; font-size: .9rem; line-height: 1.65; color: #d5cce6; }
+  header p { margin: 0 0 1.3rem; }
+  .presets { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+  button { font-family: inherit; font-size: .8rem; font-weight: 500; line-height: 1.35; color: #eee9fc; background: #292236; border: 1px solid #74618e; border-radius: 9px; padding: .65rem .8rem; cursor: pointer; }
+  button[aria-pressed=true] { color: #231537; background: #c2aaff; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, input:focus-visible { outline: 3px solid #6de6cd; outline-offset: 4px; }
+  .slider-label { display: block; margin: 1.6rem 0; font-size: .9rem; }
+  output { float: right; font: 600 1rem ui-monospace, monospace; color: #83ead0; }
+  input { display: block; width: 100%; margin: 1rem 0 0; accent-color: #c2aaff; min-height: 24px; cursor: ew-resize; }
+  .chart { border-block: 1px solid #44364e; padding: 1.3rem 0 .7rem; }
+  .bar-label { display: flex; justify-content: space-between; gap: .5rem; font-size: .8rem; margin-bottom: .5rem; }
+  .bar-label span { font: .85rem ui-monospace, monospace; }
+  .bar-track { display: flex; height: 32px; margin-bottom: 1.4rem; background: #262032; border-radius: 4px; overflow: hidden; }
+  .segment { height: 100%; transition: width 180ms ease-out; flex: 0 0 auto; }
+  .startup { background: #b79afa; }
+  .work { background: #6dd9bd; }
+  .axis { display: flex; justify-content: space-between; color: #b9aec9; }
+  .legend { display: flex; flex-wrap: wrap; gap: .6rem 1rem; font-size: .7rem; margin-top: .8rem; color: #d5cce6; }
+  .legend span { display: inline-flex; align-items: center; gap: .4rem; }
+  i { width: 10px; height: 10px; border-radius: 2px; }
+  .equations { display: flex; flex-wrap: wrap; gap: .6rem 2rem; margin-top: 1rem; }
+  code { color: #e0d5ee; background: none; padding: 0; font: .8rem/1.6 ui-monospace, monospace; }
+  .result { border-left: 3px solid #83ead0; padding: .8rem 1rem; margin: 1.4rem 0 1rem; background: #242435; min-height: 5rem; }
+  figcaption { text-align: left; font-size: .78rem; color: #b9aec9; }
+  .file-grid { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); align-items: stretch; margin-top: 1.5rem; }
+  .file { min-width: 0; background: #222031; border: 1px solid #74618e; border-radius: 10px; padding: 1rem .8rem; }
+  .app-file { border-top: 3px solid #83ead0; }
+  .disk-file { border-top: 3px solid #c2aaff; }
+  .file-label { display: block; color: #cfc1e2; }
+  .file-label small { display: block; color: #ada0c0; font: normal .7rem/1.6 system-ui; letter-spacing: 0; }
+  pre { font: .74rem/1.8 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; color: #eee9fc; margin: 1rem 0; min-height: 3rem; background: none; padding: 0; }
+  .version { font-size: .62rem; color: #ada0c0; letter-spacing: 0; }
+  .save-bridge { display: grid; place-items: center; font-size: 1.5rem; color: #83ead0; }
+  [data-state=blocked] .save-bridge { color: #ffd18b; }
+  [data-state=blocked] .disk-file { border-color: #ffd18b; }
+  .snapshot { margin-top: 1rem; padding: .8rem 1rem; border: 1px dashed #68547e; border-radius: 8px; }
+  .snapshot code { display: block; white-space: pre-wrap; margin-top: .4rem; font-size: .74rem; }
+  @media (max-width: 520px) { .file-grid { grid-template-columns: 1fr; } .save-bridge { height: 32px; } .save-bridge [data-direction=arrow] { transform: rotate(90deg); } .file { padding: .8rem; } pre { min-height: 0; margin: .6rem 0; font-size: .8rem; } .file-label small { display: inline; margin-left: .5rem; } .version { font-size: .7rem; } }
+  @media (prefers-reduced-motion: reduce) { .segment { transition: none; } }
+</style>

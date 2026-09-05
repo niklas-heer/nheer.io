@@ -10,6 +10,7 @@ import { remarkOptimizeImages } from "./src/utils/remark-optimize-images.mjs";
 
 // https://astro.build/config
 export default defineConfig({
+  devToolbar: { enabled: process.env.PREVIEW_DRAFTS !== "true" },
   prefetch: {
     prefetchAll: true,
     defaultStrategy: "viewport",
