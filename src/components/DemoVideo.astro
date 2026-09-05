@@ -1,0 +1,17 @@
+---
+interface Props { name: string; title: string; caption: string; }
+const { name, title, caption } = Astro.props;
+const base = `/assets/articles/2026/${name}`;
+---
+<figure class="application-demo" data-application-demo>
+  <video controls playsinline preload="none" width={name === "quirl-modes-demo" ? 1100 : 1040} height={name === "tdx-readme-demo" ? 700 : 720} poster={`${base}-poster.png`} aria-label={title}>
+    <source src={`${base}.mp4`} type="video/mp4" />
+    <a href={`${base}.mp4`}>Watch {title}</a>
+  </video>
+  <figcaption><strong>{title}.</strong> {caption}</figcaption>
+</figure>
+<style>
+  .application-demo { margin: 2rem 0; text-align: left; }
+  video { width: 100%; height: auto; display: block; border: 1px solid var(--color-border); border-radius: 12px; background: #1e1e2e; }
+  figcaption { margin: .8rem 0 0; color: var(--color-muted); font-size: .85rem; line-height: 1.6; text-align: left; }
+</style>

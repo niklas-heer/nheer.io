@@ -1,6 +1,6 @@
 ---
-title: "I gave a classroom projector a racing career"
-description: "Overhead Overdrive turns an unlikely vehicle into a browser racer—and asks how much physics a good joke needs."
+title: "The projector racing game I never got around to making"
+description: "An idea I had with friends at roughly thirteen, a new model to try, and an overhead projector finally getting its moment on the track."
 date: "2026-09-04T23:59:00+02:00"
 icon: ":racing_car:"
 tags: ["games", "typescript", "web", "creative-coding"]
@@ -8,52 +8,30 @@ draft: false
 lang: "en"
 ---
 
-import StoryLab from '../../../components/StoryLab.astro';
+When I was somewhere around twelve, thirteen, or fourteen, my friends and I had an idea: a racing game with overhead projectors.
 
-An overhead projector has many admirable qualities. It can illuminate a transparency. It can become extremely warm. It can make an entire classroom watch someone clean a mysterious smudge off a sheet of plastic.
+The age is approximate. The vehicle choice, unfortunately, was quite deliberate.
 
-It is less widely celebrated for its cornering performance.
+I never got around to making it. The idea stayed in the back of my mind, occasionally resurfacing without bringing a finished game—or any 3D-modeling skills—with it. I still do not have those skills today.
 
-[Overhead Overdrive](https://github.com/niklas-heer/overhead-overdrive) gives it an opportunity to address that oversight. It is a browser racing game in which a projector on four casters drifts around a stylized interpretation of Schenk-von-Limpurg-Gymnasium in Gaildorf.
+Then GPT-6 Astra arrived, and I wanted to see what I could do with it. This seemed like a good test: could I finally turn that old idea into something playable?
 
-The vehicle is ridiculous. Making it enjoyable to drive is a fairly serious design problem.
+![Overhead Overdrive's courtyard menu, with a classroom projector waiting at the starting line](/assets/articles/2026/projector-courtyard.png)
 
-## The joke has to survive the first corner
+The first attempt gave me surprisingly nice results quite quickly. Enough that my reaction was essentially: “Hey, why not?”
 
-A funny screenshot gets you to the starting line. The controls have to do the rest.
+So I kept going.
 
-The projector needs some weight. It should not change direction like a mouse pointer wearing a school uniform. But too much realism would also be a mistake: a genuinely top-heavy projector hitting a corner at racing speed would probably end the game in a small insurance discussion.
+The result is [Overhead Overdrive](https://github.com/niklas-heer/overhead-overdrive): a browser racing game with a very questionable choice of vehicle. The screenshots here come from the first playable version and its early polish, rather than a mockup of what it might become.
 
-The game uses an arcade model. Acceleration, drag, sideways grip, and turning interact, while the body animation adds a sense of mass. The chassis can lean and the mast can flex without turning every bump into a full rigid-body catastrophe.
+![An actual race in the school atrium, with several overhead projectors crowding into a corner](/assets/articles/2026/projector-race.png)
 
-That distinction matters. The casters swivel visually, but they are not four independently simulated suspension assemblies. The goal is a readable, controllable vehicle whose movement makes the joke feel convincing.
+I could give you a detailed explanation of the drift system. But the part I find most interesting is much simpler: an idea that had lived in my head since school now exists as something I can play.
 
-## Sliding should give you something to do
+That does not mean I suddenly became a 3D artist. It means I had a way to try the idea without first becoming one.
 
-Drifting works best when it creates a decision, rather than merely announcing that traction has left the building.
+Sometimes a new tool is useful because it saves time on work you already do. Sometimes it gets you to attempt the slightly ridiculous thing you have been postponing for years.
 
-Reducing grip allows the projector to carry momentum through a turn. A charged drift can reward a clean release with a speed kick. Contact cancels the charge, so holding the slide forever is not a clever universal strategy. It is mostly a way to become acquainted with a wall.
+In this case, the slightly ridiculous thing has wheels and used to explain fractions.
 
-<StoryLab kind="racing" />
-
-This is an explanatory sketch of the mechanic, not a miniature simulation. In the game, the moment-to-moment experience also comes from the sparks, the caster movement, the lens head, and the sound. Small reactions make an ordinary input feel like something happened to a physical object.
-
-The same idea runs through the tracks. There are three circuits, distinct handling setups, and opponents with different driving styles. Classroom clutter becomes part of the racing vocabulary. Flying worksheets finally have a use beyond making a room look busy.
-
-## Keep the simulation on its own clock
-
-The vehicle dynamics run at a fixed 120 Hz, independently of rendering.
-
-For a player, the useful consequence is consistency: the driving model should not depend on how enthusiastically their browser produces frames. For development, the separation makes it possible to exercise driving behavior without treating every check as a manual lap.
-
-That does not mean an automated race can tell you whether a drift is satisfying. It can tell you more concrete things: whether a racer gets around the course, whether checkpoints work, and whether a change has made an obstacle impossible to negotiate.
-
-The project combines simulation checks with browser-driven checks for controls, races, items, and the interface. They answer different questions. A mathematical model can finish a race while the actual keyboard controls are broken. A lovely menu can conceal a track nobody can complete.
-
-## Small worlds can have a lot of character
-
-What I like about this project is that it does not need an enormous world to have an identity. A familiar building, an improbable vehicle, and a few carefully connected mechanics are enough to make it recognizable.
-
-If you want to play locally, the [project README](https://github.com/niklas-heer/overhead-overdrive/tree/9edd2c224140) has the setup and controls. It needs Node.js and a WebGL2-capable browser.
-
-The projector has been waiting years for someone to notice the wheels. It would be rude not to give it a lap.
+[Get the game and local setup instructions](https://github.com/niklas-heer/overhead-overdrive/tree/9edd2c224140).

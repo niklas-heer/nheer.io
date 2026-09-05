@@ -18,29 +18,19 @@ for (const width of [1280, 390]) {
       await page.goto('/posts/');
       // Enter through Astro client navigation, where listeners used to get lost.
       await page.locator(`main a[href*="${slug}"]`).click();
-      await expect(page.locator('story-lab')).toBeVisible();
+      await expect(page.locator('article')).toBeVisible();
       if (kind === 'benchmark') {
-        const slider = page.getByRole('slider', { name: 'Units of work' });
-        await expect(page.locator('[data-result]')).toContainText('A finishes 57 ms sooner');
-        await page.getByRole('button', { name: 'Find the crossover' }).click();
-        await expect(page.locator('[data-result]')).toContainText('A tie at 120 ms');
-        await expect(page.locator('[data-total-a]')).toHaveText('120 ms');
-        await expect(page.locator('[data-total-b]')).toHaveText('120 ms');
-        await slider.focus();
-        await page.keyboard.press('ArrowRight');
-        await expect(slider).toHaveValue('21');
-        await expect(page.locator('[data-result]')).toContainText('B finishes 3 ms sooner');
-        await expect(page.locator('[data-chart]')).toHaveAttribute('aria-label', 'At 21 units: A takes 125 milliseconds. B takes 122 milliseconds.');
-        await page.getByRole('button', { name: 'Long calculation' }).click();
-        await expect(page.locator('[data-total-a]')).toHaveText('1,020 ms');
-        await expect(page.locator('[data-total-b]')).toHaveText('480 ms');
-        // Both stacked bars must share one scale, not independently fill the chart.
-        // Wait on geometry explicitly because the visual intentionally interpolates.
-        await expect.poll(async () => page.locator('[data-b-start]').evaluate(el =>
-          (el.getBoundingClientRect().width + el.nextElementSibling!.getBoundingClientRect().width) / el.parentElement!.getBoundingClientRect().width
-        )).toBeCloseTo(480 / 1020, 2);
-        await page.emulateMedia({ reducedMotion: 'reduce' });
-        await expect(page.locator('[data-a-start]')).toHaveCSS('transition-duration', '0s');
+        const buttons = page.locator('pipeline-history button');
+        await expect(buttons).toHaveCount(3);
+        for (let era = 0; era < 3; era++) {
+          await buttons.nth(era).click();
+          await expect(buttons.nth(era)).toHaveAttribute('aria-pressed', 'true');
+          await expect(page.locator(`pipeline-history [data-era-panel="${era}"]`)).toBeVisible();
+          await expect(page.locator('pipeline-history [data-era-panel]:not([hidden])')).toHaveCount(1);
+        }
+        await buttons.first().focus();
+        await page.keyboard.press('Enter');
+        await expect(buttons.first()).toHaveAttribute('aria-pressed', 'true');
       } else if (kind === 'saving') {
         await page.getByRole('button', { name: 'Add a note elsewhere' }).click();
         await page.getByRole('button', { name: 'Try saving' }).click();
@@ -58,7 +48,7 @@ for (const width of [1280, 390]) {
         await page.getByRole('button', { name: 'Reset', exact: true }).click();
         await page.getByRole('button', { name: 'Add a note elsewhere' }).click();
         await page.getByRole('button', { name: 'Try saving' }).click();
-      } else {
+      } else if (kind === 'diagram') {
         const buttons = page.locator('story-lab button[data-step]');
         await expect(buttons).toHaveCount(3);
         for (let step = 0; step < 3; step++) {
@@ -71,8 +61,28 @@ for (const width of [1280, 390]) {
         await page.keyboard.press('Enter');
         await expect(buttons.first()).toHaveAttribute('aria-pressed', 'true');
       }
+      if (['saving', 'packing', 'shell'].includes(kind)) {
+        const video = page.locator('video');
+        await expect(video).toBeVisible();
+        await expect(video).toHaveAttribute('controls', '');
+        expect(await video.evaluate((el: HTMLVideoElement) => el.autoplay)).toBe(false);
+        const poster = await video.getAttribute('poster');
+        expect((await page.request.get(poster!)).status()).toBe(200);
+        await video.evaluate((el: HTMLVideoElement) => { el.muted = true; return el.play(); });
+        await expect.poll(() => video.evaluate((el: HTMLVideoElement) => el.currentTime)).toBeGreaterThan(0.2);
+        expect(await video.evaluate((el: HTMLVideoElement) => el.videoWidth)).toBeGreaterThan(0);
+        await video.evaluate((el: HTMLVideoElement) => el.pause());
+      }
+      if (kind === 'racing' || kind === 'diagram') {
+        const pictures = page.locator('article img[src^="/assets/articles/"]');
+        await expect(pictures).toHaveCount(kind === 'racing' ? 2 : 1);
+        for (const picture of await pictures.all()) {
+          await picture.scrollIntoViewIfNeeded();
+          await expect.poll(() => picture.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+        }
+      }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      await page.locator('story-lab').screenshot({ path: test.info().outputPath(`${kind}.png`) });
+      await page.locator(kind === 'benchmark' ? 'pipeline-history' : kind === 'packing' ? '.binary-size' : kind === 'shell' ? '[data-application-demo]' : kind === 'racing' ? 'article img[src$="projector-courtyard.png"]' : 'story-lab').screenshot({ path: test.info().outputPath(`${kind}.png`) });
       await page.getByRole('link', { name: 'Back to all posts' }).click();
       await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
       expect(errors).toEqual([]);
@@ -89,7 +99,7 @@ test('cold-load controls wait for their handlers without losing the first click'
   });
   for (const [slug, buttonName, expectedText] of [
     ['2026-07-19_diagrams-that-explain-themselves', 'Inspect', 'Validation and layout advice'],
-    ['2026-02-10_what-a-benchmark-measures', 'Find the crossover', 'A tie at 120 ms'],
+    ['2026-02-10_what-a-benchmark-measures', 'Nix + Dagger', 'LANGUAGES dictionary'],
     ['2026-07-17_saving-a-markdown-file', 'Add a note elsewhere', 'The other editor added a note'],
   ]) {
     scriptsReady = new Promise<void>(resolve => { release = resolve; });
@@ -100,8 +110,8 @@ test('cold-load controls wait for their handlers without losing the first click'
       await expect(button).toBeDisabled();
       release();
       await button.click();
-      await expect(page.locator('story-lab')).toContainText(expectedText);
-      if (buttonName === 'Inspect') await expect(button).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('article')).toContainText(expectedText);
+      if (buttonName !== 'Add a note elsewhere') await expect(button).toHaveAttribute('aria-pressed', 'true');
     } finally {
       release();
     }

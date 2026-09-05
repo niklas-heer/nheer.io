@@ -118,7 +118,7 @@ test('published interactive articles appear in the blog, feed, and homepage', as
   const root = 'src/content/posts/2026';
   const articles = readdirSync(root).filter(file => {
     const content = readFileSync(join(root, file), 'utf8');
-    return content.includes('import StoryLab') && /^draft: false$/m.test(content);
+    return file.endsWith('.mdx') && /^draft: false$/m.test(content);
   });
   expect(articles.length).toBeGreaterThanOrEqual(6);
   expect((await request.get('/drafts/')).status()).toBe(404);
@@ -132,7 +132,7 @@ test('published interactive articles appear in the blog, feed, and homepage', as
     const url = `/posts/${date[1]}/${date[2]}/${slug}/`;
     const response = await request.get(url);
     expect(response.status()).toBe(200);
-    expect(await response.text()).toContain('<story-lab');
+    expect(await response.text()).toContain('<article');
     expect(index).toContain(url);
     expect(feed).toContain(slug);
   }

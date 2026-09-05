@@ -1,63 +1,89 @@
 ---
-title: "A shell with two kinds of pipes"
-description: "Quirl keeps familiar shell habits while making room for structured data—and keeps the boundary between the two visible."
+title: "I wanted a shell that could keep my old habits"
+description: "Quirl grew out of a very ordinary annoyance: I loved working with structured data, but I still wanted the commands I copied to work."
 date: "2026-08-23T10:00:00+02:00"
 icon: ":shell:"
-tags: ["rust", "shell", "cli", "developer-tools"]
+tags: ["rust", "shell", "lua", "developer-tools"]
 draft: false
 lang: "en"
 ---
 
-import StoryLab from '../../../components/StoryLab.astro';
+import DemoVideo from '../../../components/DemoVideo.astro';
 
-A shell pipeline is one of computing's great bargains. One program writes something. Another program reads it. You can build a surprisingly useful tool out of a few commands and an optimistic attitude toward whitespace.
+I used zsh for a long time. I tried Fish and wandered through a few other shells, as one does when the actual task is insufficiently distracting.
 
-Then a filename contains a space, a column moves, or a number turns out to include a unit. Your elegant one-liner begins applying for a position as a small language runtime.
+Then I found Nushell and made it the default in the terminals I use.
 
-I built [Quirl](https://github.com/niklas-heer/quirl) to explore a shell that can work with both familiar command-line behavior and typed data pipelines.
+Working with data felt wonderful. CSV and JSON stopped being things I had to disassemble with increasingly elaborate text processing. I could inspect rows, select fields, filter values, and keep drilling into the result. Even a directory listing became something I could ask questions of.
 
-The interesting part is not that records are better than text. It is deciding when each is the right material to pass around.
+Then I copied a command from my notes.
 
-## Text is a very good common language
+It did not work.
 
-Ordinary pipes are useful precisely because they ask relatively little of the programs on either end. A command can produce bytes without knowing who will read them. Existing tools can be combined in ways their authors never anticipated.
+## The clipboard kept sending me back
 
-That flexibility is worth keeping.
+The same thing happened with commands from the internet and from sessions with AI tools. They assumed familiar shell syntax. My new default shell had different rules.
 
-It also moves interpretation somewhere else. A line might look like three tidy columns to a human while being one undifferentiated string to the next command. Extracting a field means agreeing on a format, even when that agreement is only “I think the third bit is always the number.”
+Those rules were part of what made the data experience so useful. But I kept switching back to a traditional shell to run the command I had just copied. I wanted the new capabilities without making the clipboard a compatibility negotiation.
 
-For stable output, that can be entirely reasonable. Problems begin when a display format quietly becomes a data contract.
+I had also spent some time with Xonsh. The idea of using Python—a real, general-purpose programming language—inside a shell appealed to me. For scripts and customization, I would rather use a language with a life beyond configuring my prompt.
 
-## Sometimes you want the number to stay a number
+Eventually the wish list became fairly clear:
 
-Quirl includes an explicit data mode for structured values. Once data has fields and types, operations can work with that structure instead of repeatedly trying to recover it from presentation text.
+- Keep a familiar mode for everyday commands and Bash/zsh habits.
+- Switch to a data mode when I actually want to work with data.
+- Use a general-purpose language to script and extend the shell.
 
-<StoryLab kind="shell" />
+[Quirl](https://github.com/niklas-heer/quirl) is my attempt to put those things in one place.
 
-The example is conceptual, not Quirl command syntax. Imagine filtering records by a numeric count. With typed records, the count already has a name and a value. You do not first have to trim a line, split it correctly, and hope that a helpful new column has not arrived upstream.
+## Watch the same session change gears
 
-This is particularly useful when exploring structured input. You can think about the question you want to ask of the data, rather than the string surgery needed to reach it.
+<DemoVideo name="quirl-modes-demo" title="Familiar commands, typed data, and Lua in one Quirl session" caption="Recorded with a development build of Quirl’s 0.1 line. A byte pipeline runs first, then a JSON file becomes filtered records, followed by an explicit Bash block and a Lua expression. The sample services are local demo data." />
 
-## The boundary is where the design gets interesting
+The first command is deliberately unremarkable:
 
-A shell cannot declare the rest of the world structured and expect every existing command to comply.
+```sh
+printf 'api\nworker\njobs\n' | wc -l && echo 'pipeline: healthy'
+```
 
-External programs still use byte streams. Some shell constructs belong to a particular dialect. Extensions need their own rules. These boundaries need to be explicit enough that a person can predict what a command will do.
+A familiar pipe, a count, and a command that runs if the pipeline succeeds. That is the point. Not every trip to the terminal should require a new worldview.
 
-Quirl's 0.1 line combines a native shell with typed pipelines and a Lua extension SDK. It also provides explicit Bash and Zsh islands for dialect-specific work. Familiarity is a goal; silently promising to be every other shell would be a much larger—and less credible—goal.
+Quirl's native normal mode covers a defined core of shell behavior. It is not a complete Bash or zsh implementation, so dialect-specific syntax has an explicit home:
 
-For users, the practical question is simple: **can I tell which rules apply here?**
+```sh
+bash { cat <(printf 'Bash still works.\n') }
+```
 
-A surprising conversion can be harder to debug than a slightly longer command. An explicit boundary gives you somewhere to look when the result differs from your expectation.
+There are zsh blocks too. The goal is to make existing habits usable while keeping it clear which language is interpreting a command.
 
-## Your fingers are users too
+## When I want data, I ask for data
 
-A shell is unusual software because people carry years of physical habits into it. Navigation, editing, completion, and command composition happen before conscious thought catches up.
+Type `mode data`, and a command like this can work with the fields in a JSON file:
 
-A new feature has to earn its place in that environment. It is not enough for a structured pipeline to look tidy in a demonstration. The surrounding shell must remain understandable when you are tired, moving quickly, or trying to recover from a typo.
+```text
+open services.json | where latency > 50 | select service latency
+```
 
-That is why I find this an interesting space to build in. The challenge sits between language design and everyday interaction: richer data, but also a prompt that feels usable on an ordinary Tuesday.
+In the recording, the result contains the services whose numeric latency exceeds 50. No counting columns. No guessing which run of spaces belongs to the table formatting.
 
-If you want to explore it, start with the [0.1.0 release](https://github.com/niklas-heer/quirl/releases/tag/v0.1.0) and its [versioned documentation](https://github.com/niklas-heer/quirl/tree/v0.1.0). The release targets interactive Linux and macOS use; broader compatibility has its own limits.
+This is the part of the structured-shell experience I wanted to keep: exploring data should feel like exploring data. CSV files, JSON documents, and structured listings are natural places to use it.
 
-Quirl means a whisk. Mixing a few useful ideas is the intention. Producing a shell-shaped smoothie is the failure mode to avoid.
+Type `mode normal` when you want to go back. Both modes earn their place by being useful at different moments.
+
+## Lua is the third ingredient
+
+For the extension language, I ended up choosing Lua rather than Python.
+
+I spent time looking for something fast and embeddable. Lua fit that goal, and Quirl already uses it for configuration, scripts, and extensions. Rust handles the shell's core; the embedded Lua runtime has explicit resource limits.
+
+You can try it without writing a configuration file:
+
+```lua
+lua return { answer = 6 * 7, language = _VERSION }
+```
+
+That is a tiny example, but it shows the boundary: when I want to program the shell, there is a programming language available. I do not need to stretch a configuration format into one.
+
+Quirl means a whisk. I wanted to mix familiar commands, structured data, and an extension language into a shell I would enjoy using. The [0.1 release](https://github.com/niklas-heer/quirl/releases/tag/v0.1.0) is an early implementation of that vision on Linux and macOS.
+
+Mostly, I would like to spend less time explaining my clipboard to my terminal.

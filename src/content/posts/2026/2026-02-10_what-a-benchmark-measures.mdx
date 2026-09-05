@@ -1,71 +1,94 @@
 ---
-title: "The fastest language, with an asterisk"
-description: "What a small programming-language benchmark can tell us—and why the interesting part is often the measurement rather than the winner."
+title: "The slowest part of my speed comparison"
+description: "From one big Arch Linux container to Earthly, then Nix and Dagger: the real story is making dozens of language environments manageable."
 date: "2026-02-10T10:00:00+01:00"
-icon: ":stopwatch:"
-tags: ["performance", "benchmarks", "programming", "open-source"]
+icon: ":wrench:"
+tags: ["ci", "nix", "dagger", "open-source"]
 draft: false
 lang: "en"
 ---
 
-import StoryLab from '../../../components/StoryLab.astro';
+import PipelineHistory from '../../../components/PipelineHistory.astro';
 
-“Which programming language is fastest?” is an excellent way to start a discussion and a rather ambitious way to describe a benchmark.
+My [speed-comparison repository](https://github.com/niklas-heer/speed-comparison) runs the same numerical task in many programming languages. The visible result is a chart.
 
-Fast at what? On which machine? With which compiler settings? Including startup? Using how many threads? At some point the question develops enough footnotes to qualify as a small academic department.
+The less visible result is that I have spent a remarkable amount of time installing programming languages.
 
-My [speed-comparison project](https://github.com/niklas-heer/speed-comparison) has a deliberately narrow task: implementations of the Leibniz formula for π, compared across languages.
+Compilers, interpreters, libraries, base images, version checks, build flags: before anything can race, somebody has to get the contestants to the starting line. Eventually, that became the more interesting engineering problem.
 
-The aim is not to discover π more accurately than everyone else. π seems fairly settled on the matter. The formula gives the implementations a shared piece of numerical work.
+The project has gone through three approaches to it. Reading the commits is a useful reminder that a tidy chart can have a very untidy supply cupboard behind it.
 
-## A narrow benchmark can still be useful
+<PipelineHistory />
 
-A repeated floating-point calculation lets us examine something concrete. It exercises a particular mix of loops, arithmetic, and runtime behavior.
+## First: put everything in the Arch container
 
-That is useful evidence about that workload. It does not tell us which language will be best for a web service, a compiler, a database, or the application your team has to maintain for the next five years.
+In February 2018, I [switched the environment to Arch Linux](https://github.com/niklas-heer/speed-comparison/commit/eecf226). The Dockerfile installed the base tools, then a long list of language runtimes with `pacman`. More setup handled plotting, Python dependencies, and the package helper.
 
-The distinction is easy to state and surprisingly easy to forget once the results become a colorful chart. A bar has a persuasive confidence about it. It does not naturally display all the things that were not measured.
+The mental model was straightforward: build one large environment with everything installed, then run the comparison inside it.
 
-## Same formula does not mean identical work for the processor
+That was convenient until the environment itself became a substantial thing to maintain. Adding another language meant adding another dependency to the shared home. Updating the distribution and updating the contestants were uncomfortably close to the same operation.
 
-One recent Swift contribution uses four independent accumulators in the calculation. The interesting idea is to reduce the dependency chain: instead of every addition depending on the immediately preceding result, several streams of work can make progress independently.
+I wanted a benchmark suite. I was gradually acquiring the responsibilities of a small Linux distribution.
 
-That is instruction-level parallelism within a single thread. It is different from splitting the task across CPU cores.
+## Then: give each language an Earthly target
 
-It is also a useful reminder that the spelling of an algorithm matters. Two implementations can represent the same mathematical idea while giving the compiler different opportunities. Floating-point addition order can also affect numerical results, so correctness remains part of the comparison.
+The [first Earthfile arrived in October 2022](https://github.com/niklas-heer/speed-comparison/commit/eb6b44c). Splitting the work into targets was a useful improvement. Shared preparation and benchmark steps could be reused, with language-specific instructions where needed.
 
-The project keeps single-threaded execution as a rule and treats SIMD versions as separate targets. Those choices do not eliminate every ambiguity, but they make more of the comparison visible.
+There was even an early NixOS detour: the [very next commit](https://github.com/niklas-heer/speed-comparison/commit/1d59bca) removed those images because of the load they put on the system. Apparently the route to declarative infrastructure was going to include a round trip.
 
-## What dominates depends on how long you run
+But the recipe for “install this language” still depended on where it came from.
 
-Startup is another source of confusion. For a tiny command, interpreter or runtime startup may be a large part of the experience. For a long numerical loop, the calculation may dominate instead.
+One target used an Alpine package. Another needed a Debian-based image. Another started from a language's official container. Bumping a version could mean changing a package name, replacing an image tag, revisiting an installation script, or discovering that the image brought along a different version of something else.
 
-<StoryLab kind="benchmark" />
+A concrete example is the [Python/Numba addition](https://github.com/niklas-heer/speed-comparison/commit/39aa9c504772): a `python:3.13-slim` base, Debian preparation, compiler and development packages, then `pip install numba`. It is a reasonable recipe. It is also another particular environment to understand when something changes.
 
-These are teaching numbers, not repository measurements. Both bars share the same time scale. At twenty units of work, the two implementations tie. Beyond that, the one with the slower start wins: its cheaper work has finally repaid the entrance fee.
+Earthly can reuse targets and run work in parallel. My frustration was with how **this project** had accumulated different installation recipes and tightly connected responsibilities. Preparing toolchains, building programs, and collecting results were harder to separate than I wanted.
 
-Try nudging the slider back across that boundary. Neither implementation changed. The question did.
+## The new direction: describe the language once
 
-This is why I would not use a long arithmetic benchmark to choose the snappiest interactive CLI. Conversely, timing an almost-empty command tells you very little about sustained numerical work.
+In December 2025, I [added the Dagger pipeline](https://github.com/niklas-heer/speed-comparison/commit/5e7efe5). Dagger handles the container work from Python. Nix packages, managed through Devbox, supply the language environments.
 
-The user experience determines the question. The benchmark should follow it.
+The part I like most is almost disappointingly small: a Python dictionary.
 
-## Reproducibility is more interesting than a trophy
+`dagger-poc/languages.py` holds the `LANGUAGES` definitions. Here is the useful core of the actual Go entry, with display metadata omitted:
 
-A result becomes more useful when another person can understand how it was produced: the source, language version, optimization flags, hardware, workload size, and measurement method.
+```python
+"go": Language(
+    name="Go",
+    nixpkgs=("go@1.25.4",),
+    file="leibniz.go",
+    compile="go build -ldflags='-s -w' -o leibniz leibniz.go",
+    run="./leibniz",
+    version_cmd="go version",
+),
+```
 
-It also helps to keep distinct implementations distinct. If a heavily optimized variant silently replaces the ordinary version, the chart may improve while becoming harder to interpret.
+The package version, source file, compilation command, execution command, and version check now live together. The same data can drive the build, the benchmark, validation, and update tooling.
 
-The repository's contributions are valuable in this respect. They make implementation choices discussable. A change is not just “Swift moved on the chart”; it is a specific piece of code that someone else can inspect, question, and run.
+For a straightforward version bump, I can change the declaration and let the pipeline do the repetitive work. I do not have to remember which Docker image happened to contain the version I wanted.
 
-The [accumulator contribution](https://github.com/niklas-heer/speed-comparison/pull/251) is a good example. This article explains the mechanism; it does not assign a speedup to it without reproducing the measurement.
+The [version-check workflow](https://github.com/niklas-heer/speed-comparison/blob/8917f3cdf761/.github/workflows/dagger-version-check.yml) builds on that common definition. Declarative configuration is particularly satisfying when the alternative is repeatedly rediscovering your own installation instructions.
 
-## Read the caption before choosing the winner
+## Separate the kitchen from the stopwatch
 
-I still enjoy a performance chart. There is something satisfying about turning a question into a repeatable experiment.
+The newer pipeline builds language environments ahead of time and stores them in the container registry. Benchmark source is added when it is needed. That gives me a useful separation between **preparing a toolchain** and **running a measurement**.
 
-The trick is to let the chart answer the question you actually asked. “This implementation completed this workload in this environment” is a useful statement. It may sound less exciting than “Language X destroys everything,” but it has the considerable advantage of meaning something.
+The commits show that separation becoming more precise:
 
-And if a benchmark makes you ask a better question about your own application, that can be more valuable than finding out which bar is shortest.
+- [Deduplicate base images](https://github.com/niklas-heer/speed-comparison/commit/6e8f7b6) so language variants can share the same prepared environment.
+- [Detect image-affecting changes](https://github.com/niklas-heer/speed-comparison/commit/cc959b4) instead of rebuilding images for unrelated metadata edits.
+- [Use language-specific source cache keys](https://github.com/niklas-heer/speed-comparison/commit/c19f3fb) so editing one implementation does not invalidate every other source cache. Shared configuration changes still affect the relevant shared inputs.
 
-*Based on the project and contributions present in [this February 2026 revision](https://github.com/niklas-heer/speed-comparison/tree/8917f3cdf761). Current benchmark results may differ.*
+Preparation can be split into independently managed jobs. That does not mean every timed benchmark should compete for the same CPU at once; the runner's loop still executes its selected targets sequentially.
+
+## Declarative does not mean magical
+
+The migration has plenty of repair commits too. Swift needed particular Nix packages and headers. Commands had to run through `devbox run` to get the intended environment. Some languages still need explicit setup steps beyond a package declaration.
+
+The Earthfile also remains in the repository, alongside a directory still named `dagger-poc`. This is an evolving migration, not a claim that the old system vanished overnight.
+
+What improved is where the knowledge lives. Versions and exceptions have a common, testable representation. Building environments and running benchmarks have clearer boundaries. Updating the collection becomes less of an expedition through unrelated containers.
+
+The chart is still the thing most visitors come to see. But the work I am happiest about is making the next update less interesting.
+
+That is a surprisingly good outcome for infrastructure.

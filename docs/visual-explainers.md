@@ -17,7 +17,10 @@ Use native controls, keyboard input, readable mobile layouts, textual results, a
 
 These are editorial references, not templates to reproduce. Keep the site's own typography and palette, write original explanations, and draw original diagrams.
 
-## First applications
+## Current applications
 
-- Benchmark draft: two hypothetical implementations, workload slider, common time scale, explicit equations, crossover at 20 units. The reader can reverse the winner without changing either implementation.
-- tdx draft: stable app/disk/snapshot views; create an external edit, attempt a save, inspect the blocked write, and deliberately keep both edits. The model illustrates a safety property; it does not promise arbitrary automatic merging in tdx.
+- Benchmark plumbing story: a three-era view of the actual Arch, Earthly, and Nix/Devbox + Dagger configurations, with source-linked commits. It replaced the earlier generic workload experiment after the author's editorial feedback.
+- Kipferl: a measured size comparison of two builds of the same real terminal app, accompanied by its source and a VHS recording.
+- tdx: a VHS recording demonstrates editing tasks inside a README; the separate save-conflict model explains why those ordinary files need careful handling.
+- Quirl: an actual terminal session demonstrates Normal mode, Data mode, Bash compatibility, and Lua. The prose supplies the author's motivation and the commands.
+- Overhead Overdrive: real screenshots carry a short personal story. An interactive physics diagram would distract from the reason the author made the game.

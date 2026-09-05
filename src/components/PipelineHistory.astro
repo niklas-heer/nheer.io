@@ -1,0 +1,62 @@
+---
+const stages = [
+  { year: '2018', label: 'Arch container', source: 'One Dockerfile', install: 'All the toolchains', run: 'One shared environment', code: 'pacman -S pypy ruby php rust go nodejs …', caption: 'Every language moves into the same container. The environment is a shared maintenance concern before the benchmark starts.' },
+  { year: '2022', label: 'Earthly targets', source: 'One Earthfile', install: 'A recipe per target', run: 'Build + benchmark targets', code: 'FROM python:3.13-slim → apt-get → pip install', caption: 'Targets separate the work, but installation still depends on each image and package ecosystem. This example is the later Numba target in that architecture.' },
+  { year: '2025', label: 'Nix + Dagger', source: 'LANGUAGES dictionary', install: 'Nix / Devbox packages', run: 'Cached image → benchmark', code: 'nixpkgs=("go@1.25.4",)', caption: 'Declare the environment, prepare and cache its image, then add benchmark source. Versions, build commands, and update tooling share a Python definition.' },
+];
+---
+<pipeline-history>
+  <figure>
+    <span class="eyebrow">THREE WAYS TO GET TO THE STARTING LINE</span>
+    <h3>The benchmark stayed. The plumbing changed.</h3>
+    <div class="controls" role="group" aria-label="Pipeline history">
+      {stages.map((stage, i) => <button type="button" disabled data-era={i} aria-pressed={i === 0}><span>{stage.year}</span>{stage.label}</button>)}
+    </div>
+    {stages.map((stage, i) => <div data-era-panel={i} hidden={i !== 0}>
+      <div class="flow" role="img" aria-label={`${stage.source}, then ${stage.install}, then ${stage.run}`}>
+        <div><small>DECLARE</small><strong>{stage.source}</strong></div><span aria-hidden="true">→</span>
+        <div><small>PREPARE</small><strong>{stage.install}</strong></div><span aria-hidden="true">→</span>
+        <div><small>MEASURE</small><strong>{stage.run}</strong></div>
+      </div>
+      <code>{stage.code}</code>
+      <p role="status">{stage.caption}</p>
+    </div>)}
+    <figcaption>A map of the repository's evolution, not a timing comparison. The linked commits below show the actual configurations.</figcaption>
+  </figure>
+</pipeline-history>
+<script>
+  class PipelineHistory extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      this.addEventListener('click', event => {
+        const selected = (event.target as Element).closest<HTMLButtonElement>('[data-era]');
+        if (!selected) return;
+        for (const button of this.querySelectorAll<HTMLButtonElement>('[data-era]')) button.setAttribute('aria-pressed', String(button === selected));
+        for (const panel of this.querySelectorAll<HTMLElement>('[data-era-panel]')) panel.hidden = panel.dataset.eraPanel !== selected.dataset.era;
+      });
+      for (const button of this.querySelectorAll<HTMLButtonElement>('[data-era]')) button.disabled = false;
+    }
+  }
+  if (!customElements.get('pipeline-history')) customElements.define('pipeline-history', PipelineHistory);
+</script>
+<style>
+  pipeline-history { display: block; margin: 2rem 0; }
+  figure { margin: 0; padding: 1.4rem; background: #191527; color: #eee9fc; border: 1px solid #554477; border-radius: 16px; text-align: left; }
+  .eyebrow { font: 600 .65rem/1.5 ui-monospace, monospace; color: #c2aaff; letter-spacing: .05em; }
+  h3 { color: #eee9fc; font-size: 1.3rem; line-height: 1.25; margin: .6rem 0 1rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+  button { font-family: inherit; font-size: .8rem; padding: .6rem .7rem; color: #eee9fc; border: 1px solid #74618e; border-radius: 8px; background: #292236; cursor: pointer; }
+  button span { display: block; font: .65rem ui-monospace, monospace; margin-bottom: .3rem; }
+  button[aria-pressed=true] { color: #231537; background: #c2aaff; }
+  button:focus-visible { outline: 3px solid #74dfc2; outline-offset: 3px; }
+  .flow { display: grid; grid-template-columns: 1fr 15px 1fr 15px 1fr; align-items: center; gap: .4rem; }
+  .flow div { align-self: stretch; border: 1px solid #655378; border-top: 3px solid #74dfc2; border-radius: 8px; padding: .75rem .55rem; }
+  small { display: block; font: .6rem ui-monospace, monospace; margin-bottom: .5rem; color: #b8adca; }
+  .flow strong { display: block; font-size: .78rem; line-height: 1.4; }
+  code { display: block; margin-top: 1rem; font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  p { color: #d5cce6; font-size: .85rem; line-height: 1.6; min-height: 5rem; }
+  figcaption { text-align: left; color: #b8adca; font-size: .75rem; line-height: 1.6; }
+  [hidden] { display: none !important; }
+  @media(max-width:520px) { .flow { grid-template-columns: 1fr; } .flow > span { text-align: center; transform: rotate(90deg); } .flow div { padding: .6rem .75rem; } small { margin-bottom: .25rem; } .flow strong { font-size: .85rem; } }
+</style>

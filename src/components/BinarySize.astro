@@ -1,0 +1,21 @@
+<figure class="binary-size" aria-label="Measured size of the same Kipferl status app with two runtime profiles">
+  <span class="eyebrow">SAME SOURCE · TWO RUNTIME PROFILES</span>
+  <h3>The table fits. Most of the runtime stays home.</h3>
+  <div class="row"><strong>Core profile</strong><span>1.47 MB</span></div>
+  <div class="track"><div class="core" style="width:30.36%"></div></div>
+  <div class="row"><strong>Full runtime</strong><span>4.83 MB</span></div>
+  <div class="track"><div class="full"></div></div>
+  <figcaption><strong>69.6% smaller.</strong> Core: 1,467,617 bytes. Full: 4,834,705 bytes. Both are standalone builds of the recorded status app, measured on macOS ARM64 with Kipferl 0.6.0.</figcaption>
+</figure>
+<style>
+  .binary-size { margin: 2rem 0; padding: 1.5rem; border: 1px solid #554477; border-radius: 16px; background: #191527; color: #eee9fc; text-align: left; }
+  .eyebrow { font: 600 .68rem/1.5 ui-monospace, monospace; color: #c2aaff; letter-spacing: .05em; }
+  h3 { color: #eee9fc; font-size: 1.25rem; line-height: 1.3; margin: .6rem 0 1.5rem; }
+  .row { display: flex; justify-content: space-between; gap: 1rem; font-size: .85rem; margin-bottom: .5rem; }
+  .row span { font-family: ui-monospace, monospace; }
+  .track { height: 28px; background: #292336; border-radius: 4px; overflow: hidden; margin-bottom: 1.2rem; }
+  .track div { height: 100%; }
+  .core { background: #74dfc2; }
+  .full { background: #b8a0fa; width: 100%; }
+  figcaption { text-align: left; color: #c7bddb; font-size: .8rem; line-height: 1.6; }
+</style>

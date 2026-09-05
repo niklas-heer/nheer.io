@@ -7,16 +7,19 @@ when the articles were originally written or published.
 
 | Article | Display date | Basis |
 |---|---|---|
-| The fastest language, with an asterisk | 2026-02-10 | Day after the February 9 benchmark contributions, including Swift accumulators in commit `8917f3cdf761` |
-| The hard part of a Markdown todo app is saving the file | 2026-07-17 | Day after tdx v0.13.1; versioned README confirms conflict handling and snapshot history |
+| The slowest part of my speed comparison | 2026-02-10 | Repository snapshot `8917f3cdf761`: Arch migration (2018), Earthly (2022), Nix/Devbox and Dagger work (December 2025), and February 2026 target maintenance |
+| My todo list lives in the repository | 2026-07-17 | Day after tdx v0.13.1; versioned README confirms conflict handling and snapshot history |
 | Teaching architecture diagrams to explain themselves | 2026-07-19 | Sceno v0.4.0; excludes the September live-preview/verified-repair UI |
-| How much Python does a little CLI need? | 2026-08-06 | Day after Kipferl v0.6.0; excludes September project-workflow additions |
-| A shell with two kinds of pipes | 2026-08-23 | Day after Quirl v0.1.0; excludes later repository finder, explorers and conversational assistant |
-| I gave a classroom projector a racing career | 2026-09-04 | First playable version and driving-polish commits on September 4, through `9edd2c224140` |
+| Python-shaped code. A 1.47 MB executable. | 2026-08-06 | Day after Kipferl v0.6.0; excludes September project-workflow additions |
+| I wanted a shell that could keep my old habits | 2026-08-23 | Day after Quirl v0.1.0; excludes later repository finder, explorers and conversational assistant |
+| The projector racing game I never got around to making | 2026-09-04 | First playable version and driving-polish commits on September 4, through `9edd2c224140` |
 
-Each article links its source revision or release. Visuals are hand-authored explanatory
-SVGs with keyboard-operable controls; benchmark numbers are explicitly illustrative.
-The articles avoid unverified benchmark improvements and invented development anecdotes.
+The September 5 editorial revision incorporates the author's own motivations and
+memories. Fresh terminal recordings use the released Kipferl 0.6.0 builder,
+Homebrew tdx 0.13.1, and a Quirl 0.1-line development artifact. The two game screenshots come from
+commit `9edd2c224140`; Sceno's real exported figure comes from v0.4.0. Recordings
+were made for the articles, not on their historical display dates. Sources and
+reproduction instructions are in `scripts/article-demos/README.md`.
 
 The six articles are public posts. The homepage shows the latest three; `/posts/`
 and RSS include all six. Browser tests exercise the production routes and verify

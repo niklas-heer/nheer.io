@@ -1,6 +1,6 @@
 ---
-title: "The hard part of a Markdown todo app is saving the file"
-description: "A follow-up on tdx: external edits, conflict detection, and why a trustworthy save matters more than another checkbox feature."
+title: "My todo list lives in the repository"
+description: "tdx is a small terminal app for the Markdown tasks you already own—even when they live in your README. No central task system required."
 date: "2026-07-17T10:00:00+02:00"
 icon: ":floppy_disk:"
 tags: ["go", "cli", "markdown", "software-design"]
@@ -9,61 +9,75 @@ lang: "en"
 ---
 
 import StoryLab from '../../../components/StoryLab.astro';
+import DemoVideo from '../../../components/DemoVideo.astro';
 
-A todo application appears to have an unusually small job description. Show a list. Change a square into a square with a tick. Allow the user to experience approximately four seconds of being in control of their life.
+I do not want every small project to come with a second project called “maintaining the task management system.”
 
-Then save the file.
+Sometimes I just want a list next to the code. Clone the repository, open the list, carry on. If the tasks belong in the README, even better: the introduction and the unfinished business can share a file.
 
-Those last four words contain quite a lot of engineering.
+That is what I like about [tdx](https://github.com/niklas-heer/tdx). It is a small terminal application that works directly with Markdown checkboxes. **The Markdown file is the task list.** There is no central service holding the authoritative version somewhere else.
 
-I previously wrote about [building tdx](/posts/2025/11/2025-11-29_building-tdx/), including its move to Go and the benefits of a testable terminal interface. This time I want to look at something less visible: what happens when the Markdown file changes while the application is using it.
+## Point it at the file you already have
 
-## Plain text means other tools are invited
+Here is an ordinary README:
 
-One of tdx's main attractions is that your tasks live in ordinary Markdown. You can keep them in a project, edit them in your preferred editor, and put them in Git.
+```markdown
+# Tiny weather app
 
-That also means tdx does not own the file exclusively.
+A weekend project. Bring your own umbrella.
 
-Imagine opening a task list in the terminal interface, then adding a note in your editor. The application still has its earlier view of the file. If it writes that view back without checking, your new note disappears.
+## Next up
 
-Nothing about that failure looks dramatic in the interface. A checkbox might even toggle successfully. The problem is that the app has done exactly what you asked and one additional thing you very much did not ask for.
+- [ ] Add a rain alert #feature
+- [ ] Write the setup guide #docs
+- [x] Make it run locally
+
+## Run it
+
+Use `npm run dev` to start the app.
+```
+
+Now run:
+
+```sh
+tdx README.md
+```
+
+That is the setup. No workspace creation, project import, or ceremonial invitation to yourself.
+
+<DemoVideo name="tdx-readme-demo" title="Edit tasks inside a real README" caption="tdx 0.13.1 opens the sample README, ticks a task in the terminal UI, and leaves a normal Git diff. The surrounding prose stays in the file." />
+
+The app gives you a comfortable view of the tasks: keyboard navigation, toggling, editing, filtering, and searching. Underneath, the result is still `- [x]` in your Markdown.
+
+You can also use it without opening the interactive interface:
+
+```sh
+tdx README.md list
+tdx README.md add "Check the rain alert on a real phone #testing"
+```
+
+## A little tool, rather than another service
+
+The [0.13.1 Apple Silicon release](https://github.com/niklas-heer/tdx/releases/tag/v0.13.1) is a single **9,661,858-byte executable—about 9.66 MB**. Other platforms have slightly different sizes. There is no application server or task database to deploy beside it.
+
+The more important kind of smallness is how little infrastructure it asks of a project.
+
+Keep a `todo.md` beside the source, or put a checklist under a README heading. Commit it when that makes sense. Your usual Git workflow can carry the tasks between machines and collaborators along with the code.
+
+That does not turn a Markdown file into a live collaborative board. Git still has merges, and people still have to coordinate. But for many of my projects, I want exactly that arrangement: the work travels with the repository, in a format I can read without tdx.
+
+If I stop using the application tomorrow, the list does not need to be exported. It is already there.
+
+## Being a guest in the file comes with responsibilities
+
+Because the file is ordinary Markdown, other tools are welcome to edit it too. That is a feature—and the reason saving deserves care.
+
+Imagine ticking a task in tdx while another editor adds a note. Writing the app's old copy blindly would erase the note. Atomic writes alone do not solve that: you can write the wrong contents very reliably.
 
 <StoryLab kind="saving" />
 
-## A successful write is not necessarily a safe save
+External-change detection, a conflict view, and recoverable snapshots help make this arrangement trustworthy. The 0.13 line also includes a `:versions` view for inspecting file history and restoring a previous version. Those features support the simple idea; they are not the reason to sign up for a new system.
 
-There are several separate problems hiding behind the Save button.
+There is no new system to sign up for.
 
-An atomic save helps prevent the destination from being left halfway written. External-change detection asks whether the file still matches the version the app started from. A conflict view helps a person understand the difference. History provides another route back when a previous state is needed.
-
-Solving one does not solve all the others. You can replace a file atomically and still replace it with the wrong contents. You can keep snapshots and still make a confusing decision about whose edit wins.
-
-The user should not have to know those terms to benefit from them. They should be able to use their editor and their todo tool without treating the file like a diplomatic incident.
-
-## Recovery should be something you can inspect
-
-The 0.13 release line includes file version history: content-addressed snapshots, a way to compare versions, and a restore flow. The command palette's `:versions` view makes that history accessible from the interface.
-
-The useful part is not merely “there is a backup somewhere.” It is being able to see what changed before restoring it.
-
-For example, an older version may contain a sentence you want back and several completed tasks you do not want to undo. A diff makes the decision concrete. A timestamp alone mostly tells you when to feel suspicious.
-
-Snapshots also have a different job from Git. They can help with local editing recovery, but they are not a replacement for a repository history or a backup strategy.
-
-## Preserve more than the checkboxes
-
-Markdown task files are rarely just tasks. They contain headings, links, notes, code blocks, and the spacing that makes them comfortable to read.
-
-A tool that treats the whole document as disposable wrapping around its checkboxes will eventually become an unwelcome collaborator. The app needs to make a small change while respecting the surrounding file.
-
-This is where the earlier work on parsing and testable behavior continues to pay off. The interesting cases are concrete: an external edit, a changed task, a restore, a document containing syntax that merely looks like a task. These are better questions for tests than “does the happy-path screenshot still look nice?”
-
-## Trust is a feature you notice when it is missing
-
-It is tempting to judge a small tool by how many commands fit in its README. But file-based tools also need to earn the right to touch your files.
-
-For me, that makes saving behavior part of the product itself. The goal is for the user to think about their tasks, not maintain an emergency copy before checking one off.
-
-There are already enough ways to avoid doing a todo. Protecting the todo list from the todo application should not be another one.
-
-*This follow-up is tied to [tdx 0.13.1](https://github.com/niklas-heer/tdx/releases/tag/v0.13.1). See the [versioned README](https://github.com/niklas-heer/tdx/blob/v0.13.1/README.md) for conflict handling and version-history behavior.*
+I [wrote earlier about building tdx](/posts/2025/11/2025-11-29_building-tdx/). What keeps it useful to me is still quite modest: open the repository, find the next thing to do, and tick it off without leaving the place where the work lives.
