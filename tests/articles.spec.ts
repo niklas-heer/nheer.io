@@ -15,7 +15,7 @@ for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 844 });
       const errors: string[] = [];
       page.on('pageerror', error => errors.push(error.message));
-      await page.goto('/drafts/');
+      await page.goto('/posts/');
       // Enter through Astro client navigation, where listeners used to get lost.
       await page.locator(`main a[href*="${slug}"]`).click();
       await expect(page.locator('story-lab')).toBeVisible();
@@ -73,8 +73,8 @@ for (const width of [1280, 390]) {
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await page.locator('story-lab').screenshot({ path: test.info().outputPath(`${kind}.png`) });
-      await page.getByRole('link', { name: 'All article drafts' }).click();
-      await expect(page.getByRole('heading', { name: 'Six projects, six stories' })).toBeVisible();
+      await page.getByRole('link', { name: 'Back to all posts' }).click();
+      await expect(page.getByRole('heading', { name: 'Blog', exact: true })).toBeVisible();
       expect(errors).toEqual([]);
     });
   }
@@ -94,7 +94,7 @@ test('cold-load controls wait for their handlers without losing the first click'
   ]) {
     scriptsReady = new Promise<void>(resolve => { release = resolve; });
     try {
-      await page.goto(`/drafts/2026/${slug}/`, { waitUntil: 'commit' });
+      await page.goto(`/posts/2026/${slug.slice(5, 7)}/${slug}/`, { waitUntil: 'commit' });
       const button = page.getByRole('button', { name: buttonName });
       await expect(button).toBeVisible();
       await expect(button).toBeDisabled();

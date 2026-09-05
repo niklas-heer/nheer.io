@@ -15,7 +15,8 @@ const Content = post ? (await post.render()).Content : null;
 ---
 {post && Content ? <PostLayout post={post}><p><strong>Draft preview</strong> · <a href="/drafts/">All article drafts</a></p><Content /></PostLayout> :
 <BaseLayout title="Article drafts" description="Local previews of new articles">
-  <h1>Six projects, six stories</h1>
+  <h1>Article drafts</h1>
   <p>Private draft preview. These routes are excluded from normal production builds.</p>
+  {posts.length === 0 && <p>No unpublished articles. <a href="/posts/">Read the published posts</a>.</p>}
   <ul>{posts.map(entry => <li style="margin: 1.25rem 0"><a href={`/drafts/${entry.slug}/`}>{entry.data.title}</a><br /><small>{entry.data.date.toISOString().slice(0, 10)} · {entry.data.description}</small></li>)}</ul>
 </BaseLayout>}

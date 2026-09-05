@@ -114,18 +114,29 @@ test('podcast snapshots are labeled and populated data has working categories', 
   await expect(category.locator('a').first()).toBeVisible();
 });
 
-test('new article drafts and their preview index stay out of production', async ({ request }) => {
+test('published interactive articles appear in the blog, feed, and homepage', async ({ request }) => {
   const root = 'src/content/posts/2026';
-  const drafts = readdirSync(root).filter(file => /^draft: true$/m.test(readFileSync(join(root, file), 'utf8')));
-  expect(drafts.length).toBe(6);
+  const articles = readdirSync(root).filter(file => {
+    const content = readFileSync(join(root, file), 'utf8');
+    return content.includes('import StoryLab') && /^draft: false$/m.test(content);
+  });
+  expect(articles.length).toBeGreaterThanOrEqual(6);
   expect((await request.get('/drafts/')).status()).toBe(404);
   const feed = await (await request.get('/rss.xml')).text();
-  for (const file of drafts) {
+  const index = await (await request.get('/posts/')).text();
+  const home = await (await request.get('/')).text();
+  for (const file of articles) {
     const content = readFileSync(join(root, file), 'utf8');
     const date = content.match(/^date: "(\d{4})-(\d{2})/m)!;
     const slug = file.replace(/\.mdx$/, '');
     const url = `/posts/${date[1]}/${date[2]}/${slug}/`;
-    expect((await request.get(url)).status()).toBe(404);
-    expect(feed).not.toContain(slug);
+    const response = await request.get(url);
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain('<story-lab');
+    expect(index).toContain(url);
+    expect(feed).toContain(slug);
+  }
+  for (const slug of ['2026-09-04_projector-racing', '2026-08-23_shell-two-pipelines', '2026-08-06_small-python-cli']) {
+    expect(home).toContain(slug);
   }
 });
