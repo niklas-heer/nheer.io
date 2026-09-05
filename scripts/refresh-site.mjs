@@ -23,6 +23,13 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
   if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 
   const commandEnv = { ...env, CI: 'true' };
+  if (mode === 'check') {
+    commandEnv.SITE_TEST_DATA = 'true';
+    delete commandEnv.REQUIRE_LIVE_DATA;
+  } else {
+    delete commandEnv.SITE_TEST_DATA;
+    delete commandEnv.PREVIEW_DRAFTS;
+  }
   const execute = run || ((command, args) => {
     const result = spawnSync(command, args, { env: commandEnv, stdio: 'inherit' });
     if (result.error || result.status !== 0) throw new Error(`${command} ${args[0]} failed`);
@@ -48,6 +55,7 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
     execute('npm', ['run', 'build']);
     execute('npm', ['test']);
     if (mode === 'publish') {
+      execute('node', ['scripts/verify-build.mjs']);
       // Netlify receives only the tested static output. It never connects to Postgres.
       execute('npm', ['exec', '--yes', '--package=netlify-cli@27.5.0', '--',
         'netlify', 'deploy', '--prod', '--no-build', '--dir=dist',

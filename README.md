@@ -78,3 +78,30 @@ Run `just` to see all available commands.
 ## License
 
 Content is licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+
+## Tests and article previews
+
+```bash
+npm run build:check   # Explicit sample podcast data; never eligible for publishing
+npm test             # Unit guards + production UI + all six draft visuals, desktop/mobile
+npm run test:sync     # Docker + Bun: real PostgreSQL rollback, retry and recovery checks
+npm run preview:articles -- --port 4323
+# Open http://127.0.0.1:4323/drafts/
+```
+
+The draft preview runs on localhost and needs no live credentials. New articles
+remain `draft: true`; normal builds exclude their routes and RSS entries.
+`PREVIEW_DRAFTS=true` enables only the `/drafts/` review routes, not public post listings.
+See `docs/article-dates.md` for the project milestones behind their dates.
+
+The build emits `build-health.json`. Live builds and publishing require a live
+podcast snapshot at most 48 hours old. Publishing rejects sample data and draft
+previews. Browser checks require a populated podcast page, so missing credentials
+cannot silently skip the main dashboard test; use `build:check` for local CI.
+
+The Pocket Casts importer uses a transaction and database lock. An API failure
+rolls back partial writes; a repeated run does not count the same episode progress
+twice. After a long data gap, it refreshes totals and episode state without assigning
+all missed listening to the recovery date. The API's limited history cannot recreate
+missing daily snapshots. Keep production sync/publish paused until the 1Password
+`nheer Site Jobs` credentials are configured and a live run succeeds.

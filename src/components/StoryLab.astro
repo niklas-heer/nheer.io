@@ -1,0 +1,138 @@
+---
+interface Props { kind: 'diagram' | 'packing' | 'shell' | 'saving' | 'racing' | 'benchmark'; }
+const { kind } = Astro.props;
+const stories = {
+  diagram: { title: 'Give the diagram a second draft', eyebrow: 'SCENO / THE FEEDBACK LOOP', states: [
+    ['Describe', 'A picture gives you the result. A scene description also gives you positions, sizes, and routes.'],
+    ['Inspect', 'Validation and layout advice turn a vague “this looks odd” into a smaller problem to investigate.'],
+    ['Revise', 'Edit the source and render again. Each relationship now has a direct route; check the result before exporting.'],
+  ] },
+  packing: { title: 'Pack for the trip you are taking', eyebrow: 'KIPFERL / A CURATED RUNTIME', states: [
+    ['Write', 'Start with a small Python-style program and the capabilities it imports.'],
+    ['Choose', 'The universal builder selects a suitable runtime from the available capability profiles.'],
+    ['Ship', 'Distribute the application and its selected runtime as one executable. Arbitrary pip packages are outside this promise.'],
+  ] },
+  shell: { title: 'Same task, different material', eyebrow: 'QUIRL / BYTES AND RECORDS', states: [
+    ['Text', 'A line of text is flexible, but a number inside it is still text until something parses it.'],
+    ['Records', 'Structured data keeps fields and values together. A numeric comparison can work on a number.'],
+    ['Boundary', 'External tools still speak bytes. Crossing the boundary needs an explicit conversion, not hopeful punctuation.'],
+  ] },
+  saving: { title: 'Two editors walk into a file', eyebrow: 'TDX / A SAVE SHOULD EARN YOUR TRUST', states: [
+    ['Open', 'The app starts from the version on disk. Both views agree.'],
+    ['External edit', 'Another editor changes the file. Saving the old in-memory copy blindly would lose that change.'],
+    ['Resolve', 'Detect the difference and inspect it before choosing what to keep. A snapshot helps with recovery; it does not decide intent.'],
+  ] },
+  racing: { title: 'A projector with questionable intentions', eyebrow: 'OVERHEAD OVERDRIVE / AN ARCADE TURN', states: [
+    ['Grip', 'With ordinary grip, lateral friction helps the projector follow the turn.'],
+    ['Drift', 'Reduced grip lets momentum carry it sideways. Charging the drift reward gives the slide a purpose.'],
+    ['Release', 'Release a charged drift while accelerating for a speed kick. This diagram explains the mechanic; it is not the game simulation.'],
+  ] },
+  benchmark: { title: 'A fast start is only part of the race', eyebrow: 'BENCHMARKS / ILLUSTRATIVE TIMES', states: [
+    ['Tiny job', 'Example: 20 ms of startup plus 5 ms of work. Startup accounts for 80% of the total.'],
+    ['Long job', 'Example: the same 20 ms of startup plus 980 ms of work. Startup now accounts for 2%.'],
+    ['Compare fairly', 'Changing workload size changes what dominates. These are invented teaching numbers, not results from the repository.'],
+  ] },
+};
+const story = stories[kind];
+---
+<story-lab class="story-lab" data-kind={kind}>
+  <figure>
+    <div class="lab-heading"><span>{story.eyebrow}</span><h3>{story.title}</h3></div>
+    <div class="lab-controls" role="group" aria-label={story.title}>
+      {story.states.map(([label], i) => <button type="button" data-step={i} aria-pressed={i === 0}><span>0{i + 1}</span>{label}</button>)}
+    </div>
+    {story.states.map(([label, description], i) => (
+      <div data-panel={i} hidden={i !== 0}>
+        <svg viewBox="0 0 680 260" role="img" aria-label={`${label}: ${description}`}>
+          <rect x="1" y="1" width="678" height="258" rx="16" class="canvas" />
+          {kind === 'diagram' && <>
+            <path d={i === 2 ? 'M180 130 H300 M420 130 H500' : 'M180 130 H225 V65 H280 M420 65 H450 V195 H500'} class="line" />
+            <rect x="40" y="100" width="140" height="60" rx="12" class="node"/><text x="110" y="136">Browser</text>
+            <rect x="280" y={i === 2 ? 100 : 35} width="140" height="60" rx="12" class="accent"/><text x="350" y={i === 2 ? 136 : 71}>API</text>
+            <rect x="500" y={i === 2 ? 100 : 165} width="140" height="60" rx="12" class="node"/><text x="570" y={i === 2 ? 136 : 201}>Database</text>
+            {i === 1 && <><circle cx="450" cy="165" r="20" class="warning"/><text x="450" y="171">?</text></>}
+          </>}
+          {kind === 'packing' && <>
+            <rect x="45" y="55" width="155" height="150" rx="12" class="node"/><text x="122" y="98">app.py</text><text x="122" y="135" class="small">import json</text><text x="122" y="162" class="small">import tui</text>
+            <path d="M215 130 H275 M430 130 H485" class="line"/>
+            <rect x="285" y="55" width="140" height="150" rx="12" class="accent"/><text x="355" y="98">Runtime</text><text x="355" y="134" class="small">VM + modules</text><text x="355" y="165" class="small">{i === 0 ? 'capabilities' : 'lean profile'}</text>
+            <rect x="495" y="80" width="140" height="100" rx="12" class={i === 2 ? 'accent' : 'node'}/><text x="565" y="126">my-app</text><text x="565" y="152" class="small">one executable</text>
+          </>}
+          {kind === 'shell' && <>
+            <rect x="45" y="48" width="590" height="164" rx="12" class="node"/>
+            <text x="340" y="95" class="small">{i === 0 ? 'TEXT STREAM' : i === 1 ? 'TYPED RECORD' : 'EXPLICIT CONVERSION'}</text>
+            <text x="340" y="144" class="mono">{i === 0 ? 'api  12  healthy' : i === 1 ? '{ name: "api", count: 12 }' : 'bytes  →  records  →  bytes'}</text>
+            <text x="340" y="185" class="small">{i === 0 ? 'Where does one field end?' : i === 1 ? 'count is a number, not column-shaped text' : 'Make the boundary visible'}</text>
+          </>}
+          {kind === 'saving' && <>
+            <rect x="40" y="65" width="230" height="130" rx="12" class="node"/><text x="155" y="100" class="small">IN THE APP</text><text x="155" y="145" class="mono">[x] Ship the thing</text>
+            <path d="M285 130 H395" class="line"/><circle cx="340" cy="130" r="23" class={i === 0 ? 'accent' : 'warning'}/><text x="340" y="136">{i === 0 ? '=' : '≠'}</text>
+            <rect x="410" y="65" width="230" height="130" rx="12" class="node"/><text x="525" y="100" class="small">ON DISK</text><text x="525" y="145" class="mono">{i === 0 ? '[x] Ship the thing' : '[ ] Review it first'}</text>
+            <text x="340" y="235" class="small">{i === 2 ? 'Inspect the difference before writing' : i === 1 ? 'The disk has moved on' : 'A shared starting point'}</text>
+          </>}
+          {kind === 'racing' && <>
+            <path d="M50 200 H320 Q500 200 500 45" class="track"/><path d="M50 200 H320 Q500 200 500 45" class="lane"/>
+            <g transform={`translate(${i === 2 ? 490 : 365} ${i === 2 ? 95 : 186}) rotate(${i === 0 ? -15 : i === 1 ? -40 : -85})`}>
+              <rect x="-44" y="-29" width="88" height="58" rx="10" class="accent"/>
+              <rect x="-21" y="-17" width="37" height="34" rx="4" class="node"/>
+              <path d="M15 0 H35 V-48 H49" class="line"/>
+              <circle cx="-29" cy="-31" r="7" class="wheel"/><circle cx="29" cy="-31" r="7" class="wheel"/><circle cx="-29" cy="31" r="7" class="wheel"/><circle cx="29" cy="31" r="7" class="wheel"/>
+              {i === 2 && <path d="M-58 -15 H-93 M-58 0 H-108 M-58 15 H-88" class="line"/>}
+            </g>
+            <text x="195" y="70">{label}</text><text x="195" y="99" class="small">{i === 0 ? 'Follow the curve' : i === 1 ? 'Let it slide a little' : 'Class is dismissed'}</text>
+          </>}
+          {kind === 'benchmark' && <>
+            <text x="340" y="56" class="small">STARTUP + WORK = TOTAL TIME</text>
+            <rect x="70" y="91" width="540" height="58" rx="8" class="node"/>
+            <rect x="70" y="91" width={i === 0 ? 432 : 11} height="58" rx="5" class="accent"/>
+            <text x="340" y="186">{i === 0 ? '25 ms total · 80% startup' : '1,000 ms total · 2% startup'}</text>
+            <text x="340" y="222" class="small">Purple: startup. Remaining width: useful work. Each bar = 100%.</text>
+          </>}
+        </svg>
+        <figcaption aria-live="polite">{description}</figcaption>
+      </div>
+    ))}
+    <noscript><p class="lab-note">The first view is shown. Enable JavaScript to explore the other views.</p></noscript>
+  </figure>
+</story-lab>
+<script>
+  class StoryLab extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      this.addEventListener('click', (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button[data-step]');
+        if (!button || !this.contains(button)) return;
+        for (const item of this.querySelectorAll('button[data-step]')) item.setAttribute('aria-pressed', String(item === button));
+        for (const panel of this.querySelectorAll<HTMLElement>('[data-panel]')) panel.hidden = panel.dataset.panel !== button.dataset.step;
+      });
+    }
+  }
+  if (!customElements.get('story-lab')) customElements.define('story-lab', StoryLab);
+</script>
+<style>
+  .story-lab { display: block; margin: 2.5rem 0; --ink: #eae8ff; --muted: #b7b1d4; --purple: #b8a2ff; }
+  figure { margin: 0; padding: 1.4rem; border: 1px solid #554477; border-radius: 22px; background: #191527; color: var(--ink); box-shadow: 0 14px 38px #0002; }
+  .lab-heading > span { font: 600 .68rem/1.5 ui-monospace, monospace; color: var(--purple); letter-spacing: .13em; }
+  .lab-heading h3 { color: var(--ink); font-size: clamp(1.2rem, 3vw, 1.7rem); margin: .5rem 0 1rem; line-height: 1.2; }
+  .lab-controls { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+  button { appearance: none; background: transparent; border: 1px solid #605475; border-radius: 999px; color: var(--ink); padding: .6rem .85rem; font-family: inherit; font-size: .8rem; font-weight: 500; line-height: 1.3; cursor: pointer; }
+  button span { font: .68rem ui-monospace, monospace; margin-right: .5rem; opacity: .7; }
+  button[aria-pressed=true] { background: #c2aaff; color: #211438; border-color: #c2aaff; }
+  button:focus-visible { outline: 3px solid #6de6cd; outline-offset: 3px; }
+  svg { display: block; width: 100%; height: auto; }
+  .canvas { fill: #211d32; stroke: #3b334e; }
+  .node { fill: #302840; stroke: #8f7bb0; stroke-width: 2; }
+  .accent { fill: #7954b0; stroke: #d4bdff; stroke-width: 2; }
+  .warning { fill: #654017; stroke: #ffc975; stroke-width: 2; }
+  .line { fill: none; stroke: #b7a1d8; stroke-width: 3; stroke-linecap: round; }
+  text { fill: #f0eaff; font: 17px system-ui, sans-serif; text-anchor: middle; }
+  .small { font-size: 13px; fill: #c7bddb; }
+  .mono { font: 16px ui-monospace, monospace; }
+  .track { fill: none; stroke: #413a51; stroke-width: 67; }
+  .lane { fill: none; stroke: #81758e; stroke-width: 2; stroke-dasharray: 10 12; }
+  .wheel { fill: #101017; stroke: #d5cbe8; stroke-width: 2; }
+  figcaption, .lab-note { display: block; margin: 1rem .1rem 0; font-size: .9rem; line-height: 1.65; color: #d5cce6; text-align: left; }
+  [hidden] { display: none !important; }
+  @media (max-width: 480px) { svg text { font-size: 25px; } svg .small { font-size: 20px; } svg .mono { font-size: 21px; } figure { padding: .85rem; border-radius: 15px; } button { padding: .55rem .6rem; } }
+</style>

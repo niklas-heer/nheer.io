@@ -1,0 +1,70 @@
+---
+title: "How much Python does a little CLI need?"
+description: "Kipferl takes a small Python-style program, a deliberately limited runtime, and the business of shipping one useful executable."
+date: "2026-08-06T10:00:00+02:00"
+icon: ":croissant:"
+tags: ["python", "cli", "developer-tools", "open-source"]
+draft: true
+lang: "en"
+---
+
+import StoryLab from '../../../components/StoryLab.astro';
+
+A small command-line tool has a wonderfully modest ambition. You ask it a question, it does a little work, and it gets out of the way.
+
+Distributing it can be rather less modest.
+
+Suddenly the tiny script needs an interpreter, an environment, some instructions about that environment, and a second set of instructions for the person whose environment disagrees with the first set. The tool sorts a list. Its installation guide is developing a plot.
+
+[Kipferl](https://github.com/niklas-heer/kipferl) explores a narrower bargain: write a Python-style CLI using a curated runtime, then ship it as one executable.
+
+## A smaller promise is a useful promise
+
+The important word is *curated*.
+
+Kipferl is not a way to turn an arbitrary Python application and its entire dependency tree into a tiny binary. It embeds PocketPy and supplies a selected set of capabilities for command-line applications. It does not support pip or CPython C extensions.
+
+That boundary is a feature of the design, although it will absolutely be a reason not to use it for some programs. If your application needs the wider Python scientific stack, choosing a small runtime does not make those requirements politely disappear.
+
+For a focused CLI, the trade can be attractive. The developer gives up some ecosystem breadth. The person running the program gets a simpler distribution story.
+
+## Take the modules you need
+
+The universal build mode inspects imports and selects an appropriate runtime profile. The aim is to avoid carrying optional capabilities that the application does not use.
+
+<StoryLab kind="packing" />
+
+Think of it as packing for a trip. The trip might require a raincoat. It probably does not require the entire wardrobe, a spare wardrobe, and a package manager for wardrobes.
+
+There is still a runtime in the executable. “Standalone” describes what the recipient needs to install, not the absence of an interpreter inside the file. Keeping that distinction clear makes the size and compatibility tradeoffs much easier to understand.
+
+The basic workflow stays small:
+
+```bash
+kipferl dev app.py
+kipferl build app.py -o app --mode universal
+```
+
+The [0.6 documentation](https://github.com/niklas-heer/kipferl/blob/v0.6.0/README.md) describes the supported platforms, build modes, and module surface. There is also a full-runtime option for cases where static import analysis cannot establish the required capabilities.
+
+## Fast is a property of a particular program
+
+Startup matters for tools you invoke repeatedly. A delay that seems unimportant once becomes irritating when it sits between every command and its answer.
+
+But performance claims deserve a little specificity. The size of an empty application does not tell you the size of yours. Bundled assets, enabled modules, the target platform, and the work performed at startup all change the result.
+
+My preference is to measure the command someone will actually run: asking for help, processing a representative input, or entering the interface. A small executable is pleasant. A small executable that spends its first second discovering itself is less of a victory.
+
+For the same reason, the article's diagram is conceptual. It is not a size comparison disguised as a set of attractive rectangles.
+
+## The recipient is part of the design
+
+Developer tools often spend a lot of attention on writing the program and much less on handing it to another person.
+
+That handoff is where I find Kipferl interesting. Can the recipient run it without learning how the author manages Python installations? Can the supported surface be explained clearly enough that the author knows when to choose another tool? Can a CLI feel polished without arriving as a large deployment project?
+
+Those questions are more useful than trying to win “smallest binary” in the abstract.
+
+Kipferl is named after a pastry. The project cannot promise that packaging software will always be a pleasant baking exercise. It can, however, try to hand the user one finished thing rather than a bag of ingredients.
+
+*Written around [Kipferl 0.6.0](https://github.com/niklas-heer/kipferl/releases/tag/v0.6.0), including the project's new name. Features added to later development versions are outside this article.*

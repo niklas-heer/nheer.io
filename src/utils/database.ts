@@ -1,6 +1,7 @@
 // Database utility for querying podcast data
 
 import pg from "pg";
+import { podcastFixture } from "./podcast-fixture";
 
 const { Client } = pg;
 
@@ -67,10 +68,10 @@ export interface PodcastData {
 }
 
 async function getClient() {
-  const connectionString = import.meta.env.DATABASE_URL;
+  const connectionString = (process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL);
   if (!connectionString) {
     console.warn("DATABASE_URL not set");
-    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+    if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
       throw new Error("Required podcast data unavailable");
     }
     return null;
@@ -82,6 +83,10 @@ async function getClient() {
 }
 
 export async function fetchPodcastData(): Promise<PodcastData | null> {
+  if ((process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === 'true') {
+    if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === 'true') throw new Error('Test data cannot be used in a live build');
+    return podcastFixture();
+  }
   const client = await getClient();
   if (!client) return null;
 
@@ -95,7 +100,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
 
     // Get latest cumulative stats
     const statsResult = await client.query(`
-      SELECT date, time_listened, time_silence_removal, time_skipping,
+      SELECT date::text AS date, time_listened, time_silence_removal, time_skipping,
              time_intro_skipping, time_variable_speed
       FROM listening_stats
       ORDER BY date DESC
@@ -117,7 +122,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
 
     // Get cumulative stats history for chart
     const historyResult = await client.query(`
-      SELECT date, time_listened, time_silence_removal, time_skipping,
+      SELECT date::text AS date, time_listened, time_silence_removal, time_skipping,
              time_intro_skipping, time_variable_speed
       FROM listening_stats
       ORDER BY date ASC
@@ -134,7 +139,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
 
     // Get daily stats (actual per-day listening)
     const dailyStatsResult = await client.query(`
-      SELECT date, time_listened, episodes_started, episodes_completed
+      SELECT date::text AS date, time_listened, episodes_started, episodes_completed
       FROM daily_stats
       ORDER BY date DESC
       LIMIT 30
@@ -153,7 +158,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
     const yesterdayStr = yesterday.toISOString().split("T")[0];
 
     const yesterdayResult = await client.query(
-      `SELECT date, time_listened, episodes_started, episodes_completed
+      `SELECT date::text AS date, time_listened, episodes_started, episodes_completed
        FROM daily_stats
        WHERE date = $1`,
       [yesterdayStr],
@@ -175,7 +180,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
     const firstOfMonthStr = firstOfMonth.toISOString().split("T")[0];
 
     const monthlyStatsResult = await client.query(
-      `SELECT date, time_listened, episodes_started, episodes_completed
+      `SELECT date::text AS date, time_listened, episodes_started, episodes_completed
        FROM daily_stats
        WHERE date >= $1
        ORDER BY date ASC`,
@@ -336,7 +341,7 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
   } catch (error) {
     console.error("Failed to fetch podcast data:", error);
     await client.end();
-    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+    if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
       throw new Error("Required podcast data unavailable");
     }
     return null;

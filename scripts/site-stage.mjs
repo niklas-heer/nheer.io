@@ -1,4 +1,6 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { assertLiveSnapshot } from '../src/utils/podcast-health.mjs';
 
 const stage = process.argv[2];
 const env = { ...process.env, CI: 'true' };
@@ -23,7 +25,16 @@ const config = stages[stage];
 if (!config) throw new Error('Unknown site pipeline stage');
 const missing = config.required.filter((name) => !env[name]);
 if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
-if (stage === 'build') env.REQUIRE_LIVE_DATA = 'true';
+if (stage === 'build') {
+  env.REQUIRE_LIVE_DATA = 'true';
+  delete env.SITE_TEST_DATA;
+  delete env.PREVIEW_DRAFTS;
+}
+if (stage === 'build-check') {
+  env.SITE_TEST_DATA = 'true';
+  delete env.REQUIRE_LIVE_DATA;
+}
+if (stage === 'publish') assertLiveSnapshot(JSON.parse(readFileSync('dist/build-health.json', 'utf8')));
 const [command, ...args] = config.command;
 const result = spawnSync(command, args, { env, stdio: 'inherit' });
 if (result.error || result.status !== 0) process.exitCode = 1;

@@ -1,0 +1,74 @@
+---
+title: "Teaching architecture diagrams to explain themselves"
+description: "Sceno turns a diagram into something you can inspect, discuss, and improve without playing pixel detective."
+date: "2026-07-19T22:30:00+02:00"
+icon: ":triangular_ruler:"
+tags: ["diagrams", "developer-tools", "ai", "open-source"]
+draft: true
+lang: "en"
+---
+
+import StoryLab from '../../../components/StoryLab.astro';
+
+There is a particular kind of engineering work that consists of moving a rectangle three pixels to the left, deciding it was better before, and moving it two pixels back.
+
+Architecture diagrams are remarkably good at creating this work.
+
+The boxes are rarely the difficult part. The difficult part is keeping the picture understandable as the system changes. Add a service, reroute a connection, export a slide, discover that a label now lives inside a database. Apparently the database stores embarrassment too.
+
+I built [Sceno](https://github.com/niklas-heer/sceno) around a different starting point: **the diagram is a document, and the picture is one way to read it.**
+
+## A diagram you can review
+
+Sceno uses KDL, a text format with a natural shape for nested things. A small diagram can look like this:
+
+```kdl
+diagram title="A small service" layout=auto gap=32 padding=24 {
+  shape box api "API" layer=1
+  shape cylinder db "Database" layer=2
+  edge api -> db
+}
+```
+
+You do not need to find the right toolbar icon to understand the relationship. There is an API, there is a database, and there is a connection. A change to that relationship produces a text diff.
+
+That matters even if you never ask an AI agent to touch the file. A diagram in a repository can change alongside the code it describes. Reviewing “we added a queue between these services” becomes easier when the diagram change is part of the same conversation.
+
+The export still matters, of course. Nobody wants an architecture presentation delivered entirely as curly braces. Sceno renders the source into SVG, PNG, PDF, HTML, and slide output.
+
+## Give the next edit something to work with
+
+The more interesting part is the feedback around the drawing.
+
+A rendered picture tells you what happened. A scene description can also tell you where things are and how connections travel. Validation can point out a problem before you open an image. Layout advice can give you a reason to inspect a particular area.
+
+<StoryLab kind="diagram" />
+
+The illustration is deliberately simple. The point is the loop, not an imaginary promise that one command knows what every good diagram looks like.
+
+With Sceno, you can ask for several views of the same source:
+
+```bash
+sceno validate -i architecture.kdl --json
+sceno describe -i architecture.kdl --json
+sceno advise -i architecture.kdl --json
+sceno render -i architecture.kdl -o output/architecture
+```
+
+These commands answer different questions. Is the source valid? What scene did it describe? What might deserve attention? What does the result look like?
+
+That separation is useful for agents. “Make it nicer” is a very large request. A structured finding narrows the next edit. The agent can revise the source, run the checks again, and show a new result. A human can use exactly the same loop.
+
+## A valid diagram can still tell the wrong story
+
+This is the limit I find most useful to keep in mind: layout checks cannot decide which parts of your architecture deserve the reader's attention.
+
+A perfectly aligned drawing of every component may explain less than a small diagram with five boxes. A correct arrow does not explain whether a dependency is desirable. Sometimes the best repair is deleting half the diagram.
+
+Sceno helps with the mechanics so that more of the conversation can be about the system. It does not remove the need for that conversation.
+
+If you want to try the approach, start with one small flow you already understand. Put it in a file. Change one relationship. Read the diff, inspect the scene, and export the result.
+
+If that saves you from nudging one rectangle repeatedly while muttering “nearly,” I will consider it useful software.
+
+*This article describes the [Sceno 0.4 release](https://github.com/niklas-heer/sceno/releases/tag/v0.4.0). The [versioned README](https://github.com/niklas-heer/sceno/blob/v0.4.0/README.md) contains the commands and format reference.*

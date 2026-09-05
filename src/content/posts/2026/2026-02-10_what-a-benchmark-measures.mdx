@@ -1,0 +1,69 @@
+---
+title: "The fastest language, with an asterisk"
+description: "What a small programming-language benchmark can tell us—and why the interesting part is often the measurement rather than the winner."
+date: "2026-02-10T10:00:00+01:00"
+icon: ":stopwatch:"
+tags: ["performance", "benchmarks", "programming", "open-source"]
+draft: true
+lang: "en"
+---
+
+import StoryLab from '../../../components/StoryLab.astro';
+
+“Which programming language is fastest?” is an excellent way to start a discussion and a rather ambitious way to describe a benchmark.
+
+Fast at what? On which machine? With which compiler settings? Including startup? Using how many threads? At some point the question develops enough footnotes to qualify as a small academic department.
+
+My [speed-comparison project](https://github.com/niklas-heer/speed-comparison) has a deliberately narrow task: implementations of the Leibniz formula for π, compared across languages.
+
+The aim is not to discover π more accurately than everyone else. π seems fairly settled on the matter. The formula gives the implementations a shared piece of numerical work.
+
+## A narrow benchmark can still be useful
+
+A repeated floating-point calculation lets us examine something concrete. It exercises a particular mix of loops, arithmetic, and runtime behavior.
+
+That is useful evidence about that workload. It does not tell us which language will be best for a web service, a compiler, a database, or the application your team has to maintain for the next five years.
+
+The distinction is easy to state and surprisingly easy to forget once the results become a colorful chart. A bar has a persuasive confidence about it. It does not naturally display all the things that were not measured.
+
+## Same formula does not mean identical work for the processor
+
+One recent Swift contribution uses four independent accumulators in the calculation. The interesting idea is to reduce the dependency chain: instead of every addition depending on the immediately preceding result, several streams of work can make progress independently.
+
+That is instruction-level parallelism within a single thread. It is different from splitting the task across CPU cores.
+
+It is also a useful reminder that the spelling of an algorithm matters. Two implementations can represent the same mathematical idea while giving the compiler different opportunities. Floating-point addition order can also affect numerical results, so correctness remains part of the comparison.
+
+The project keeps single-threaded execution as a rule and treats SIMD versions as separate targets. Those choices do not eliminate every ambiguity, but they make more of the comparison visible.
+
+## What dominates depends on how long you run
+
+Startup is another source of confusion. For a tiny command, interpreter or runtime startup may be a large part of the experience. For a long numerical loop, the calculation may dominate instead.
+
+<StoryLab kind="benchmark" />
+
+These are teaching numbers, not repository measurements. Both bars fill the available width because each represents 100% of its own run. The proportion changes dramatically even though the startup time stays the same.
+
+This is why I would not use a long arithmetic benchmark to choose the snappiest interactive CLI. Conversely, timing an almost-empty command tells you very little about sustained numerical work.
+
+The user experience determines the question. The benchmark should follow it.
+
+## Reproducibility is more interesting than a trophy
+
+A result becomes more useful when another person can understand how it was produced: the source, language version, optimization flags, hardware, workload size, and measurement method.
+
+It also helps to keep distinct implementations distinct. If a heavily optimized variant silently replaces the ordinary version, the chart may improve while becoming harder to interpret.
+
+The repository's contributions are valuable in this respect. They make implementation choices discussable. A change is not just “Swift moved on the chart”; it is a specific piece of code that someone else can inspect, question, and run.
+
+The [accumulator contribution](https://github.com/niklas-heer/speed-comparison/pull/251) is a good example. This article explains the mechanism; it does not assign a speedup to it without reproducing the measurement.
+
+## Read the caption before choosing the winner
+
+I still enjoy a performance chart. There is something satisfying about turning a question into a repeatable experiment.
+
+The trick is to let the chart answer the question you actually asked. “This implementation completed this workload in this environment” is a useful statement. It may sound less exciting than “Language X destroys everything,” but it has the considerable advantage of meaning something.
+
+And if a benchmark makes you ask a better question about your own application, that can be more valuable than finding out which bar is shortest.
+
+*Based on the project and contributions present in [this February 2026 revision](https://github.com/niklas-heer/speed-comparison/tree/8917f3cdf761). Current benchmark results may differ.*

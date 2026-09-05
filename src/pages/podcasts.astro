@@ -9,7 +9,11 @@ import {
     POCKETCASTS_START_DATE,
 } from "../utils/database";
 
+import { snapshotStatus } from '../utils/podcast-health.mjs';
 const data = await fetchPodcastData();
+const freshness = snapshotStatus(data?.stats?.date);
+const fixture = (process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === 'true';
+const snapshotDate = data?.stats?.date ? new Date(data.stats.date).toISOString().slice(0, 10) : null;
 const stats = data?.stats;
 const podcasts = data?.podcasts || [];
 const podcastsByCategory = data?.podcastsByCategory || new Map();
@@ -173,6 +177,13 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
         )
     }
 
+    {snapshotDate && (
+        <p class="text-muted mb-8" data-podcast-freshness={freshness}>
+            {fixture ? 'Preview: sample data for automated tests. ' : ''}
+            Last data update: <time datetime={snapshotDate}>{snapshotDate}</time>.
+            {freshness !== 'fresh' && ' Updates are paused; the figures below show the last recorded snapshot.'}
+        </p>
+    )}
     {/* Stats Section */}
     {
         data && stats && (

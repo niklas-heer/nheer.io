@@ -13,6 +13,8 @@ import {
   type PodcastToClassify,
 } from "../src/utils/classify";
 
+import { canAttributeToToday } from "../src/utils/pocketcasts-response.mjs";
+
 const env = process.env;
 
 // Pocket Casts data starts from this date
@@ -33,25 +35,32 @@ async function syncPocketCasts() {
     if (!auth) {
       throw new Error("Failed to authenticate with Pocket Casts");
     }
-    console.log("Authenticated as:", auth.email);
+    console.log("Authenticated with Pocket Casts");
 
     // Connect to database
     await client.connect();
     console.log("Connected to database");
+    await client.query('BEGIN');
+    const lock = await client.query("SELECT pg_try_advisory_xact_lock(hashtext('nheer-pocketcasts-sync')) AS locked");
+    if (!lock.rows[0].locked) throw new Error('Another podcast sync is running');
 
     const today = new Date().toISOString().split("T")[0];
     const now = new Date();
+    let recordDaily = false;
 
     // Fetch and store stats
     console.log("\nFetching listening stats...");
     const stats = await fetchStats(auth.token);
 
+    if (!stats) throw new Error("Pocket Casts statistics are unavailable");
     if (stats) {
       // Get previous cumulative stats to calculate daily delta
       const prevStatsResult = await client.query(
-        `SELECT time_listened FROM listening_stats ORDER BY date DESC LIMIT 1`,
+        `SELECT date::text AS date, time_listened FROM listening_stats ORDER BY date DESC LIMIT 1`,
       );
       const prevTimeListened = prevStatsResult.rows[0]?.time_listened || 0;
+      recordDaily = canAttributeToToday(prevStatsResult.rows[0]?.date, today);
+      if (!recordDaily) console.log('Resuming after a data gap: updating totals without assigning historical listening to today.');
 
       // Calculate daily listening time (delta from last sync)
       const dailyListeningTime = Math.max(
@@ -208,7 +217,7 @@ async function syncPocketCasts() {
         );
       }
 
-      const isCompleted = episode.playedUpTo >= episode.duration * 0.9; // 90% = completed
+      const isCompleted = episode.duration > 0 && episode.playedUpTo >= episode.duration * 0.9; // 90% = completed
 
       // Get existing episode data to track changes
       const existingEpisode = await client.query(
@@ -270,7 +279,7 @@ async function syncPocketCasts() {
       }
 
       // Track episode history for timeline feature
-      if (listeningDelta > 0 || isNew) {
+      if (recordDaily && (listeningDelta > 0 || isNew)) {
         await client.query(
           `INSERT INTO episode_history (episode_uuid, date, played_up_to, delta_seconds, completed, synced_at)
            VALUES ($1, $2, $3, $4, $5, $6)
@@ -295,8 +304,8 @@ async function syncPocketCasts() {
     console.log("  New episodes:", newEpisodes);
     console.log("  Newly completed:", newlyCompleted);
 
-    // Update daily stats with episode counts
-    await client.query(
+    // Do not label a multi-day catch-up as a single day of listening.
+    if (recordDaily) await client.query(
       `INSERT INTO daily_stats (date, time_listened, episodes_started, episodes_completed, synced_at)
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (date) DO UPDATE SET
@@ -306,6 +315,8 @@ async function syncPocketCasts() {
          synced_at = $5`,
       [today, totalDailyListening, episodesStarted, newlyCompleted, now],
     );
+
+    await client.query('COMMIT');
 
     // Print summary
     console.log("\n" + "=".repeat(50));
@@ -335,6 +346,7 @@ async function syncPocketCasts() {
 
     await client.end();
   } catch (error: any) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error("Sync failed:", error.message);
     await client.end();
     process.exit(1);

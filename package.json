@@ -7,10 +7,13 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "playwright test",
+    "test": "npm run test:pipeline && playwright test",
     "refresh": "node scripts/refresh-site.mjs refresh",
     "publish:site": "node scripts/refresh-site.mjs publish",
-    "test:pipeline": "node --test scripts/tests/*.test.mjs"
+    "test:pipeline": "node --test scripts/tests/*.test.mjs",
+    "build:check": "node scripts/site-stage.mjs build-check",
+    "preview:articles": "PREVIEW_DRAFTS=true SITE_TEST_DATA=true astro dev --host 127.0.0.1",
+    "test:sync": "node scripts/tests/podcast-sync.integration.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.12",

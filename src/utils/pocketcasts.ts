@@ -1,6 +1,8 @@
 // Pocket Casts API utility for fetching podcast data
 // Unofficial API - https://api.pocketcasts.com
 
+import { readPocketResponse } from "./pocketcasts-response.mjs";
+
 const POCKETCASTS_API_URL = "https://api.pocketcasts.com";
 
 export interface PocketCastsStats {
@@ -51,6 +53,7 @@ export async function authenticate(
   try {
     const response = await fetch(`${POCKETCASTS_API_URL}/user/login`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: {
         "Content-Type": "application/json",
         Origin: "https://play.pocketcasts.com",
@@ -88,13 +91,14 @@ export async function fetchStats(
   try {
     const response = await fetch(`${POCKETCASTS_API_URL}/user/stats/summary`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    const data = await response.json();
+    const data = await readPocketResponse(response, "stats");
 
     return {
       timeListened: data.timeListened || 0,
@@ -104,8 +108,7 @@ export async function fetchStats(
       timeVariableSpeed: data.timeVariableSpeed || 0,
     };
   } catch (error) {
-    console.error("Failed to fetch stats:", error);
-    return null;
+    throw new Error("Pocket Casts statistics request failed");
   }
 }
 
@@ -118,18 +121,15 @@ export async function fetchSubscriptions(
   try {
     const response = await fetch(`${POCKETCASTS_API_URL}/user/podcast/list`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    const data = await response.json();
+    const data = await readPocketResponse(response, "podcasts");
 
-    if (!data.podcasts) {
-      console.error("No podcasts in response");
-      return [];
-    }
 
     return data.podcasts.map((p: any) => ({
       uuid: p.uuid,
@@ -143,8 +143,7 @@ export async function fetchSubscriptions(
       slug: p.slug,
     }));
   } catch (error) {
-    console.error("Failed to fetch subscriptions:", error);
-    return [];
+    throw new Error("Pocket Casts subscriptions request failed");
   }
 }
 
@@ -157,18 +156,15 @@ export async function fetchHistory(
   try {
     const response = await fetch(`${POCKETCASTS_API_URL}/user/history`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    const data = await response.json();
+    const data = await readPocketResponse(response, "episodes");
 
-    if (!data.episodes) {
-      console.error("No episodes in response");
-      return [];
-    }
 
     return data.episodes.map((e: any) => ({
       uuid: e.uuid,
@@ -184,8 +180,7 @@ export async function fetchHistory(
       starred: e.starred || false,
     }));
   } catch (error) {
-    console.error("Failed to fetch history:", error);
-    return [];
+    throw new Error("Pocket Casts history request failed");
   }
 }
 
@@ -198,6 +193,7 @@ export async function fetchInProgress(
   try {
     const response = await fetch(`${POCKETCASTS_API_URL}/user/in_progress`, {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

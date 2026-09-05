@@ -1,0 +1,63 @@
+---
+title: "A shell with two kinds of pipes"
+description: "Quirl keeps familiar shell habits while making room for structured data—and keeps the boundary between the two visible."
+date: "2026-08-23T10:00:00+02:00"
+icon: ":shell:"
+tags: ["rust", "shell", "cli", "developer-tools"]
+draft: true
+lang: "en"
+---
+
+import StoryLab from '../../../components/StoryLab.astro';
+
+A shell pipeline is one of computing's great bargains. One program writes something. Another program reads it. You can build a surprisingly useful tool out of a few commands and an optimistic attitude toward whitespace.
+
+Then a filename contains a space, a column moves, or a number turns out to include a unit. Your elegant one-liner begins applying for a position as a small language runtime.
+
+I built [Quirl](https://github.com/niklas-heer/quirl) to explore a shell that can work with both familiar command-line behavior and typed data pipelines.
+
+The interesting part is not that records are better than text. It is deciding when each is the right material to pass around.
+
+## Text is a very good common language
+
+Ordinary pipes are useful precisely because they ask relatively little of the programs on either end. A command can produce bytes without knowing who will read them. Existing tools can be combined in ways their authors never anticipated.
+
+That flexibility is worth keeping.
+
+It also moves interpretation somewhere else. A line might look like three tidy columns to a human while being one undifferentiated string to the next command. Extracting a field means agreeing on a format, even when that agreement is only “I think the third bit is always the number.”
+
+For stable output, that can be entirely reasonable. Problems begin when a display format quietly becomes a data contract.
+
+## Sometimes you want the number to stay a number
+
+Quirl includes an explicit data mode for structured values. Once data has fields and types, operations can work with that structure instead of repeatedly trying to recover it from presentation text.
+
+<StoryLab kind="shell" />
+
+The example is conceptual, not Quirl command syntax. Imagine filtering records by a numeric count. With typed records, the count already has a name and a value. You do not first have to trim a line, split it correctly, and hope that a helpful new column has not arrived upstream.
+
+This is particularly useful when exploring structured input. You can think about the question you want to ask of the data, rather than the string surgery needed to reach it.
+
+## The boundary is where the design gets interesting
+
+A shell cannot declare the rest of the world structured and expect every existing command to comply.
+
+External programs still use byte streams. Some shell constructs belong to a particular dialect. Extensions need their own rules. These boundaries need to be explicit enough that a person can predict what a command will do.
+
+Quirl's 0.1 line combines a native shell with typed pipelines and a Lua extension SDK. It also provides explicit Bash and Zsh islands for dialect-specific work. Familiarity is a goal; silently promising to be every other shell would be a much larger—and less credible—goal.
+
+For users, the practical question is simple: **can I tell which rules apply here?**
+
+A surprising conversion can be harder to debug than a slightly longer command. An explicit boundary gives you somewhere to look when the result differs from your expectation.
+
+## Your fingers are users too
+
+A shell is unusual software because people carry years of physical habits into it. Navigation, editing, completion, and command composition happen before conscious thought catches up.
+
+A new feature has to earn its place in that environment. It is not enough for a structured pipeline to look tidy in a demonstration. The surrounding shell must remain understandable when you are tired, moving quickly, or trying to recover from a typo.
+
+That is why I find this an interesting space to build in. The challenge sits between language design and everyday interaction: richer data, but also a prompt that feels usable on an ordinary Tuesday.
+
+If you want to explore it, start with the [0.1.0 release](https://github.com/niklas-heer/quirl/releases/tag/v0.1.0) and its [versioned documentation](https://github.com/niklas-heer/quirl/tree/v0.1.0). The release targets interactive Linux and macOS use; broader compatibility has its own limits.
+
+Quirl means a whisk. Mixing a few useful ideas is the intention. Producing a shell-shaped smoothie is the failure mode to avoid.

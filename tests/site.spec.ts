@@ -91,3 +91,41 @@ test('draft reviews are absent from the production build', async ({ request }) =
     expect(response.status()).toBe(404);
   }
 });
+
+test('podcast snapshots are labeled and populated data has working categories', async ({ page, request }) => {
+  const report = await (await request.get('/build-health.json')).json();
+  await page.goto('/podcasts');
+  await expect(page.getByRole('heading', { name: 'Podcasts', exact: true })).toBeVisible();
+  expect(['fixture', 'live']).toContain(report.source);
+  await expect(page.locator('[data-podcast-freshness]')).toContainText('Last data update:');
+  if (report.source === 'fixture') {
+    await expect(page.getByText('Preview: sample data for automated tests.', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Currently Listening' })).toBeVisible();
+  } else {
+    const { assertLiveSnapshot } = await import('../src/utils/podcast-health.mjs');
+    assertLiveSnapshot(report);
+  }
+  const category = page.locator('details.category-group').first();
+  await expect(category).toHaveAttribute('open', '');
+  await category.locator('summary').click();
+  await expect(category).not.toHaveAttribute('open');
+  await category.locator('summary').click();
+  await expect(category).toHaveAttribute('open', '');
+  await expect(category.locator('a').first()).toBeVisible();
+});
+
+test('new article drafts and their preview index stay out of production', async ({ request }) => {
+  const root = 'src/content/posts/2026';
+  const drafts = readdirSync(root).filter(file => /^draft: true$/m.test(readFileSync(join(root, file), 'utf8')));
+  expect(drafts.length).toBe(6);
+  expect((await request.get('/drafts/')).status()).toBe(404);
+  const feed = await (await request.get('/rss.xml')).text();
+  for (const file of drafts) {
+    const content = readFileSync(join(root, file), 'utf8');
+    const date = content.match(/^date: "(\d{4})-(\d{2})/m)!;
+    const slug = file.replace(/\.mdx$/, '');
+    const url = `/posts/${date[1]}/${date[2]}/${slug}/`;
+    expect((await request.get(url)).status()).toBe(404);
+    expect(feed).not.toContain(slug);
+  }
+});
