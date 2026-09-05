@@ -11,12 +11,12 @@ const { kind } = Astro.props;
     </header>
     {kind === 'benchmark' ? <>
       <div class="presets" role="group" aria-label="Example workloads">
-        <button type="button" data-work="1" aria-pressed="true">Tiny command</button>
-        <button type="button" data-work="20" aria-pressed="false">Find the crossover</button>
-        <button type="button" data-work="200" aria-pressed="false">Long calculation</button>
+        <button type="button" disabled data-work="1" aria-pressed="true">Tiny command</button>
+        <button type="button" disabled data-work="20" aria-pressed="false">Find the crossover</button>
+        <button type="button" disabled data-work="200" aria-pressed="false">Long calculation</button>
       </div>
       <label class="slider-label">Units of work <output data-units>1</output>
-        <input type="range" min="1" max="200" value="1" step="1" aria-label="Units of work" />
+        <input disabled type="range" min="1" max="200" value="1" step="1" aria-label="Units of work" />
       </label>
       <div class="chart" role="img" aria-label="At 1 unit: A takes 25 milliseconds. B takes 82 milliseconds." data-chart>
         <div class="bar-label"><strong>A · quick start</strong><span data-total-a>25 ms</span></div>
@@ -37,10 +37,10 @@ const { kind } = Astro.props;
       </div>
       <div class="snapshot"><span class="file-label">RECOVERY SNAPSHOT</span><code data-snapshot>No write yet. No snapshot in this example.</code></div>
       <div class="presets" role="group" aria-label="Try a file conflict">
-        <button type="button" data-action="external">1. Add a note elsewhere</button>
-        <button type="button" data-action="save">2. Try saving</button>
+        <button type="button" disabled data-action="external">1. Add a note elsewhere</button>
+        <button type="button" disabled data-action="save">2. Try saving</button>
         <button type="button" data-action="resolve" disabled>3. Keep both edits</button>
-        <button type="button" data-action="reset">Reset</button>
+        <button type="button" disabled data-action="reset">Reset</button>
       </div>
       <p class="result" data-result role="status">Try adding a note in the other editor, then save. Or save first to see the uncomplicated version.</p>
       <figcaption>A simplified model of conflict detection, review, and recovery. “Keep both edits” represents your deliberate resolution after inspection; it does not claim that tdx automatically merges arbitrary changes.</figcaption>
@@ -107,6 +107,7 @@ const { kind } = Astro.props;
           }
         });
       }
+      for (const control of this.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button:not([data-action=resolve])')) control.disabled = false;
     }
   }
   if (!customElements.get('article-experiment')) customElements.define('article-experiment', ArticleExperiment);

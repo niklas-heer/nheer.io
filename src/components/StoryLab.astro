@@ -40,7 +40,7 @@ const story = stories[kind];
   {kind === 'benchmark' || kind === 'saving' ? <ArticleExperiment kind={kind} /> : <figure>
     <div class="lab-heading"><span>{story.eyebrow}</span><h3>{story.title}</h3></div>
     <div class="lab-controls" role="group" aria-label={story.title}>
-      {story.states.map(([label], i) => <button type="button" data-step={i} aria-pressed={i === 0}><span>0{i + 1}</span>{label}</button>)}
+      {story.states.map(([label], i) => <button type="button" disabled data-step={i} aria-pressed={i === 0}><span>0{i + 1}</span>{label}</button>)}
     </div>
     {story.states.map(([label, description], i) => (
       <div data-panel={i} hidden={i !== 0}>
@@ -107,6 +107,7 @@ const story = stories[kind];
         for (const item of this.querySelectorAll('button[data-step]')) item.setAttribute('aria-pressed', String(item === button));
         for (const panel of this.querySelectorAll<HTMLElement>('[data-panel]')) panel.hidden = panel.dataset.panel !== button.dataset.step;
       });
+      for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-step]')) button.disabled = false;
     }
   }
   if (!customElements.get('story-lab')) customElements.define('story-lab', StoryLab);

@@ -79,3 +79,31 @@ for (const width of [1280, 390]) {
     });
   }
 }
+
+test('cold-load controls wait for their handlers without losing the first click', async ({ page }) => {
+  let release = () => {};
+  let scriptsReady = Promise.resolve();
+  await page.route('**/*', async route => {
+    if (route.request().resourceType() === 'script') await scriptsReady;
+    await route.continue();
+  });
+  for (const [slug, buttonName, expectedText] of [
+    ['2026-07-19_diagrams-that-explain-themselves', 'Inspect', 'Validation and layout advice'],
+    ['2026-02-10_what-a-benchmark-measures', 'Find the crossover', 'A tie at 120 ms'],
+    ['2026-07-17_saving-a-markdown-file', 'Add a note elsewhere', 'The other editor added a note'],
+  ]) {
+    scriptsReady = new Promise<void>(resolve => { release = resolve; });
+    try {
+      await page.goto(`/drafts/2026/${slug}/`, { waitUntil: 'commit' });
+      const button = page.getByRole('button', { name: buttonName });
+      await expect(button).toBeVisible();
+      await expect(button).toBeDisabled();
+      release();
+      await button.click();
+      await expect(page.locator('story-lab')).toContainText(expectedText);
+      if (buttonName === 'Inspect') await expect(button).toHaveAttribute('aria-pressed', 'true');
+    } finally {
+      release();
+    }
+  }
+});
