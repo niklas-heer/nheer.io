@@ -63,34 +63,15 @@
 </style>
 
 <script>
-    function initBackToTop() {
-        const button = document.getElementById("back-to-top");
-        if (!button) return;
-
-        const toggleVisibility = () => {
-            if (window.scrollY > 300) {
-                button.classList.add("visible");
-            } else {
-                button.classList.remove("visible");
-            }
-        };
-
-        window.addEventListener("scroll", toggleVisibility, { passive: true });
-        toggleVisibility();
-
-        button.addEventListener("click", () => {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        });
+    function updateBackToTop() {
+        document.getElementById("back-to-top")?.classList.toggle("visible", window.scrollY > 300);
     }
 
-    // Run when DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initBackToTop);
-    } else {
-        initBackToTop();
-    }
-
-    // Re-initialize after page transitions
-    document.addEventListener("astro:after-swap", initBackToTop);
-    document.addEventListener("astro:page-load", initBackToTop);
+    window.addEventListener("scroll", updateBackToTop, { passive: true });
+    document.addEventListener("astro:page-load", updateBackToTop);
+    document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest("#back-to-top")) return;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        window.scrollTo({ top: 0, behavior: reduceMotion ? "instant" : "smooth" });
+    });
 </script>

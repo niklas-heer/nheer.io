@@ -78,6 +78,9 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
 
   if (!token) {
     console.warn("GITHUB_TOKEN not set, skipping GitHub data fetch");
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required GitHub data unavailable");
+    }
     return null;
   }
 
@@ -96,6 +99,9 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
 
     if (!response.ok) {
       console.error("GitHub API error:", response.status, response.statusText);
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required GitHub data unavailable");
+      }
       return null;
     }
 
@@ -103,12 +109,18 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
 
     if (data.errors) {
       console.error("GitHub GraphQL errors:", data.errors);
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required GitHub data unavailable");
+      }
       return null;
     }
 
     const user = data.data?.user;
     if (!user) {
       console.error("No user data returned from GitHub");
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required GitHub data unavailable");
+      }
       return null;
     }
 
@@ -123,6 +135,9 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
     };
   } catch (error) {
     console.error("Error fetching GitHub data:", error);
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required GitHub data unavailable");
+    }
     return null;
   }
 }

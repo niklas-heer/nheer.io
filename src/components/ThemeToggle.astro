@@ -3,7 +3,7 @@
 ---
 
 <button
-  id="theme-toggle"
+  data-theme-toggle
   type="button"
   class="rounded-md p-2 hover:bg-surface transition-colors"
   aria-label="Toggle theme"
@@ -40,38 +40,30 @@
 </button>
 
 <script>
-  function initThemeToggle() {
-    const toggle = document.getElementById('theme-toggle');
-    const sunIcon = toggle?.querySelector('.sun-icon');
-    const moonIcon = toggle?.querySelector('.moon-icon');
-
-    function updateIcons(theme: string) {
-      if (theme === 'dark') {
-        sunIcon?.classList.remove('hidden');
-        moonIcon?.classList.add('hidden');
-      } else {
-        sunIcon?.classList.add('hidden');
-        moonIcon?.classList.remove('hidden');
-      }
-    }
-
-    // Initialize icons based on current theme
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    updateIcons(currentTheme);
-
-    toggle?.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      updateIcons(next);
+  function updateThemeToggles() {
+    const theme = document.documentElement.dataset.theme || 'dark';
+    document.querySelectorAll('[data-theme-toggle]').forEach((toggle) => {
+      toggle.querySelector('.sun-icon')?.classList.toggle('hidden', theme !== 'dark');
+      toggle.querySelector('.moon-icon')?.classList.toggle('hidden', theme === 'dark');
+      toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
     });
   }
 
-  // Run on initial load
-  initThemeToggle();
+  // Delegate once so both buttons also work after client-side navigation.
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element) || !event.target.closest('[data-theme-toggle]')) return;
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Keep the toggle usable when browser storage is unavailable.
+    }
+    updateThemeToggles();
+  });
 
-  // Re-run after Astro page transitions
-  document.addEventListener('astro:after-swap', initThemeToggle);
+  document.addEventListener('astro:before-swap', (event) => {
+    event.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme || 'dark';
+  });
+  document.addEventListener('astro:page-load', updateThemeToggles);
 </script>

@@ -70,6 +70,9 @@ async function getClient() {
   const connectionString = import.meta.env.DATABASE_URL;
   if (!connectionString) {
     console.warn("DATABASE_URL not set");
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required podcast data unavailable");
+    }
     return null;
   }
 
@@ -333,6 +336,9 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
   } catch (error) {
     console.error("Failed to fetch podcast data:", error);
     await client.end();
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required podcast data unavailable");
+    }
     return null;
   }
 }

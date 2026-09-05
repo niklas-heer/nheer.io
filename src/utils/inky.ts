@@ -21,6 +21,9 @@ export async function getInkyComments(): Promise<InkyComment[]> {
   const connectionString = import.meta.env.DATABASE_URL;
   if (!connectionString) {
     console.warn("DATABASE_URL not set, using fallback comments");
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required Inky comments unavailable");
+    }
     return getFallbackComments();
   }
 
@@ -68,6 +71,9 @@ export async function getInkyComments(): Promise<InkyComment[]> {
     }));
 
     if (newsComments.length === 0 && generalComments.length === 0) {
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required Inky comments unavailable");
+      }
       return getFallbackComments();
     }
 
@@ -97,6 +103,9 @@ export async function getInkyComments(): Promise<InkyComment[]> {
   } catch (error) {
     console.error("Failed to fetch Inky comments:", error);
     await client.end();
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required Inky comments unavailable");
+    }
     return getFallbackComments();
   }
 }

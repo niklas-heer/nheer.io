@@ -185,6 +185,9 @@ export async function fetchReadingData(): Promise<ReadingData | null> {
 
   if (!token) {
     console.warn("HARDCOVER_API_TOKEN not set - skipping Hardcover data fetch");
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required hardcover data unavailable");
+    }
     return null;
   }
 
@@ -204,6 +207,9 @@ export async function fetchReadingData(): Promise<ReadingData | null> {
         response.status,
         response.statusText,
       );
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required hardcover data unavailable");
+      }
       return null;
     }
 
@@ -211,6 +217,9 @@ export async function fetchReadingData(): Promise<ReadingData | null> {
 
     if (data.errors) {
       console.error("Hardcover GraphQL errors:", data.errors);
+      if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+        throw new Error("Required hardcover data unavailable");
+      }
       return null;
     }
 
@@ -232,6 +241,9 @@ export async function fetchReadingData(): Promise<ReadingData | null> {
     };
   } catch (error) {
     console.error("Failed to fetch Hardcover data:", error);
+    if (import.meta.env.REQUIRE_LIVE_DATA === "true") {
+      throw new Error("Required hardcover data unavailable");
+    }
     return null;
   }
 }

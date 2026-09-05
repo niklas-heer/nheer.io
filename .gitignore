@@ -26,3 +26,7 @@ bun.lock
 
 # Hugo backup (can be removed after confirming migration)
 _hugo_backup/
+
+# Browser test artifacts
+playwright-report/
+test-results/

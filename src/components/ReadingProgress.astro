@@ -26,48 +26,27 @@
 </style>
 
 <script>
-  function initReadingProgress() {
+  let frame: number | undefined;
+
+  function updateProgress() {
+    frame = undefined;
     const progressBar = document.getElementById('reading-progress-bar');
-    const article = document.querySelector('article');
-
-    if (!progressBar || !article) return;
-
-    function updateProgress() {
-      const docHeight = document.documentElement.scrollHeight;
-      const windowHeight = window.innerHeight;
-      const scrollTop = window.scrollY;
-
-      // Simple calculation: how far through the scrollable area are we?
-      const scrollable = docHeight - windowHeight;
-
-      if (scrollable <= 0) {
-        progressBar!.style.width = '100%';
-        return;
-      }
-
-      const progress = (scrollTop / scrollable) * 100;
-      progressBar!.style.width = `${progress}%`;
-    }
-
-    // Update on scroll with requestAnimationFrame for performance
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          updateProgress();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    }, { passive: true });
-
-    // Initial update
-    updateProgress();
+    if (!progressBar) return;
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollable <= 0 ? 100 : (window.scrollY / scrollable) * 100;
+    progressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
   }
 
-  // Run on load
-  initReadingProgress();
+  function scheduleUpdate() {
+    if (frame === undefined) frame = requestAnimationFrame(updateProgress);
+  }
 
-  // Re-initialize after page transitions
-  document.addEventListener('astro:after-swap', initReadingProgress);
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', scheduleUpdate);
+  const resizeObserver = new ResizeObserver(scheduleUpdate);
+  document.addEventListener('astro:before-swap', () => resizeObserver.disconnect());
+  document.addEventListener('astro:page-load', () => {
+    resizeObserver.observe(document.body);
+    scheduleUpdate();
+  });
 </script>

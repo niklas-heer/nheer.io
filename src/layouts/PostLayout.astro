@@ -187,19 +187,6 @@ const readingTime = Math.ceil(words / 200);
         initZoom();
     }
 
-    // Run when DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initAll);
-    } else {
-        initAll();
-    }
-
-    // Clean up before page transition starts
     document.addEventListener("astro:before-swap", cleanupZoom);
-
-    // Re-initialize after page transition completes
-    document.addEventListener("astro:after-swap", initAll);
-
-    // Also listen for astro:page-load for full page loads
     document.addEventListener("astro:page-load", initAll);
 </script>

@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import ReviewLayout from '../../layouts/ReviewLayout.astro';
 
 export async function getStaticPaths() {
-  const reviews = await getCollection('reviews');
+  const reviews = await getCollection('reviews', ({ data }) => !data.draft);
 
   return reviews.map((review) => ({
     params: { slug: review.slug },
