@@ -3,6 +3,14 @@ export async function readPocketResponse(response, field) {
   const data = await response.json();
   if (field === 'stats') {
     const fields = ['timeListened', 'timeSilenceRemoval', 'timeSkipping', 'timeIntroSkipping', 'timeVariableSpeed'];
+    // Pocket Casts sends these counters as decimal strings in live responses.
+    // Normalize them before validation and arithmetic, without coercing blanks,
+    // booleans or null into a successful zero-valued snapshot.
+    for (const key of fields) {
+      if (typeof data?.[key] === 'string' && /^\d+(?:\.\d+)?$/.test(data[key])) {
+        data[key] = Number(data[key]);
+      }
+    }
     if (!data || typeof data.timeListened !== 'number' || fields.some(key => data[key] !== undefined && (typeof data[key] !== 'number' || !Number.isFinite(data[key]) || data[key] < 0))) {
       throw new Error('Pocket Casts returned invalid listening statistics');
     }

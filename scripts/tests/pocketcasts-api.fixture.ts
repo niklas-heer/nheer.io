@@ -3,7 +3,7 @@ globalThis.fetch = async (input) => {
   const path = new URL(String(input)).pathname;
   const payloads = {
     '/user/login': { token: 'test-token', email: 'test@example.invalid' },
-    '/user/stats/summary': { timeListened: 4800 },
+    '/user/stats/summary': { timeListened: '4800' },
     '/user/podcast/list': { podcasts: [{ uuid: 'p1', title: 'Test podcast', author: 'Test author' }] },
     '/user/history': { episodes: [{ uuid: 'e1', podcastUuid: 'p1', title: 'Test episode', duration: 1800, playedUpTo: 600, published: '2026-01-01', starred: false }] },
   };

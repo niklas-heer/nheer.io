@@ -29,3 +29,23 @@ test('a resumed sync does not attribute months of activity to today', () => {
   assert.equal(canAttributeToToday('2026-09-04', '2026-09-05'), true);
   assert.equal(canAttributeToToday('2026-09-05', '2026-09-05'), true);
 });
+test('live Pocket Casts string counters are normalized before arithmetic', async () => {
+  const stats = {
+    timeListened: '4800', timeSilenceRemoval: '12.5', timeSkipping: '120',
+    timeIntroSkipping: '0', timeVariableSpeed: '900',
+  };
+  const result = await readPocketResponse(new Response(JSON.stringify(stats)), 'stats');
+  assert.deepEqual(result, {
+    timeListened: 4800, timeSilenceRemoval: 12.5, timeSkipping: 120,
+    timeIntroSkipping: 0, timeVariableSpeed: 900,
+  });
+  assert.equal(result.timeSkipping + result.timeVariableSpeed, 1020);
+});
+test('invalid string counters cannot silently become zero or corrupt totals', async () => {
+  for (const value of ['', ' ', 'NaN', 'Infinity', '-1', '12 seconds', null, false, '9'.repeat(400)]) {
+    for (const key of ['timeListened', 'timeVariableSpeed']) {
+      const stats = { timeListened: '4800', [key]: value };
+      await assert.rejects(readPocketResponse(new Response(JSON.stringify(stats)), 'stats'), /invalid/);
+    }
+  }
+});
