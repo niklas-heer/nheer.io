@@ -136,7 +136,11 @@ test('published interactive articles appear in the blog, feed, and homepage', as
     expect(index).toContain(url);
     expect(feed).toContain(slug);
   }
-  for (const slug of ['2026-09-04_projector-racing', '2026-08-23_shell-two-pipelines', '2026-08-06_small-python-cli']) {
+  const latestArticles = articles.map(file => ({
+    slug: file.replace(/\.mdx$/, ''),
+    date: new Date(readFileSync(join(root, file), 'utf8').match(/^date: "([^"]+)"/m)![1]).getTime(),
+  })).sort((a, b) => b.date - a.date).slice(0, 3);
+  for (const { slug } of latestArticles) {
     expect(home).toContain(slug);
   }
 });

@@ -1,0 +1,166 @@
+---
+title: "My homelab has users. They are my parents."
+description: "An AI family plan became a small platform: Talos, declarative DNS with KDL, private networking with NetBird, and a home for my other projects."
+date: "2026-09-07T10:00:00+02:00"
+icon: ":house:"
+tags: ["homelab", "kubernetes", "self-hosting", "platform-engineering"]
+toc: true
+draft: false
+lang: "en"
+---
+
+import HomelabArchitecture from '../../../components/HomelabArchitecture.astro';
+
+I wanted more say in where my family's digital life runs.
+
+I remember coming across the idea of setting aside a recurring day to move away from big tech services. [Digital Independence Day](https://di.day/en) follows that approach on the first Sunday of each month. The idea appealed to me: make a small, concrete change toward more independence. For me, that meant looking for European alternatives to US services.
+
+I also wanted an AI family plan where I could handle the setup and my parents could simply use it. I had not found an offering that worked the way I wanted. They should be able to ask a question without researching models, providers, and subscriptions first.
+
+So I started building it myself. It now involves seven Kubernetes nodes. Apparently, I had some additional interests.
+
+## A family plan, with my own plumbing
+
+The experience I want is simple: open a page, sign in, and ask for help understanding a manual or planning dinner. Choosing an inference provider should be my problem.
+
+Open WebUI supplies that chat interface, with German model labels such as “Alltag” and “Schwierige Fragen,” speech input, Kokoro text-to-speech, and a family group for sharing useful material.
+
+Behind it, LiteLLM provides a configured set of models through one API. An upstream proxy sends requests to Eden AI, falls back to OpenRouter when needed, and notifies me when that happens. I can change the provider behind the interface while my parents keep a familiar place to go.
+
+The language models run with external providers. Hosting the interface gives me control over that layer; prompts still leave the cluster for inference, and the fallback path may have different regional properties.
+
+The lab also runs a few other useful applications:
+
+| Application | What it does here |
+| --- | --- |
+| TREK | Family travel planning |
+| AFFiNE | Collaborative documents and planning |
+| NocoDB | Small data applications |
+| CloudBeaver | Private database administration |
+| Grafana and Pyrra | Operator dashboards and a family status view |
+
+Authentik provides single sign-on. Open WebUI, TREK, and AFFiNE use it through OpenID Connect, as do several admin tools. Other entrypoints use proxy authentication. Centralizing identity lets me manage access in one place, with family and administrator roles kept distinct.
+
+## European choices at each layer
+
+The provider choices are part of the design. For the lab's infrastructure, primary AI gateway, private networking, and DNS, I chose companies based in the EU. Three of the four are based in Germany:
+
+| Provider | What I use it for | Company base |
+| --- | --- | --- |
+| [Eden AI](https://www.edenai.co/about) | Primary gateway to external AI models | Lyon, France |
+| [Hetzner](https://www.hetzner.com/legal/legal-notice/) | Cloud servers, volumes, and object storage | Gunzenhausen, Germany |
+| [NetBird](https://netbird.io/press) | Private networking and managed network control | Berlin, Germany |
+| [INWX](https://www.inwx.de/en/aboutus/imprint) | Domain and DNS management | Berlin, Germany |
+
+That puts the move toward European services into concrete choices. The wider setup still includes GitHub, 1Password, and an OpenRouter fallback, so it is a work in progress. A provider's headquarters also does not by itself determine where every downstream AI request is processed.
+
+## What the architecture looks like
+
+The machines run in Hetzner Cloud. Three Talos nodes handle the Kubernetes control plane, and four workers run the applications and platform services. A separate NixOS utility host handles web routing and private network access.
+
+Use the diagram to follow a family chat request or a visit to my private Grafana dashboard. The numbered stops show where each request goes—and when it leaves the lab:
+
+<HomelabArchitecture />
+
+Seven Kubernetes nodes for three people deserves an explanation. Learning Kubernetes, GitOps, and infrastructure automation is part of what I want from this project. The family services give that learning a purpose, and my other projects use the same platform. I accept the extra machinery because operating it is part of the hobby.
+
+The useful question for another builder is which parts serve their own goals. A family chat interface does not require copying my whole cluster. The choices around identity, provider access, and keeping configuration reproducible are useful independently of the node count.
+
+I chose [Talos](https://www.siderolabs.com/talos-linux) because it contains very little beyond what Kubernetes needs. There is no SSH daemon, interactive shell, or package manager. Fewer components mean less software to maintain and a smaller attack surface—a security property I value. Configuration and updates go through its API, which also fits the way I want to automate the lab.
+
+The dedicated control plane came from experience: application spikes on the earlier mixed nodes interfered with Kubernetes itself. Separating the roles helps, though the latest audit still identified control-plane memory headroom to improve.
+
+Caddy on the utility host routes web requests to explicit Kubernetes NodePorts. Cilium handles cluster networking. That gives me a fairly direct request path to inspect when something fails. The utility host is still a single dependency, so its rebuild procedure matters too.
+
+## Everything should have a declaration
+
+Pulumi, written in Python, provisions the Hetzner infrastructure and handles bootstrap work. Argo CD reconciles Kubernetes manifests and Helm values from Git. Infrastructure code lives in `infra/`, applications in `cluster/`, and operating procedures in `docs/`. Invoke tasks provide the repeatable commands.
+
+1Password is the source for secrets, which Connect and the Kubernetes operator deliver to applications. Pulumi state lives in object storage. Dagger runs the CI checks, and Renovate proposes dependency updates for review.
+
+I want the intended result to have a home outside my memory.
+
+## The eighth machine gets NixOS
+
+The utility host would be an easy place for that idea to fall apart. It sits outside Kubernetes and needs Caddy, NetBird, firewall rules, and phone notifications through ntfy. Plenty of opportunities for a quick manual fix that becomes permanent through forgetfulness.
+
+NixOS lets me describe that machine's system configuration too. These are selected settings from its host module:
+
+```nix
+{ ... }:
+{
+  services.caddy.enable = true;
+  services.netbird.enable = true;
+  services.netbird.useRoutingFeatures = "server";
+
+  services.openssh.enable = true;
+  services.openssh.settings.PasswordAuthentication = false;
+}
+```
+
+The complete configuration includes the proxy routes and firewall rules. A [flake](https://nix.dev/concepts/flakes.html) assembles the system, its lock file pins the inputs, and Disko describes the disk layout. Python renderers fill in host-specific settings such as cluster addresses, keeping that wiring connected to the infrastructure tooling.
+
+The machine starts from a temporary Linux image provisioned through Pulumi. My `utility.install` task uses [nixos-anywhere](https://nix-community.github.io/nixos-anywhere/) to install the declared NixOS system. Later, `utility.apply` renders the configuration and runs a remote `nixos-rebuild switch`. Secrets come from 1Password; NetBird enrollment happens separately so its setup key stays out of Git.
+
+One detail I especially like: Caddy includes the INWX plugin and uses [DNS challenges](https://caddyserver.com/docs/automatic-https#dns-challenge) for certificates. It proves control of a domain through DNS, so a private dashboard can have browser-trusted HTTPS while remaining reachable only through the private network. NixOS, INWX, and NetBird each handle one part of that result.
+
+## Even DNS gets a file
+
+The DNS records themselves live in a KDL file, with INWX as the provider.
+
+Here is a shortened example using the same format as my real configuration. The domain and IP are documentation examples:
+
+```kdl
+zone "example.org" {
+  provider "inwx"
+
+  record "chat" type="A" value="192.0.2.10" ttl=300
+  record "auth" type="A" value="192.0.2.10" ttl=300
+  record "travel" type="A" value="192.0.2.10" ttl=300
+}
+```
+
+The structure is easy to scan: one zone, one provider, and records with their type, value, and time to live. The real file also includes mail and verification records. Those belong to the domain just as much as the homelab's web addresses do.
+
+Repository tasks parse that file, compare it with the live INWX zone, and show which records would be created, updated, or deleted. DNS uses this explicit sync workflow alongside Pulumi:
+
+```sh
+uv run invoke dns.plan
+# Review the proposed changes, then apply them.
+uv run invoke dns.apply
+uv run invoke dns.verify --server ns.inwx.de
+```
+
+There are also checks for nameserver delegation and propagation. During a provider migration, the sequence is to inventory the old zone, declare it in Git, populate and verify the new provider, then change delegation.
+
+Even a DNS change becomes a diff I can read.
+
+## Private networking, with another European choice
+
+Along the way I discovered NetBird, an alternative to Tailscale built by a [Berlin-based company](https://netbird.io/press). Its clients and core server components are [open source](https://netbird.io/knowledge-hub/netbird-agpl-announcement), including the management, signal, and relay services. Having a self-hostable option appealed to the same sovereignty instinct that started the lab.
+
+I currently use NetBird Cloud for management. The utility host acts as a routing peer into the private network, giving my devices access to cluster administration and private tools such as Argo CD, Grafana, and CloudBeaver. My parents can use the public family applications without joining that administration network.
+
+## A home for my other projects
+
+The cluster also provides somewhere to run the work behind my projects.
+
+Argo Workflows now refreshes this website's data, builds it, runs browser checks, and publishes the tested result every three hours. The public site stays on Netlify; the supporting PostgreSQL data stays private in the cluster.
+
+My [speed-comparison project](https://github.com/niklas-heer/speed-comparison) also has benchmark workflows and a private result archive here. The benchmark workflow uses a selected worker for a consistent machine, although neighboring workloads can still introduce noise. The weekly benchmark schedule remains suspended while that workflow evolves; a separate daily job imports published snapshots into the archive.
+
+These projects can share scheduling, storage, secrets, and monitoring that already exist for the family services. That makes the lab useful as a small development platform as well.
+
+## Being able to bring it back
+
+Sharing infrastructure also means sharing limits. Several applications use a three-instance PostgreSQL cluster managed by CloudNativePG, with separate databases and roles. After a burst of login traffic exhausted its connection budget, I capped Authentik's role to preserve headroom for neighboring apps.
+
+The most useful backup result so far was a failed restore attempt.
+
+PostgreSQL has database-aware backups and WAL archiving; Velero covers Kubernetes resources and relevant filesystem data. During a September drill, PostgreSQL recovered, but the CloudBeaver filesystem restore never started. The verification caught it. After fixing the resource filter, the drill recovered both into fresh volumes and checked their contents.
+
+That gave me something more useful than a green backup indicator: a mistake found while the original data was still available. It was a component drill on a working cluster; a full rebuild still needs its own exercise.
+
+Prometheus, Grafana, Loki, and phone notifications help me operate it, with alerts focused on sustained failures. They support the original goal: a useful service for my parents that I can understand, change, and recover.
+
+I get somewhere to learn and run my projects. My parents get a page in the browser. Ideally, they rarely need to think about the seven nodes behind it.

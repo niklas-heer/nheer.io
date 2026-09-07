@@ -1,0 +1,182 @@
+<homelab-architecture>
+<figure aria-labelledby="homelab-map-title" aria-describedby="homelab-map-caption">
+  <header>
+    <span class="eyebrow">THE LAB AT A GLANCE · SEPTEMBER 2026</span>
+    <h3 id="homelab-map-title">One platform, two ways in</h3>
+  </header>
+  <div class="route-controls" role="group" aria-label="Follow a request" hidden>
+    <button type="button" data-route="overview" aria-pressed="true">Overview</button>
+    <button type="button" data-route="chat" aria-pressed="false">Family chat</button>
+    <button type="button" data-route="admin" aria-pressed="false">My dashboard</button>
+  </div>
+  <div class="route-explanation" aria-live="polite" aria-atomic="true" hidden>
+    <strong data-route-title>Two entrances, one shared platform</strong>
+    <p data-route-text>Choose a request to follow the numbered stops. The map stays in place so you can compare public family access with my private dashboard access.</p>
+  </div>
+
+  <div class="pair entrances">
+    <div class="entry public" data-part="browser"><strong>Family browser</strong><span>Public app URLs</span></div>
+    <div class="entry private" data-part="device"><strong>My devices</strong><span>NetBird private network</span></div>
+  </div>
+  <div class="pair paths" aria-hidden="true">
+    <span>HTTPS <b>↓</b></span><span>Private access <b>↓</b></span>
+  </div>
+
+  <section class="cloud" aria-label="Compute hosted on Hetzner Cloud">
+    <div class="boundary-label">HETZNER CLOUD</div>
+    <div class="utility" data-part="utility">
+      <span class="eyebrow">1 UTILITY HOST · NIXOS</span>
+      <strong>Caddy + NetBird routing peer</strong>
+      <span>Public app routes · private administration routes</span>
+    </div>
+    <div class="connector"><span>Web traffic via explicit NodePorts</span><b aria-hidden="true">↓</b></div>
+    <section class="cluster" aria-label="Talos Kubernetes cluster">
+      <div class="cluster-title"><strong>Talos · Kubernetes</strong><span>Cilium networking</span></div>
+      <div class="topology"><span><b>3</b> control-plane nodes</span><span><b>4</b> worker nodes</span></div>
+      <div class="identity"><strong>Authentik</strong><span>SSO for integrated apps and admin tools</span></div>
+      <div class="pair workloads">
+        <div data-part="apps"><strong>Family applications</strong><span>Open WebUI · TREK<br />AFFiNE · NocoDB</span></div>
+        <div><strong>Project workflows</strong><span>Site build checks<br />Benchmark jobs &amp; archives</span></div>
+      </div>
+      <div class="shared" data-part="shared"><strong>Shared services</strong><span>PostgreSQL · 1Password Connect<br />Grafana · Prometheus · Loki · Velero</span></div>
+    </section>
+  </section>
+
+  <div class="pair dependencies">
+    <div>
+      <div class="connector"><span>From the cluster: data &amp; backups</span><b aria-hidden="true">↓</b></div>
+      <div class="dependency"><span class="eyebrow">HETZNER STORAGE</span><strong>Volumes + Object Storage</strong><span>Live data · backups · Pulumi state</span></div>
+    </div>
+    <div>
+      <div class="connector"><span>From the cluster: AI via LiteLLM &amp; proxy</span><b aria-hidden="true">↓</b></div>
+      <div class="dependency external" data-part="models"><span class="eyebrow">EXTERNAL MODEL PROVIDERS</span><strong>Eden AI → OpenRouter fallback</strong><span>Language-model inference leaves the lab</span></div>
+    </div>
+  </div>
+
+  <div class="configuration">
+    <span class="eyebrow">DECLARED IN GIT</span>
+    <dl>
+      <div><dt>Pulumi / Python</dt><dd>Infrastructure + bootstrap</dd></div>
+      <div><dt>NixOS</dt><dd>Utility-host configuration</dd></div>
+      <div><dt>Argo CD</dt><dd>Kubernetes desired state</dd></div>
+      <div><dt>KDL → INWX</dt><dd>DNS zone via sync tasks</dd></div>
+    </dl>
+  </div>
+  <figcaption id="homelab-map-caption">A map of responsibilities and web access, with selected services shown. Authentik is a shared identity service; apps integrate through OIDC or proxy authentication. NetBird also routes private API access. Storage and AI are separate dependencies.</figcaption>
+</figure>
+</homelab-architecture>
+
+<script>
+  const routes = {
+    overview: {
+      title: 'Two entrances, one shared platform',
+      text: 'Choose a request to follow the numbered stops. The map stays in place so you can compare public family access with my private dashboard access.',
+      parts: [],
+    },
+    chat: {
+      title: 'Family chat: the interface is here; inference is external',
+      text: '1. A signed-in family member sends a message. 2. Caddy forwards it into Kubernetes. 3. Open WebUI calls LiteLLM and the upstream proxy. 4. Eden AI routes the model request, with OpenRouter as a fallback. Authentik handles sign-in separately.',
+      parts: ['browser', 'utility', 'apps', 'models'],
+    },
+    admin: {
+      title: 'My dashboard: a private route to Grafana',
+      text: '1. My device joins the NetBird network. 2. Caddy on the utility host accepts the private HTTPS request. 3. The request reaches Grafana through its NodePort. Grafana uses Authentik for sign-in. This route does not use an external model provider.',
+      parts: ['device', 'utility', 'shared'],
+    },
+  };
+
+  class HomelabArchitecture extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      this.addEventListener('click', (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button[data-route]');
+        if (!button) return;
+        const key = button.dataset.route as keyof typeof routes;
+        const route = routes[key];
+        if (!route) return;
+        this.querySelector('[data-route-title]')!.textContent = route.title;
+        this.querySelector('[data-route-text]')!.textContent = route.text;
+        for (const control of this.querySelectorAll('button[data-route]')) {
+          control.setAttribute('aria-pressed', String(control === button));
+        }
+        for (const part of this.querySelectorAll<HTMLElement>('[data-part]')) {
+          const index = (route.parts as string[]).indexOf(part.dataset.part!);
+          if (index < 0) delete part.dataset.step;
+          else part.dataset.step = String(index + 1);
+        }
+      });
+      for (const panel of this.querySelectorAll<HTMLElement>('.route-controls, .route-explanation')) panel.hidden = false;
+    }
+  }
+  if (!customElements.get('homelab-architecture')) customElements.define('homelab-architecture', HomelabArchitecture);
+</script>
+
+<style>
+  homelab-architecture { display: block; }
+  [hidden] { display: none !important; }
+  .route-controls { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .8rem; }
+  button { padding: .5rem .7rem; border: 1px solid #78618e; border-radius: 6px; background: #292236; color: #eee9fc; font: inherit; cursor: pointer; }
+  button[aria-pressed="true"] { background: #c2aaff; color: #231537; }
+  button:focus-visible { outline: 3px solid #74dfc2; outline-offset: 3px; }
+  .route-explanation { padding: .75rem; margin-bottom: 1.25rem; border-left: 3px solid #c2aaff; background: #211b30; min-height: 10rem; }
+  .route-explanation strong { font-size: .8rem; }
+  .route-explanation p { margin: .35rem 0 0; font-size: .75rem; color: #d6cae4; line-height: 1.6; }
+  [data-part] { position: relative; }
+  [data-step] { outline: 2px solid #f2d497; outline-offset: 3px; }
+  [data-step]::after { content: attr(data-step); position: absolute; top: -.6rem; right: .45rem; display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #f2d497; color: #241a2e; font: 700 .7rem/1 system-ui, sans-serif; }
+  figure { margin: 2rem 0; padding: 1.4rem; border: 1px solid #554477; border-radius: 16px; background: #191527; color: #eee9fc; text-align: left; font: 400 .82rem/1.5 system-ui, sans-serif; }
+  header { margin-bottom: 1.2rem; }
+  .eyebrow, .boundary-label { display: block; color: #c5b4e0; font: 600 .63rem/1.5 ui-monospace, monospace; letter-spacing: .055em; }
+  h3 { color: #eee9fc; font-size: 1.3rem; line-height: 1.3; margin: .4rem 0 0; }
+  strong { display: block; color: #eee9fc; font-weight: 650; }
+  span { display: block; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .entry { padding: .7rem .9rem; border: 1px solid #78618e; border-top: 3px solid #c2aaff; border-radius: 8px; }
+  .entry.private { border-top-color: #74dfc2; }
+  .entry span, .utility > span:last-child, .workloads span, .shared span, .dependency > span:last-child { color: #c9bfd8; font-size: .75rem; margin-top: .15rem; }
+  .paths { text-align: center; color: #c2aaff; font-size: .68rem; padding: .4rem 0; }
+  .paths span:last-child { color: #74dfc2; }
+  .paths b, .connector b { display: block; font-size: 1.25rem; line-height: 1.1; font-weight: 400; }
+  .cloud { padding: .75rem; border: 1px dashed #78618e; border-radius: 10px; }
+  .boundary-label { margin: 0 0 .55rem .15rem; }
+  .utility { border: 1px solid #74dfc2; border-radius: 8px; background: #202b32; padding: .7rem .9rem; }
+  .utility .eyebrow { color: #a9e9d8; margin-bottom: .2rem; }
+  .connector { text-align: center; padding: .4rem 0; color: #c9bfd8; font-size: .66rem; }
+  .cluster { border: 1px solid #78618e; border-radius: 8px; padding: .8rem; background: #211b30; }
+  .cluster-title { display: flex; justify-content: space-between; gap: .4rem; align-items: baseline; }
+  .cluster-title > span { font-size: .65rem; color: #c9bfd8; }
+  .topology { display: flex; flex-wrap: wrap; gap: .4rem 1rem; color: #c9bfd8; margin: .4rem 0 .75rem; font-size: .72rem; }
+  .topology b { color: #c2aaff; }
+  .identity { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .6rem; padding: .5rem .65rem; background: #342941; border-radius: 6px; }
+  .identity span { font-size: .68rem; color: #d6cae4; }
+  .workloads { margin: .65rem 0; }
+  .workloads > div { border-left: 2px solid #c2aaff; padding: .25rem .6rem; }
+  .workloads strong { font-size: .76rem; }
+  .shared { border-top: 1px solid #554477; padding-top: .6rem; }
+  .shared strong { font-size: .72rem; }
+  .dependency { padding: .7rem; border: 1px solid #78618e; border-radius: 8px; height: 100%; }
+  .dependencies > div { display: flex; flex-direction: column; }
+  .dependencies .connector { min-height: 3.3rem; display: flex; flex-direction: column; justify-content: end; }
+  .dependency strong { font-size: .75rem; margin-top: .3rem; }
+  .dependency.external { border-style: dashed; border-color: #c6ab77; }
+  .external .eyebrow { color: #e0c695; }
+  .configuration { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid #554477; }
+  dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; margin: .6rem 0 0; }
+  dt { color: #eee9fc; font-weight: 650; font-size: .72rem; }
+  dd { margin: 0; color: #c9bfd8; font-size: .68rem; }
+  figcaption { color: #bfb1d0; font-size: .7rem; line-height: 1.6; text-align: left; margin-top: 1rem; }
+  @media (max-width: 520px) {
+    .route-explanation { min-height: 16rem; }
+    figure { padding: .85rem; }
+    .pair { gap: .5rem; }
+    .entry { padding: .55rem; }
+    .cloud { padding: .5rem; }
+    .cluster { padding: .6rem; }
+    .cluster-title { display: block; }
+    .workloads, .dependencies { grid-template-columns: 1fr; }
+    .dependencies .connector { min-height: 0; }
+    .dependency { height: auto; }
+    h3 { font-size: 1.15rem; }
+  }
+</style>
