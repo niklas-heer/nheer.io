@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { siteConfig } from "../config";
+import CvPreview from "../components/CvPreview.astro";
 
 const tradebbyteStartDate = new Date(2015, 8, 1); // September 2015
 const now = new Date();
@@ -12,7 +13,7 @@ const yearsAtTradebyte = Math.floor(
 
 <BaseLayout
     title="About"
-    description="About Niklas Heer - Engineering Manager, Platform Engineering at Tradebyte"
+    description="About Niklas Heer - Engineering Manager, Central Platform Services at Tradebyte. Experience, skills, and downloadable CV."
 >
     <div class="about-hero">
         <div class="hero-glow"></div>
@@ -28,7 +29,7 @@ const yearsAtTradebyte = Math.floor(
             About Me
         </h1>
         <p class="about-tagline">
-            Engineering Manager · Platform Engineering · Tradebyte
+            Engineering Manager · Central Platform Services · Tradebyte
         </p>
     </div>
 
@@ -39,7 +40,7 @@ const yearsAtTradebyte = Math.floor(
                 I'm an Engineering Manager at <a
                     href="https://www.tradebyte.com/">Tradebyte</a
                 >
-                (Zalando Group), leading a team of 10 building our Internal Developer
+                (Zalando Group), leading up to 9 platform and software engineers building our Internal Developer
                 Platform. We make life easier for engineering teams by providing the
                 tools and infrastructure they need to ship great software.
             </p>
@@ -50,6 +51,8 @@ const yearsAtTradebyte = Math.floor(
                 podcasts, or tinkering with side projects.
             </p>
         </section>
+
+        <CvPreview />
 
         <section class="about-section">
             <h2 class="section-title">
@@ -126,7 +129,7 @@ const yearsAtTradebyte = Math.floor(
                             <span class="role-dot"></span>
                             <div class="role-content">
                                 <span class="role-title"
-                                    >Engineering Manager Platform Engineering</span
+                                    >Engineering Manager Central Platform Services (CPS)</span
                                 >
                                 <span class="role-period"
                                     >Jun 2024 - Present</span
@@ -309,7 +312,7 @@ const yearsAtTradebyte = Math.floor(
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 400px;
+        width: min(400px, 100vw);
         height: 400px;
         background: radial-gradient(
             circle,

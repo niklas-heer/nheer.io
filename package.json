@@ -9,6 +9,7 @@
     "astro": "astro",
     "test": "npm run test:pipeline && playwright test",
     "refresh": "node scripts/refresh-site.mjs refresh",
+    "sync:cv": "node scripts/sync-cv.mjs",
     "publish:site": "node scripts/refresh-site.mjs publish",
     "test:pipeline": "node --test scripts/tests/*.test.mjs",
     "build:check": "node scripts/site-stage.mjs build-check",

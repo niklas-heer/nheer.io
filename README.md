@@ -36,6 +36,28 @@ client-side navigation, scroll controls, and unpublished draft routes. Build fir
 when testing changes. API credentials are optional for these checks; connected
 reading, podcast, and GitHub data use their existing fallbacks when unavailable.
 
+## CV downloads and preview
+
+The About page displays the designed CV and offers both published PDF editions.
+The CV repository remains the source of truth. After updating it, run its
+`mise run check-all` task and commit the generated PDFs, then run here:
+
+```sh
+npm run sync:cv                         # Uses ../cv at HEAD
+npm run sync:cv -- /path/to/cv <commit> # Optional repository and revision
+```
+
+The sync requires Poppler (`pdfinfo` and `pdftoppm`; `brew install poppler` on
+macOS). It exports only the two committed PDFs, verifies each is one A4 page,
+and renders the designed PDF into the inline JPEG preview. It records the source
+commit and artifact checksums in `src/data/cv.json`. Uncommitted CV edits are not
+included. Commit the resulting website changes together.
+
+These snapshots are checked in, so ordinary website builds need neither the CV
+checkout nor Poppler. Downloads are served at `/cv.pdf` and `/cv-ats.pdf`;
+the preview links to the full PDF for zooming. Career copy on About is still
+maintained separately and should be checked when updating the CV.
+
 ## Homelab pipelines
 
 Argo Workflows owns the recurring refresh pipeline in the homelab repository:

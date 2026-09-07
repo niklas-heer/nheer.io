@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "fda4c70471ad698336397a51312c4c365552ae06",
+  "sourceDate": "2026-09-02T23:54:20+02:00",
+  "artifacts": {
+    "cv.pdf": {
+      "bytes": 2791003,
+      "sha256": "0bdd83b24ed32e77e57003123262c33f17176dba7b196bec88ab00e5bfa81d5a"
+    },
+    "cv-ats.pdf": {
+      "bytes": 37408,
+      "sha256": "4881f12bdf069b777aabab2304b66f055996d62ce9e65f7602a04a6384cc1c1b"
+    },
+    "cv-preview.jpg": {
+      "bytes": 872365,
+      "sha256": "eaf18172484cc2e0dae7919bd55ee1fdcdccacbd606533c1cc84d1f0404bca20"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+---
+import cv from '../data/cv.json';
+
+const version = cv.artifacts['cv-preview.jpg'].sha256.slice(0, 12);
+const pdfSize = `${(cv.artifacts['cv.pdf'].bytes / 1_000_000).toFixed(1)} MB`;
+---
+
+<section class="cv-section" aria-labelledby="cv-title" id="cv">
+    <div class="cv-heading">
+        <div>
+            <p class="cv-eyebrow">The one-page version</p>
+            <h2 id="cv-title">My CV</h2>
+            <p class="cv-description">My experience in engineering leadership and developer platforms, at a glance.</p>
+        </div>
+        <div class="cv-actions">
+            <a class="cv-download" href="/cv.pdf" download="niklas-heer-cv.pdf" data-astro-reload>
+                Download CV <span>PDF · {pdfSize}</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" />
+                </svg>
+            </a>
+            <a class="cv-text-link" href="/cv-ats.pdf" download="niklas-heer-cv-ats.pdf" data-astro-reload>Text-only CV (PDF)</a>
+        </div>
+    </div>
+
+    <figure>
+        <a class="cv-paper" href="/cv.pdf" target="_blank" rel="noopener noreferrer" data-astro-reload aria-label="Open the designed CV as a full-size PDF (opens in a new tab)">
+            <img src={`/cv-preview.jpg?v=${version}`} alt="Preview of Niklas Heer's designed one-page CV, with a portrait, career timeline, skills, and education." width="1600" height="2263" loading="lazy" decoding="async" />
+        </a>
+        <figcaption>
+            <span>Designed CV · One page</span>
+            <a href="/cv.pdf" target="_blank" rel="noopener noreferrer" data-astro-reload>Open full-size PDF <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>
+        </figcaption>
+    </figure>
+</section>
+
+<style>
+    .cv-section {
+        color: var(--color-foreground);
+        padding: clamp(1rem, 3vw, 2rem);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 7%, var(--color-surface)), var(--color-surface));
+        scroll-margin-top: 6rem;
+    }
+    .cv-heading { display: flex; justify-content: space-between; gap: 1.5rem; align-items: center; margin-bottom: 1.75rem; }
+    .cv-eyebrow { color: var(--color-accent); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .35rem; }
+    h2 { font-size: 1.75rem; margin-bottom: .5rem; }
+    .cv-description { max-width: 28rem; font-size: .95rem; }
+    .cv-actions { display: flex; flex-direction: column; align-items: center; gap: .6rem; flex-shrink: 0; }
+    .cv-download { display: flex; align-items: center; gap: .6rem; padding: .7rem 1rem; border-radius: .6rem; background: var(--color-accent); color: var(--color-background); font-weight: 600; font-size: .9rem; text-decoration: none; }
+    .cv-download span { font-size: .75rem; font-weight: 400; }
+    .cv-download:hover { background: var(--color-accent-hover); }
+    .cv-text-link, figcaption a { color: var(--color-accent); font-size: .8rem; text-underline-offset: .2em; }
+    .cv-text-link:hover, figcaption a:hover { text-decoration: underline; }
+    figure { margin: 0; }
+    .cv-paper { display: block; max-width: 680px; margin: 0 auto; border-radius: .25rem; overflow: hidden; box-shadow: 0 12px 40px #0003; cursor: zoom-in; }
+    .cv-paper img { display: block; width: 100%; height: auto; }
+    a:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 5px; }
+    figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; max-width: 680px; margin: 1rem auto 0; font-size: .8rem; }
+    @media (max-width: 700px) {
+        .cv-heading { flex-direction: column; align-items: flex-start; }
+        .cv-actions { align-items: flex-start; }
+    }
+</style>
