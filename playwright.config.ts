@@ -1,10 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
+const port = Number(process.env.PLAYWRIGHT_PORT || 4321);
+const baseURL = `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   testDir: './tests',
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4321',
+    baseURL,
     browserName: 'chromium',
     trace: 'retain-on-failure',
   },
@@ -13,9 +16,9 @@ export default defineConfig({
     { name: 'articles', testMatch: 'articles.spec.ts' },
   ],
   webServer: [{
-    // The API stays in the foreground so Playwright owns cleanup, including in agent environments.
-    command: `node --input-type=module -e "import { preview } from 'astro'; await preview({ server: { host: '127.0.0.1', port: 4321 } });"`,
-    url: 'http://127.0.0.1:4321',
+    // Keep the server in the foreground so Playwright owns its cleanup.
+    command: `node --input-type=module -e "import { preview } from 'astro'; await preview({ server: { host: '127.0.0.1', port: ${port} } });"`,
+    url: baseURL,
     reuseExistingServer: false,
   }],
 });
