@@ -6,7 +6,7 @@
     --color-background: #181822;
     --color-surface: #282a36;
     --color-foreground: #e0e0e0;
-    --color-muted: #73747b;
+    --color-muted: #9899a2;
     --color-border: #4a4b50;
     --color-accent: #bd93f9;
     --color-accent-hover: #caa4ff;
@@ -26,7 +26,7 @@
     --color-background: #fff;
     --color-surface: #fafafa;
     --color-foreground: #222;
-    --color-muted: #999;
+    --color-muted: #707070;
     --color-border: #dcdcdc;
     --color-accent: #8b5cf6;
     --color-accent-hover: #7c3aed;
@@ -460,8 +460,17 @@ p.info a {
 
 /* View Transitions - Modern, smooth, and fast */
 
-/* Disable transitions for users who prefer reduced motion */
+/* Respect reduced motion across the site, including decorative animations. */
 @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
     ::view-transition-group(*),
     ::view-transition-old(*),
     ::view-transition-new(*) {

@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { parseEmoji } from "../utils/emoji";
 import { siteConfig } from "../config";
+import { getPostPath } from "../utils/content-metadata";
 
 // Get latest posts
 const allPosts = await getCollection("posts", ({ data }) => {
@@ -18,35 +19,27 @@ const latestPosts = allPosts
 // Import Hardcover data for reading section
 import { fetchReadingData } from "../utils/hardcover";
 
-const readingData = await fetchReadingData();
-const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
 
 // Import podcast data
 import { fetchPodcastData } from "../utils/database";
 
-const podcastData = await fetchPodcastData();
+const [readingData, podcastData] = await Promise.all([
+    fetchReadingData(), fetchPodcastData(),
+]);
+const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
 const yesterdayStats = podcastData?.yesterdayStats;
 const yesterdayMinutes = yesterdayStats
     ? Math.round(yesterdayStats.timeListened / 60)
     : null;
 
-// Import GitHub data for projects
-import { fetchGitHubData } from "../utils/github";
+// Curated introductions stay useful even when external services are unavailable.
+const featuredProjects = [
+    { name: "tdx", description: "Manage todos in plain Markdown from a fast terminal interface.", url: "https://github.com/niklas-heer/tdx" },
+    { name: "speed-comparison", description: "Compare programming-language performance with an open benchmark suite.", url: "https://github.com/niklas-heer/speed-comparison" },
+];
+const featuredPost = allPosts.find((post) => post.id.endsWith("saving-a-markdown-file")) || latestPosts[0];
 
-const githubData = await fetchGitHubData();
-const totalStars =
-    githubData?.pinnedRepos.reduce(
-        (sum, repo) => sum + repo.stargazerCount,
-        0,
-    ) || 0;
 
-function getPostUrl(post: (typeof latestPosts)[0]): string {
-    const date = new Date(post.data.date);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const slug = post.slug.split("/").pop();
-    return `/posts/${year}/${month}/${slug}/`;
-}
 ---
 
 <BaseLayout
@@ -61,6 +54,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
                 <img
                     src="/assets/images/about/nheer-memoji.png"
                     alt="Niklas Heer"
+                    width="140" height="140" fetchpriority="high"
                     class="hero-image"
                 />
             </div>
@@ -155,6 +149,35 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
 
     <!-- Bento Grid -->
     <section class="bento-grid">
+        <div class="bento-card bento-large">
+            <div class="bento-card-header">
+                <span class="bento-icon" aria-hidden="true">💻</span>
+                <h2>Featured Projects</h2>
+                <a href="/projects" class="bento-link">View all →</a>
+            </div>
+            <div class="featured-projects">
+                {featuredProjects.map((project) => (
+                    <a href={project.url} class="featured-project" target="_blank" rel="noopener noreferrer">
+                        <h3>{project.name} <span aria-hidden="true">↗</span></h3>
+                        <p>{project.description}</p>
+                    </a>
+                ))}
+            </div>
+        </div>
+        {featuredPost && (
+            <div class="bento-card bento-large glass-card">
+                <div class="bento-card-header">
+                    <span class="bento-icon" aria-hidden="true">📌</span>
+                    <h2>Selected Writing</h2>
+                </div>
+                <a href={getPostPath(featuredPost)} class="featured-writing">
+                    <h3>{featuredPost.data.title.replace(/\*\*/g, "")}</h3>
+                    <p>{featuredPost.data.description}</p>
+                    <span class="bento-cta">Read the story →</span>
+                </a>
+            </div>
+        )}
+
         <!-- Latest Posts - Large Card -->
         <div class="bento-card bento-large">
             <div class="bento-card-header">
@@ -165,7 +188,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
             <div class="bento-card-content">
                 {
                     latestPosts.map((post) => (
-                        <a href={getPostUrl(post)} class="bento-post">
+                        <a href={getPostPath(post)} class="bento-post">
                             <span class="bento-post-title">
                                 {post.data.icon && (
                                     <span class="bento-post-icon">
@@ -205,6 +228,7 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
                                 <img
                                     src={item.book.image.url}
                                     alt={item.book.title}
+                                    width="60" height="90" loading="lazy" decoding="async"
                                 />
                             )}
                         </a>
@@ -237,27 +261,8 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
             <a href="/podcasts" class="bento-cta">See listening stats →</a>
         </div>
 
-        <!-- Projects Card -->
-        <div class="bento-card bento-small">
-            <div class="bento-card-header">
-                <span class="bento-icon">💻</span>
-                <h2>Projects</h2>
-            </div>
-            {
-                totalStars > 0 ? (
-                    <div class="bento-projects-stat">
-                        <span class="projects-stat-number">{totalStars}</span>
-                        <span class="projects-stat-label">GitHub stars</span>
-                    </div>
-                ) : (
-                    <p class="bento-text">Open source projects and tools.</p>
-                )
-            }
-            <a href="/projects" class="bento-cta">See projects →</a>
-        </div>
-
         <!-- About Card -->
-        <div class="bento-card bento-small glass-card">
+        <div class="bento-card bento-large glass-card">
             <div class="bento-card-header">
                 <span class="bento-icon">👋</span>
                 <h2>About</h2>
@@ -272,6 +277,17 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
 </BaseLayout>
 
 <style>
+    .featured-projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .featured-project { padding: 1rem; background: var(--color-background); border-radius: 0.5rem; }
+    .featured-project h3, .featured-writing h3 { font-weight: 600; color: var(--color-accent); }
+    .featured-project p, .featured-writing p { margin: 0.5rem 0; color: var(--color-muted); font-size: 0.9rem; }
+    .featured-project:hover h3, .featured-writing:hover h3 { text-decoration: underline; }
+    .featured-writing { display: block; }
+    @media (max-width: 640px) {
+        .featured-projects { grid-template-columns: 1fr; }
+        .bento-post { flex-direction: column; align-items: flex-start !important; gap: 0.5rem; }
+    }
+
     /* Hero Section */
     .hero-section {
         position: relative;
@@ -659,33 +675,4 @@ function getPostUrl(post: (typeof latestPosts)[0]): string {
         letter-spacing: 0.05em;
     }
 
-    .bento-projects-stat {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        gap: 0.25rem;
-    }
-
-    .projects-stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(
-            135deg,
-            var(--color-accent),
-            var(--color-green)
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
-    }
-
-    .projects-stat-label {
-        font-size: 0.875rem;
-        color: var(--color-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
 </style>

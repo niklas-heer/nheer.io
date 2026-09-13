@@ -1,13 +1,7 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Install Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Add Bun to PATH for this session
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# Install dependencies and build
-bun install
-bun run build
+# Netlify provides the Node version pinned in netlify.toml.
+# Use the same lockfile and build command as local mise tasks.
+npm ci --include=dev
+npm run build

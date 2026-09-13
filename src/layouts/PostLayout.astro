@@ -5,13 +5,15 @@ import OptimizedContent from "../components/OptimizedContent.astro";
 import BackToTop from "../components/BackToTop.astro";
 import type { CollectionEntry } from "astro:content";
 import { parseText } from "../utils/emoji";
+import { getPostDescription } from "../utils/content-metadata";
 
 interface Props {
     post: CollectionEntry<"posts">;
 }
 
 const { post } = Astro.props;
-const { title, date, author, tags, description, icon } = post.data;
+const { title, date, author, tags, icon } = post.data;
+const description = getPostDescription(post);
 const parsedTitle = parseText(title);
 const parsedIcon = icon ? parseText(icon) : null;
 

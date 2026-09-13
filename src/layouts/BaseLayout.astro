@@ -4,6 +4,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import Inky from "../components/Inky.astro";
 import { ClientRouter } from "astro:transitions";
+import { plainText } from "../utils/content-metadata";
 
 interface Props {
     title: string;
@@ -14,11 +15,12 @@ interface Props {
 
 const {
     title,
-    description = "Homepage and blog by Niklas Heer",
+    description: rawDescription = "Homepage and blog by Niklas Heer",
     lang = "en",
     image = "/assets/images/nheer_logo.png",
 } = Astro.props;
-const fullTitle = title === "Home" ? "Niklas Heer" : `${title} | Niklas Heer`;
+const fullTitle = title === "Home" ? "Niklas Heer" : `${plainText(title)} | Niklas Heer`;
+const description = plainText(rawDescription);
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 ---

@@ -3,7 +3,7 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "26.8.2"
 
 # Redirects from old Hugo structure
 [[redirects]]

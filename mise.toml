@@ -1,0 +1,72 @@
+[tools]
+node = "26.8.2"
+bun = "1.4.2"
+
+[tasks.setup]
+description = "Install locked dependencies and Chromium for browser tests"
+run = ["npm ci --include=dev", "npx playwright install chromium"]
+
+[tasks.dev]
+description = "Start the development server"
+run = "npm run dev --"
+
+[tasks.build]
+description = "Build the static website"
+run = "npm run build"
+
+[tasks."build:check"]
+description = "Build with sample podcast data for local verification"
+run = "npm run build:check"
+
+[tasks.preview]
+description = "Preview the existing static build"
+run = "npm run preview --"
+
+[tasks.test]
+description = "Run pipeline, unit, and browser tests against the existing build"
+run = "npm test"
+
+[tasks.check]
+description = "Build with sample data, run all tests, and audit dependencies"
+run = [{ task = "build:check" }, { task = "test" }]
+
+[tasks.audit]
+description = "Audit production and development dependencies for known vulnerabilities"
+run = "npm run audit"
+
+[tasks."test:pipeline"]
+description = "Test refresh and publishing guards"
+run = "npm run test:pipeline"
+
+[tasks."test:unit"]
+description = "Run mocked data and content unit tests"
+run = "npm run test:unit"
+
+[tasks."test:browser"]
+description = "Run browser tests against the existing build"
+run = "npx playwright test"
+
+[tasks."test:sync"]
+description = "Test podcast sync transactions with isolated PostgreSQL (requires Docker)"
+run = "npm run test:sync"
+
+[tasks."preview:articles"]
+description = "Preview unpublished articles locally at /drafts/"
+run = "npm run preview:articles --"
+
+[tasks."sync:cv"]
+description = "Import committed CV PDFs and regenerate the About preview (requires Poppler)"
+run = "npm run sync:cv --"
+
+[tasks.refresh]
+description = "Run the existing live data sync, build, and test pipeline"
+run = "npm run refresh"
+
+[tasks.publish]
+description = "Run the existing live pipeline and publish its verified output to Netlify"
+run = "npm run publish:site"
+
+[tasks.new-post]
+description = "Create an unpublished Markdown post"
+usage = 'arg "<title>" help="Post title"'
+run = 'node scripts/new-post.mjs "$usage_title"'

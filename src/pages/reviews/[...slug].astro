@@ -1,18 +1,19 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import ReviewLayout from '../../layouts/ReviewLayout.astro';
+import { isPublished } from '../../utils/content-metadata';
 
 export async function getStaticPaths() {
-  const reviews = await getCollection('reviews', ({ data }) => !data.draft);
+  const reviews = await getCollection('reviews', isPublished);
 
   return reviews.map((review) => ({
-    params: { slug: review.slug },
+    params: { slug: review.id },
     props: { review },
   }));
 }
 
 const { review } = Astro.props;
-const { Content } = await review.render();
+const { Content } = await render(review);
 ---
 
 <ReviewLayout review={review}>

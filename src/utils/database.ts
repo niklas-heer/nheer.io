@@ -67,7 +67,21 @@ export interface PodcastData {
   daysSinceStart: number;
 }
 
-async function getClient() {
+let podcastDataPromise: Promise<PodcastData | null> | undefined;
+
+export async function fetchPodcastData(): Promise<PodcastData | null> {
+  if ((process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === "true") {
+    if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
+      throw new Error("Test data cannot be used in a live build");
+    }
+    return podcastFixture();
+  }
+  // Share one snapshot across static pages, but refresh on requests in dev.
+  if (import.meta.env.DEV) return loadPodcastData();
+  return (podcastDataPromise ??= loadPodcastData());
+}
+
+async function loadPodcastData(): Promise<PodcastData | null> {
   const connectionString = (process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL);
   if (!connectionString) {
     console.warn("DATABASE_URL not set");
@@ -77,20 +91,17 @@ async function getClient() {
     return null;
   }
 
-  const client = new Client({ connectionString });
-  await client.connect();
-  return client;
-}
-
-export async function fetchPodcastData(): Promise<PodcastData | null> {
-  if ((process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === 'true') {
-    if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === 'true') throw new Error('Test data cannot be used in a live build');
-    return podcastFixture();
-  }
-  const client = await getClient();
-  if (!client) return null;
-
+  let client: InstanceType<typeof Client> | undefined;
   try {
+    client = new Client({
+      connectionString,
+      connectionTimeoutMillis: 5000,
+      query_timeout: 10000,
+      statement_timeout: 10000,
+    });
+    // pg emits errors when a connection drops between queries as well.
+    client.on("error", () => console.error("Podcast database connection lost"));
+    await client.connect();
     // Calculate days since Pocket Casts start
     const now = new Date();
     const daysSinceStart = Math.floor(
@@ -321,8 +332,6 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
     );
     const totalCompletedEpisodes = parseInt(completedCountResult.rows[0].count);
 
-    await client.end();
-
     return {
       stats,
       statsHistory,
@@ -340,11 +349,16 @@ export async function fetchPodcastData(): Promise<PodcastData | null> {
     };
   } catch (error) {
     console.error("Failed to fetch podcast data:", error);
-    await client.end();
     if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
       throw new Error("Required podcast data unavailable");
     }
     return null;
+  } finally {
+    try {
+      await client?.end();
+    } catch {
+      console.warn("Could not close podcast database connection");
+    }
   }
 }
 

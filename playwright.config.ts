@@ -13,7 +13,8 @@ export default defineConfig({
     { name: 'articles', testMatch: 'articles.spec.ts' },
   ],
   webServer: [{
-    command: 'npm run preview -- --host 127.0.0.1 --port 4321',
+    // The API stays in the foreground so Playwright owns cleanup, including in agent environments.
+    command: `node --input-type=module -e "import { preview } from 'astro'; await preview({ server: { host: '127.0.0.1', port: 4321 } });"`,
     url: 'http://127.0.0.1:4321',
     reuseExistingServer: false,
   }],

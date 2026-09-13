@@ -35,7 +35,7 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
   const date = new Date(post.data.date);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
-  const slug = post.slug.split('/').pop();
+  const slug = post.id.split('/').pop();
   return `/posts/${year}/${month}/${slug}/`;
 }
 ---
@@ -210,6 +210,27 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
     border-radius: 0.25rem;
     flex-shrink: 0;
     margin-left: auto;
+  }
+
+  @media (max-width: 640px) {
+    .post-item {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      align-items: start;
+      gap: 0.5rem 0.75rem;
+    }
+
+    .post-title,
+    .post-description {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .post-date {
+      grid-column: 2;
+      justify-self: start;
+      margin-left: 0;
+    }
   }
 
   .archive-link {

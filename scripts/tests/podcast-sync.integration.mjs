@@ -6,12 +6,18 @@ const name = `nheer-sync-test-${process.pid}`;
 let client;
 const docker = (...args) => execFileSync('docker', args, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
 try {
-  docker('run', '-d', '--rm', '--name', name, '-e', 'POSTGRES_PASSWORD=test-only', '-e', 'POSTGRES_DB=podcast_test', '-p', '127.0.0.1::5432', 'postgres:17.6');
+  docker('run', '-d', '--rm', '--name', name, '-e', 'POSTGRES_PASSWORD=test-only', '-e', 'POSTGRES_DB=podcast_test', '-p', '127.0.0.1::5432', 'postgres:18.6');
   const port = docker('port', name, '5432/tcp').split(':').at(-1);
-  for (let i = 0; i < 30; i++) {
-    if (spawnSync('docker', ['exec', name, 'pg_isready', '-U', 'postgres'], { stdio: 'ignore' }).status === 0) break;
-    await new Promise(resolve => setTimeout(resolve, 300));
+  let ready = false;
+  for (let i = 0; i < 60; i++) {
+    // The bootstrap server accepts socket connections before TCP is ready.
+    if (spawnSync('docker', ['exec', name, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres'], { stdio: 'ignore' }).status === 0) {
+      ready = true;
+      break;
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
+  assert.ok(ready, 'Postgres did not become ready for TCP connections');
   const connectionString = `postgresql://postgres:test-only@127.0.0.1:${port}/podcast_test`;
   client = new pg.Client({ connectionString });
   await client.connect();
