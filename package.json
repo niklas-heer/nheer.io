@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "npm run test:pipeline && playwright test && npm run audit",
+    "test": "npm run test:pipeline && npm run test:unit && playwright test && npm run audit",
     "refresh": "node scripts/refresh-site.mjs refresh",
     "sync:cv": "node scripts/sync-cv.mjs",
     "publish:site": "node scripts/refresh-site.mjs publish",
@@ -15,24 +15,26 @@
     "build:check": "node scripts/site-stage.mjs build-check",
     "preview:articles": "PREVIEW_DRAFTS=true SITE_TEST_DATA=true astro dev --host 127.0.0.1",
     "test:sync": "node scripts/tests/podcast-sync.integration.mjs",
+    "test:unit": "bun test tests/*.test.ts",
     "audit": "npm audit --include=dev --audit-level=low"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/mdx": "^8.0.1",
-    "@astrojs/rss": "^4.0.14",
+    "@astrojs/rss": "^4.0.19",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.2",
     "astro-expressive-code": "^0.44.2",
     "lottie-web": "^5.13.0",
     "medium-zoom": "^1.1.0",
     "node-emoji": "^2.2.0",
-    "pg": "^8.16.3",
+    "parse5": "^8.0.1",
+    "pg": "^8.23.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "tailwindcss": "^4.3.3",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0"

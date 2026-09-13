@@ -173,6 +173,7 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                     src={profile.image.url}
                                     alt={profile.name}
                                     class="profile-avatar"
+                                    width="64" height="64" decoding="async"
                                 />
                             )}
                             <div class="profile-info">
@@ -353,6 +354,7 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                     <img
                                         src={item.book.image.url}
                                         alt={`Cover of ${item.book.title}`}
+                                        width="64" height="96" loading="lazy" decoding="async"
                                         class="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
                                     />
                                 ) : (
@@ -410,10 +412,25 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
 
     {
         recentlyRead.length > 0 && (
-            <section>
+            <section data-reading-list>
                 <h2 class="text-xl font-semibold mb-6">Reading Timeline</h2>
+                <div class="reading-filters" hidden>
+                    <label>
+                        Search books
+                        <input type="search" data-book-search placeholder="Title or author" aria-controls="reading-timeline" />
+                    </label>
+                    <label>
+                        Year
+                        <select data-book-year aria-controls="reading-timeline">
+                            <option value="">All years</option>
+                            {sortedYears.map((year) => <option value={year}>{year}</option>)}
+                        </select>
+                    </label>
+                    <button type="button" data-clear-filters>Clear filters</button>
+                </div>
+                <p class="text-sm text-muted mb-4" data-reading-results role="status" aria-live="polite" aria-atomic="true"></p>
 
-                <div class="timeline">
+                <div class="timeline" id="reading-timeline">
                     {sortedYears.map((year) => {
                         const yearMap = groupedBooks.get(year)!;
                         const sortedMonths = Array.from(yearMap.keys()).sort(
@@ -421,7 +438,7 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                         );
 
                         return (
-                            <div class="year-group">
+                            <div class="year-group" data-reading-year={year}>
                                 <div class="year-label">
                                     <span class="year-pill">{year}</span>
                                 </div>
@@ -486,6 +503,7 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                                     return (
                                                         <a
                                                             href={cardUrl}
+                                                            data-book-search-text={`${item.book.title} ${getAuthors(item.book)}`}
                                                             target="_blank"
                                                             rel="noopener"
                                                             class="book-card flex gap-4 p-4 rounded-xl bg-surface/50 hover:bg-surface transition-all duration-300 group"
@@ -500,6 +518,7 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
                                                                             .url
                                                                     }
                                                                     alt={`Cover of ${item.book.title}`}
+                                                                    width="56" height="80" loading="lazy" decoding="async"
                                                                     class="w-14 h-20 object-cover rounded-lg shadow-md flex-shrink-0 group-hover:shadow-lg transition-shadow"
                                                                 />
                                                             ) : (
@@ -576,7 +595,34 @@ const sortedYears = Array.from(groupedBooks.keys()).sort(
     }
 </BaseLayout>
 
+<script>
+    import { initReadingFilters } from '../utils/reading-filters';
+    initReadingFilters();
+    document.addEventListener('astro:page-load', initReadingFilters);
+</script>
+
 <style>
+    [hidden] { display: none !important; }
+    .reading-filters {
+        display: flex;
+        align-items: end;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .reading-filters label { display: grid; gap: 0.375rem; font-size: 0.875rem; }
+    .reading-filters label:first-child { flex: 1; min-width: min(100%, 14rem); }
+    .reading-filters input, .reading-filters select, .reading-filters button {
+        background: var(--color-surface);
+        color: var(--color-foreground);
+        border: 1px solid var(--color-border);
+        border-radius: 0.5rem;
+        padding: 0.625rem 0.75rem;
+        min-height: 44px;
+        min-width: 0;
+    }
+    .reading-filters button { cursor: pointer; }
+
     .book-card {
         border: 1px solid
             color-mix(in srgb, var(--color-border) 50%, transparent);

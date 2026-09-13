@@ -14,7 +14,7 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
     url.username = env.PGUSER;
     url.password = env.PGPASSWORD;
     url.pathname = `/${env.PGDATABASE}`;
-    url.searchParams.set('sslmode', env.PGSSLMODE || 'require');
+    url.searchParams.set('sslmode', env.PGSSLMODE || 'verify-full');
     env.DATABASE_URL = url.href;
   }
   const required = mode === 'check' ? [] : [...requiredSecrets,
@@ -57,7 +57,7 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
     if (mode === 'publish') {
       execute('node', ['scripts/verify-build.mjs']);
       // Netlify receives only the tested static output. It never connects to Postgres.
-      execute('npm', ['exec', '--yes', '--package=netlify-cli@27.5.0', '--',
+      execute('npm', ['exec', '--yes', '--package=netlify-cli@27.5.2', '--',
         'netlify', 'deploy', '--prod', '--no-build', '--dir=dist',
         '--message=Homelab scheduled refresh']);
     }

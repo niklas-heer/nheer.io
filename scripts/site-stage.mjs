@@ -9,7 +9,7 @@ if (!env.DATABASE_URL && env.PGHOST && env.PGDATABASE && env.PGUSER && env.PGPAS
   url.username = env.PGUSER;
   url.password = env.PGPASSWORD;
   url.pathname = `/${env.PGDATABASE}`;
-  url.searchParams.set('sslmode', env.PGSSLMODE || 'require');
+  url.searchParams.set('sslmode', env.PGSSLMODE || 'verify-full');
   env.DATABASE_URL = url.href;
 }
 const stages = {
@@ -19,7 +19,7 @@ const stages = {
   build: { required: ['DATABASE_URL', 'HARDCOVER_API_TOKEN', 'GITHUB_TOKEN'], command: ['npm', 'run', 'build'] },
   'build-check': { required: [], command: ['npm', 'run', 'build'] },
   test: { required: [], command: ['npm', 'test'] },
-  publish: { required: ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'], command: ['npm', 'exec', '--yes', '--package=netlify-cli@27.5.0', '--', 'netlify', 'deploy', '--prod', '--no-build', '--dir=dist', '--message=Homelab Argo workflow'] },
+  publish: { required: ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'], command: ['npm', 'exec', '--yes', '--package=netlify-cli@27.5.2', '--', 'netlify', 'deploy', '--prod', '--no-build', '--dir=dist', '--message=Homelab Argo workflow'] },
 };
 const config = stages[stage];
 if (!config) throw new Error('Unknown site pipeline stage');

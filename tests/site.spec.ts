@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { initReadingFilters } from '../src/utils/reading-filters';
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {
   test(`theme works and survives navigation at ${viewport.width}px`, async ({ page }) => {
@@ -51,6 +52,59 @@ test('theme remains usable when storage is blocked', async ({ page }) => {
   await expect(page).toHaveURL('/');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   expect(errors).toEqual([]);
+});
+
+test('reading filters combine title, author and year and reset accessibly', async ({ page }) => {
+  // A fixed shelf exercises the production filter function without account data.
+  const shelf = `<section data-reading-list>
+    <div class="reading-filters" hidden>
+      <input aria-label="Search books" data-book-search>
+      <select aria-label="Year" data-book-year><option value="">All years</option><option>2026</option><option>2025</option></select>
+      <button data-clear-filters>Clear filters</button><p role="status" data-reading-results></p>
+    </div>
+    <div class="year-group" data-reading-year="2026">
+      <div class="month-group"><a data-book-search-text="Clean Code Robert Martin">Clean Code</a></div>
+      <div class="month-group"><a data-book-search-text="Germinal Émile Zola">Germinal</a></div>
+    </div>
+    <div class="year-group" data-reading-year="2025">
+      <div class="month-group"><a data-book-search-text="Clean Architecture Robert Martin">Clean Architecture</a></div>
+    </div>
+  </section>`;
+  await page.setContent(shelf);
+  await page.evaluate(initReadingFilters);
+  const search = page.getByRole('textbox', { name: 'Search books' });
+  const year = page.getByRole('combobox', { name: 'Year' });
+  const visibleBooks = page.locator('[data-book-search-text]:visible');
+  await expect(page.getByRole('status')).toHaveText('3 books shown');
+  await search.fill('  ROBERT   clean ');
+  await expect(visibleBooks).toHaveText(['Clean Code', 'Clean Architecture']);
+  await year.selectOption('2025');
+  await expect(visibleBooks).toHaveText(['Clean Architecture']);
+  await expect(page.locator('[data-reading-year="2026"]')).toBeHidden();
+  await expect(page.getByRole('status')).toHaveText('1 book shown');
+  await year.selectOption('');
+  await search.fill('GERMINAL emile');
+  await expect(visibleBooks).toHaveText(['Germinal']);
+  await search.fill('no such book');
+  await expect(visibleBooks).toHaveCount(0);
+  await expect(page.getByRole('status')).toContainText('No books match');
+  await year.selectOption('2025');
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(search).toHaveValue('');
+  await expect(search).toBeFocused();
+  await expect(year).toHaveValue('');
+  await expect(visibleBooks).toHaveCount(3);
+  await search.fill('zola');
+  await page.evaluate(initReadingFilters);
+  await expect(visibleBooks).toHaveText(['Germinal']);
+  await page.evaluate((init) => {
+    document.addEventListener('astro:page-load', new Function(`return (${init})()`) as EventListener);
+  }, initReadingFilters.toString());
+  await page.locator('body').evaluate((body, html) => { body.innerHTML = html; }, shelf);
+  await page.evaluate(() => document.dispatchEvent(new Event('astro:page-load')));
+  await expect(visibleBooks).toHaveCount(3);
+  await search.fill('architecture');
+  await expect(visibleBooks).toHaveText(['Clean Architecture']);
 });
 
 test('scroll controls work after revisiting a post', async ({ page }) => {
@@ -144,3 +198,33 @@ test('published interactive articles appear in the blog, feed, and homepage', as
     expect(home).toContain(slug);
   }
 });
+
+for (const width of [390, 1280]) {
+  test(`homepage and reading list fit at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Featured Projects' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Selected Writing' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.screenshot({ path: test.info().outputPath(`homepage-${width}.png`), fullPage: true });
+    await page.getByRole('link', { name: 'See reading list' }).click();
+    await expect(page).toHaveURL(/\/reading\/?$/);
+    await expect(page.getByRole('heading', { name: 'Reading', exact: true })).toBeVisible();
+    const cards = page.locator('[data-book-search-text]');
+    if (await cards.count()) {
+      await expect(page.getByRole('searchbox', { name: 'Search books' })).toBeVisible();
+      await page.getByRole('searchbox', { name: 'Search books' }).fill('no-result-7cc465');
+      await expect(page.getByRole('status')).toContainText('No books match');
+      await expect(page.locator('[data-book-search-text]:visible')).toHaveCount(0);
+      await page.getByRole('button', { name: 'Clear filters' }).click();
+      await expect(cards.first()).toBeVisible();
+      await expect(page.locator('[data-reading-list] img:not([loading="lazy"])')).toHaveCount(0);
+      await page.getByRole('searchbox', { name: 'Search books' }).scrollIntoViewIfNeeded();
+      await page.screenshot({ path: test.info().outputPath(`reading-${width}.png`) });
+    } else {
+      // Both an empty shelf and unavailable account data omit the filters.
+      await expect(page.getByRole('searchbox', { name: 'Search books' })).toHaveCount(0);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}

@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
+import { getPostDescription, getPostPath, plainText } from '../utils/content-metadata';
 
 export async function GET(context: APIContext) {
   const posts = await getCollection('posts', ({ data }) => {
@@ -15,20 +16,13 @@ export async function GET(context: APIContext) {
     title: "Niklas Heer's Blog",
     description: 'Thoughts on Leadership, DevSecOps, and Quality',
     site: context.site || 'https://nheer.com',
-    items: sortedPosts.map((post) => {
-      const date = new Date(post.data.date);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const slug = post.id.split('/').pop();
-
-      return {
-        title: post.data.title,
+    items: sortedPosts.map((post) => ({
+        title: plainText(post.data.title),
         pubDate: new Date(post.data.date),
-        description: post.data.description || '',
-        link: `/posts/${year}/${month}/${slug}/`,
+        description: getPostDescription(post),
+        link: getPostPath(post),
         author: post.data.author,
-      };
-    }),
+    })),
     customData: `<language>en-us</language>`,
   });
 }

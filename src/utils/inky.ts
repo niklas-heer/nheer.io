@@ -17,7 +17,14 @@ export interface InkyComment {
  * - News comments: Get the most recent ones (they're timely)
  * - General comments: Get all of them (they're timeless, randomized at runtime via JS)
  */
-export async function getInkyComments(): Promise<InkyComment[]> {
+let commentsPromise: Promise<InkyComment[]> | undefined;
+
+export function getInkyComments(): Promise<InkyComment[]> {
+  if (import.meta.env.DEV) return loadInkyComments();
+  return (commentsPromise ??= loadInkyComments());
+}
+
+async function loadInkyComments(): Promise<InkyComment[]> {
   const connectionString = (process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL);
   if (!connectionString) {
     console.warn("DATABASE_URL not set, using fallback comments");
@@ -27,9 +34,15 @@ export async function getInkyComments(): Promise<InkyComment[]> {
     return getFallbackComments();
   }
 
-  const client = new Client({ connectionString });
-
+  let client: InstanceType<typeof Client> | undefined;
   try {
+    client = new Client({
+      connectionString,
+      connectionTimeoutMillis: 5000,
+      query_timeout: 10000,
+      statement_timeout: 10000,
+    });
+    client.on("error", () => console.error("Inky database connection lost"));
     await client.connect();
 
     // Get recent news comments (from the last 7 days)
@@ -51,8 +64,6 @@ export async function getInkyComments(): Promise<InkyComment[]> {
          AND source_type = 'general'
        ORDER BY created_at DESC`,
     );
-
-    await client.end();
 
     const newsComments = newsResult.rows.map((row) => ({
       id: row.id,
@@ -102,11 +113,16 @@ export async function getInkyComments(): Promise<InkyComment[]> {
     return interleaved;
   } catch (error) {
     console.error("Failed to fetch Inky comments:", error);
-    await client.end();
     if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
       throw new Error("Required Inky comments unavailable");
     }
     return getFallbackComments();
+  } finally {
+    try {
+      await client?.end();
+    } catch {
+      console.warn("Could not close Inky database connection");
+    }
   }
 }
 

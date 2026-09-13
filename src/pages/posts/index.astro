@@ -212,6 +212,27 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
     margin-left: auto;
   }
 
+  @media (max-width: 640px) {
+    .post-item {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr);
+      align-items: start;
+      gap: 0.5rem 0.75rem;
+    }
+
+    .post-title,
+    .post-description {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    .post-date {
+      grid-column: 2;
+      justify-self: start;
+      margin-left: 0;
+    }
+  }
+
   .archive-link {
     display: inline-flex;
     align-items: center;
