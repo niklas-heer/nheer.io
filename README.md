@@ -67,8 +67,8 @@ mise run preview:articles --port 4323
 `mise run check` runs the sample-data build, full test suite, and dependency
 audit in sequence. The audit includes development dependencies and fails on any
 reported vulnerability, including low-severity advisories.
-Browser tests start their own preview server on port 4321; stop any manually
-running preview on that port before testing. Ordinary `mise run build` keeps
+Browser tests start their own preview server on port 4321. If that port is in use,
+run `PLAYWRIGHT_PORT=44321 mise run check` to use another port. Ordinary `mise run build` keeps
 existing development fallbacks, but its output may lack the podcast data required
 by browser checks.
 
@@ -86,8 +86,8 @@ The Pocket Casts importer uses a transaction and database lock. An API failure
 rolls back partial writes; a repeated run does not count the same episode progress
 twice. After a long data gap, it refreshes totals and episode state without assigning
 all missed listening to the recovery date. The API's limited history cannot recreate
-missing daily snapshots. Keep production sync/publish paused until the 1Password
-`nheer Site Jobs` credentials are configured and a live run succeeds.
+missing daily snapshots. Production sync and publishing run through Argo using
+the configured 1Password `nheer Site Jobs` credentials and live-data checks.
 
 ## Dependency maintenance
 

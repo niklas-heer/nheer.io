@@ -222,7 +222,8 @@ for (const width of [390, 1280]) {
       await page.getByRole('searchbox', { name: 'Search books' }).scrollIntoViewIfNeeded();
       await page.screenshot({ path: test.info().outputPath(`reading-${width}.png`) });
     } else {
-      await expect(page.getByText('Reading data unavailable. Check back later!')).toBeVisible();
+      // Both an empty shelf and unavailable account data omit the filters.
+      await expect(page.getByRole('searchbox', { name: 'Search books' })).toHaveCount(0);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });

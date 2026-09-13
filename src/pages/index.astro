@@ -216,6 +216,9 @@ const featuredPost = allPosts.find((post) => post.id.endsWith("saving-a-markdown
                 <h2>Reading</h2>
             </div>
             <div class="bento-books">
+                {currentlyReading.length === 0 && (
+                    <p class="bento-text">Books, notes, and past reads.</p>
+                )}
                 {
                     currentlyReading.map((item) => (
                         <a
