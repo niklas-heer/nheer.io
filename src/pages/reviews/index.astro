@@ -21,7 +21,7 @@ const reviewsByYear = sortedReviews.reduce((acc, review) => {
 const years = Object.keys(reviewsByYear).map(Number).sort((a, b) => b - a);
 
 function getReviewUrl(review: typeof sortedReviews[0]): string {
-  return `/reviews/${review.slug}/`;
+  return `/reviews/${review.id}/`;
 }
 ---
 

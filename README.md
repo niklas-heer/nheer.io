@@ -22,13 +22,15 @@ just preview
 
 ## Verification
 
+Use Node.js 26.8.2 (matching Netlify) and Bun for the sync scripts.
 The committed npm lockfile supports reproducible installs:
 
 ```bash
 npm ci
 npm run build
 npx playwright install chromium
-npm test
+npm test             # Includes the dependency audit
+npm run audit        # Fail on any known dependency vulnerability
 ```
 
 Browser regression tests run against the production build and cover theme controls,
@@ -90,7 +92,7 @@ Run `just` to see all available commands.
 
 ## Tech Stack
 
-- **Framework**: Astro 5
+- **Framework**: Astro 7
 - **Styling**: Tailwind CSS 4
 - **Theme**: Tokyo Night
 - **Syntax Highlighting**: Expressive Code
