@@ -1,13 +1,6 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Install Bun
-curl -fsSL https://bun.sh/install | bash
-
-# Add Bun to PATH for this session
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-
-# Install dependencies and build
-bun install
-bun run build
+# Install the audited dependency tree from the committed npm lockfile.
+npm ci --include=dev
+npm run build

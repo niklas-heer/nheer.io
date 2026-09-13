@@ -3,6 +3,7 @@ import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import expressiveCode from "astro-expressive-code";
 import mdx from "@astrojs/mdx";
+import { unified } from "@astrojs/markdown-remark";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { remarkHugoShortcodes } from "./src/utils/remark-hugo-shortcodes";
@@ -10,6 +11,7 @@ import { remarkOptimizeImages } from "./src/utils/remark-optimize-images.mjs";
 
 // https://astro.build/config
 export default defineConfig({
+  compressHTML: true,
   devToolbar: { enabled: process.env.PREVIEW_DRAFTS !== "true" },
   prefetch: {
     prefetchAll: true,
@@ -17,7 +19,7 @@ export default defineConfig({
   },
   image: {
     // Enable image optimization with responsive layout
-    experimentalLayout: "responsive",
+    layout: "constrained",
     service: {
       entrypoint: "astro/assets/services/sharp",
       config: {
@@ -50,19 +52,21 @@ export default defineConfig({
     mdx(),
   ],
   markdown: {
-    remarkPlugins: [remarkHugoShortcodes, remarkOptimizeImages],
-    rehypePlugins: [
-      rehypeSlug,
-      [
-        rehypeAutolinkHeadings,
-        {
-          behavior: "wrap",
-          properties: {
-            className: ["anchor-link"],
+    processor: unified({
+      remarkPlugins: [remarkHugoShortcodes, remarkOptimizeImages],
+      rehypePlugins: [
+        rehypeSlug,
+        [
+          rehypeAutolinkHeadings,
+          {
+            behavior: "wrap",
+            properties: {
+              className: ["anchor-link"],
+            },
           },
-        },
+        ],
       ],
-    ],
+    }),
   },
   i18n: {
     defaultLocale: "en",
