@@ -6,8 +6,22 @@ Niklas explicitly requested a view count for each page, visible on that page.
 After considering self-hosted analytics, he favored Vercel because he already
 hosts other projects there. This change prepares that migration; it does not
 establish that the production site has moved. Netlify remains the default
-publishing target until Vercel access, the deployment and domain cutover are
-verified.
+publishing target until analytics setup, the deployment and domain cutover are
+verified. Vercel CLI 59.23.2 is pinned in `mise.toml`; installation and login as
+`nheer` were verified on 2026-09-19. The checkout is linked to
+`niklas-heers-projects/nheer-io` (`prj_blqrNqJWMaL1edc0X83uojSOGkrP`).
+
+The project's Web Analytics activation is still pending. The CLI explicitly
+requires the user to run this command in an interactive terminal and confirm
+the free-plan limits:
+
+```sh
+mise exec -- vercel project web-analytics enable nheer-io --scope niklas-heers-projects
+```
+
+The authenticated count API request currently returns HTTP 400 because Web
+Analytics is not enabled. CLI authentication does not yet provision the durable
+deployment and analytics tokens required by the pipeline/runtime.
 
 The counter lives in the shared footer. It displays page views since Vercel
 Web Analytics was enabled, not unique people. Drafts, the 404 page and local or
@@ -41,8 +55,8 @@ Official documentation checked on 2026-09-19:
 - [Analytics privacy](https://vercel.com/docs/analytics/privacy-policy).
 
 Recheck these provider contracts and account entitlements before cutover.
-The API and deployment have only been exercised locally with fixtures until
-Vercel access is configured.
+Counter behavior and deployment packaging have been verified locally with
+fixtures. A successful live count response and deployment remain unverified.
 
 Local verification on 2026-09-19: the static build, 18 pipeline/API tests,
 30 unit tests and 27 browser tests passed. The final dependency audit could
@@ -51,9 +65,10 @@ Run the full check again before deployment; this is not a green release gate.
 
 ## Cutover
 
-1. Create or select the Vercel project under Niklas's existing account/team.
-   Enable Web Analytics. Leave automatic Git deployments off: the homelab is
-   the source of tested builds with live private data.
+1. The Vercel project `niklas-heers-projects/nheer-io` has been created and
+   linked. Enable Web Analytics with the interactive command above. Leave
+   automatic Git deployments off: the homelab is the source of tested builds
+   with live private data.
 2. Store `VERCEL_TOKEN`, `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID` in the existing
    1Password `homelab/nheer Site Jobs` item. Keep the old Netlify credentials
    available for rollback. The deployment CLI is pinned to 59.23.2.

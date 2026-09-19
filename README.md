@@ -2,8 +2,9 @@
 
 Personal website and blog by Niklas Heer.
 
-Vercel hosting and public per-page view counts are prepared; production cutover
-is pending account setup and verification. See [the migration runbook](docs/vercel-migration.md).
+Vercel hosting and public per-page view counts are prepared. The CLI is installed
+and the `nheer-io` project is linked; analytics activation and production cutover
+remain pending. See [the migration runbook](docs/vercel-migration.md).
 
 Built with [Astro](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/).
 
@@ -18,10 +19,14 @@ mise run setup
 mise run dev
 ```
 
-`mise.toml` pins Node.js 26.8.2 and Bun 1.4.2. Setup installs dependencies from
-`package-lock.json` with `npm ci` and installs Playwright's Chromium browser.
+`mise.toml` pins Node.js 26.8.2, Bun 1.4.2 and Vercel CLI 59.23.2. Setup installs
+dependencies from `package-lock.json` with `npm ci` and installs Playwright's Chromium browser.
 Shell activation is optional: `mise run` selects the project runtimes itself.
 No global shell changes are needed.
+
+Use `mise exec -- vercel login` to authenticate the CLI on another machine;
+`mise exec -- vercel whoami` checks the current login. Authentication stays in
+the CLI's local credential store, outside Git.
 
 Use `mise tasks` to list commands. Tasks delegate to the existing npm scripts,
 so local commands and automated pipelines share the same behavior. Mise does not

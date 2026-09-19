@@ -1,6 +1,7 @@
 [tools]
 node = "26.8.2"
 bun = "1.4.2"
+"npm:vercel" = "59.23.2"
 
 [tasks.setup]
 description = "Install locked dependencies and Chromium for browser tests"
