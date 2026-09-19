@@ -11,20 +11,30 @@ verified. Vercel CLI 59.23.2 is pinned in `mise.toml`; installation and login as
 `nheer` were verified on 2026-09-19. The checkout is linked to
 `niklas-heers-projects/nheer-io` (`prj_blqrNqJWMaL1edc0X83uojSOGkrP`).
 
-The project's Web Analytics activation is still pending. The CLI explicitly
-requires the user to run this command in an interactive terminal and confirm
-the free-plan limits:
+Web Analytics is now enabled: an authenticated count request returned HTTP 200
+on 2026-09-19. No deployment or production environment variables exist yet.
+CLI authentication does not provision the durable deployment and analytics
+tokens required by the pipeline/runtime.
 
-```sh
-mise exec -- vercel project web-analytics enable nheer-io --scope niklas-heers-projects
-```
+### Live API limitation — verified 2026-09-19
 
-The authenticated count API request currently returns HTTP 400 because Web
-Analytics is not enabled. CLI authentication does not yet provision the durable
-deployment and analytics tokens required by the pipeline/runtime.
+The earlier lifetime-count assumption is not supported by the live Hobby API.
+An undated `/v1/query/web-analytics/visits/count` request returned a query window
+from `2026-09-19T00:00:00.000Z` to `2026-09-20T00:00:00.000Z`. Supplying `since`
+alone returned HTTP 400 requiring `until`. An explicit range from 1970-01-01
+to 2026-09-19 returned HTTP 400: "the hobby plan only grants access to the latest
+31 days of data." These are observations for this project's current plan,
+despite the documentation describing lifetime counts.
 
-The counter lives in the shared footer. It displays page views since Vercel
-Web Analytics was enabled, not unique people. Drafts, the 404 page and local or
+The current endpoint must not ship labeled as a lifetime counter. Resolve this
+with durable totals (carefully accumulating non-overlapping periods) or a
+separate persistent counter backend, then verify it against live behavior.
+Neither alternative has been selected or implemented. Recheck the API contract
+if Vercel changes the plan or count endpoint.
+
+The counter lives in the shared footer. Its intended total is page views since
+tracking was enabled, not unique people; lifetime aggregation is unresolved as
+described above. Drafts, the 404 page and local or
 preview traffic are not tracked. An unavailable count stays hidden; a genuine
 zero remains zero. Counts can lag by several minutes because the endpoint is
 cached. Analytics collection limits and blockers can cause undercounting.
@@ -46,8 +56,8 @@ Vercel for five minutes; failures return an uncacheable 503.
 
 Official documentation checked on 2026-09-19:
 
-- [Count API](https://vercel.com/docs/analytics/web-analytics-api): lifetime
-  production totals are separate from the aggregate reporting window.
+- [Count API](https://vercel.com/docs/analytics/web-analytics-api): describes
+  lifetime totals, but the live Hobby behavior above contradicts that assumption.
 - [Limits and pricing](https://vercel.com/docs/analytics/limits-and-pricing):
   Hobby includes 50,000 events per month; collection pauses at the limit.
 - [Build Output API](https://vercel.com/docs/build-output-api) and
@@ -56,7 +66,8 @@ Official documentation checked on 2026-09-19:
 
 Recheck these provider contracts and account entitlements before cutover.
 Counter behavior and deployment packaging have been verified locally with
-fixtures. A successful live count response and deployment remain unverified.
+fixtures. A live count response succeeded, but lifetime counts and deployment
+remain unverified.
 
 Local verification on 2026-09-19: the static build, 18 pipeline/API tests,
 30 unit tests and 27 browser tests passed. The final dependency audit could
@@ -66,7 +77,8 @@ Run the full check again before deployment; this is not a green release gate.
 ## Cutover
 
 1. The Vercel project `niklas-heers-projects/nheer-io` has been created and
-   linked. Enable Web Analytics with the interactive command above. Leave
+   linked, and Web Analytics is enabled. Resolve the lifetime-count limitation
+   above before shipping the public counter. Leave
    automatic Git deployments off: the homelab is the source of tested builds
    with live private data.
 2. Store `VERCEL_TOKEN`, `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID` in the existing

@@ -3,8 +3,8 @@
 Personal website and blog by Niklas Heer.
 
 Vercel hosting and public per-page view counts are prepared. The CLI is installed
-and the `nheer-io` project is linked; analytics activation and production cutover
-remain pending. See [the migration runbook](docs/vercel-migration.md).
+and the `nheer-io` project is linked, with analytics enabled. Lifetime-count
+storage and production cutover remain pending. See [the migration runbook](docs/vercel-migration.md).
 
 Built with [Astro](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/).
 
