@@ -1,0 +1,88 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+const routes = [
+  { key: 'create', icon: '🌱', title: 'Start a project', subtitle: 'From idea to its own repo', prompt: 'Help me turn this idea into a small project. Check what I already have, investigate the open questions, then create its repository.', steps: ['Explore the idea', 'Choose a starting scope', 'Create a separate checkout'], result: 'A project with its own README, setup, and next step. The hub keeps useful research that crosses project boundaries.' },
+  { key: 'overview', icon: '🧭', title: 'Find the next step', subtitle: 'Across existing repositories', prompt: 'Look across my projects. What needs my attention, what is waiting on someone else, and which next step would be useful?', steps: ['Read current project state', 'Compare needs and blockers', 'Continue in the chosen repo'], result: 'An evidence-backed shortlist. Issues, pull requests, project goals, and current code inform the recommendation.' },
+  { key: 'research', icon: '🔎', title: 'Explore a question', subtitle: 'Before it has a repository', prompt: 'Investigate this idea. Compare it with my existing work and save the evidence, open questions, and a useful next experiment.', steps: ['Inspect code and sources', 'Compare the approaches', 'Save findings and next steps'], result: 'A research note to pick up later. The outcome can be a new project, a change to an existing one, or a reason to stop.' },
+];
+---
+<hub-launchpad>
+  <ArticleFigure id="hub-launchpad" label="The hub today" title="One starting point. Several directions." caption="A diagram of the workflow, not a live dashboard. These example requests use the agent, repository instructions, shared skills, and current project evidence.">
+    <div class="entry"><span aria-hidden="true">🗂️</span><div><strong>hub/</strong><span>Open here with the coding agent</span></div><span class="entry-note">Context · workflows · useful history</span></div>
+    <div class="connector" aria-hidden="true">↓</div>
+    <div class="choices" role="group" aria-label="Choose a hub workflow">
+      {routes.map((route, index) => <button type="button" disabled data-route={route.key} aria-pressed={index === 0}>
+        <span class="icon" aria-hidden="true">{route.icon}</span><strong>{route.title}</strong><span class="subtitle">{route.subtitle}</span>
+      </button>)}
+    </div>
+    {routes.map((route, index) => <div class="route" data-panel={route.key} hidden={index !== 0}>
+      <div class="prompt"><span class="label">AN EXAMPLE REQUEST</span><p>{route.prompt}</p></div>
+      <ol class="steps" aria-label="Workflow steps">{route.steps.map((step, i) => <li><span aria-hidden="true">{i + 1}</span>{step}</li>)}</ol>
+      <p class="result">{route.result}</p>
+    </div>)}
+    <p class="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="return"><span aria-hidden="true">↩</span><div><strong>Bring useful learning back.</strong><span>Implementation stays with its project. Shared findings can return to the hub.</span></div></div>
+    <noscript><p>Start a project is shown here. The article below also explains finding the next step and investigating a question.</p></noscript>
+  </ArticleFigure>
+</hub-launchpad>
+<script>
+  class HubLaunchpad extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      this.addEventListener('click', event => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button[data-route]');
+        if (!button) return;
+        for (const control of this.querySelectorAll('button')) control.setAttribute('aria-pressed', String(control === button));
+        for (const panel of this.querySelectorAll<HTMLElement>('[data-panel]')) panel.hidden = panel.dataset.panel !== button.dataset.route;
+        const current = this.querySelector<HTMLElement>('[data-panel]:not([hidden])');
+        this.querySelector('[role="status"]')!.textContent = `${button.querySelector('strong')!.textContent}. ${current?.querySelector('.result')?.textContent ?? ''}`;
+      });
+      for (const button of this.querySelectorAll<HTMLButtonElement>('button')) button.disabled = false;
+    }
+  }
+  if (!customElements.get('hub-launchpad')) customElements.define('hub-launchpad', HubLaunchpad);
+</script>
+<style>
+  hub-launchpad { display: block; }
+  [hidden] { display: none !important; }
+  .entry { display: flex; align-items: center; gap: .8rem; padding: 1rem; border: 1px solid #c6adff; border-radius: 12px; background: #332642; }
+  .entry > span:first-child { font-size: 2rem; }
+  .entry strong { display: block; font: 600 1.2rem ui-monospace, monospace; }
+  .entry div > span, .entry-note { color: #d0c2e0; font-size: .72rem; }
+  .entry-note { margin-left: auto; max-width: 10rem; text-align: right; }
+  .connector { text-align: center; color: #c6adff; font-size: 1.4rem; line-height: 1.8; }
+  .choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; }
+  button { padding: .85rem .65rem; text-align: left; border: 1px solid #78618e; border-radius: 10px; background: #211a2c; color: #efe7fa; cursor: pointer; font: inherit; }
+  button:disabled { cursor: default; }
+  button[aria-pressed="true"] { border-color: #8ae0c6; background: #203332; outline: 1px solid #8ae0c6; }
+  button:focus-visible { outline: 3px solid #f0cd8e; outline-offset: 3px; }
+  .icon { display: block; font-size: 1.3rem; margin-bottom: .4rem; }
+  button strong { display: block; font-size: .85rem; }
+  .subtitle { display: block; color: #c9bbd7; font-size: .67rem; margin-top: .3rem; }
+  .prompt { padding: 1rem; margin-top: 1.1rem; background: #201b2a; border-left: 3px solid #c6adff; }
+  .label { color: #c6adff; font: .62rem ui-monospace, monospace; letter-spacing: .08em; }
+  .prompt p { margin: .5rem 0 0; color: #e5dbee; font-size: .85rem; min-height: 4.8em; }
+  ol.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; padding: 0; margin: 1.2rem 0; gap: .7rem; }
+  .steps li { margin: 0; font-size: .73rem; line-height: 1.5; border-top: 1px solid #756183; padding-top: .7rem; }
+  .steps li > span { display: block; color: #8ae0c6; font: 650 .9rem ui-monospace, monospace; margin-bottom: .45rem; }
+  p.result { font-size: .8rem; color: #d2c5df; margin: 0; min-height: 4.8em; }
+  .return { display: flex; gap: .7rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #78618e; }
+  .return > span { font-size: 1.4rem; color: #8ae0c6; }
+  .return strong, .return div > span { display: block; font-size: .75rem; }
+  .return div > span { color: #c9bbd7; margin-top: .2rem; }
+  p.announcement { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (max-width: 520px) {
+    .entry { flex-wrap: wrap; }
+    .entry-note { margin: 0; max-width: none; text-align: left; flex-basis: 100%; }
+    .choices { grid-template-columns: 1fr; }
+    button { display: grid; grid-template-columns: 1.8rem 1fr; column-gap: .4rem; padding: .65rem .8rem; }
+    .icon { grid-row: 1 / 3; margin: 0; align-self: center; }
+    .subtitle { grid-column: 2; margin-top: .1rem; }
+    .prompt p { min-height: 8em; }
+    ol.steps { grid-template-columns: 1fr; gap: .5rem; }
+    .steps li { display: flex; gap: .7rem; align-items: baseline; padding-top: .5rem; }
+    .steps li > span { margin: 0; }
+    p.result { min-height: 8em; }
+  }
+</style>

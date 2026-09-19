@@ -7,8 +7,8 @@ const folders = [
   { icon: '🧪', name: 'scratch/', question: 'What can we throw away?', example: 'A temporary experiment log', keeps: 'Disposable output · Git ignores it', color: '#b9b5c8' },
 ];
 ---
-<ArticleFigure id="hub-folders" label="02 / Inside the hub" title="Four folders. Four different jobs." caption="These are different kinds of records, not mandatory stages. An investigation can end without a new fact or an accepted decision.">
-  <div class="root"><span aria-hidden="true">📂</span> agent-hub/ <span class="root-note">guided by AGENTS.md</span></div>
+<ArticleFigure id="hub-folders" label="Shared context / Inside the hub" title="Four folders. Four different jobs." caption="These are different kinds of records, not mandatory stages. An investigation can end without a new fact or an accepted decision.">
+  <div class="root"><span aria-hidden="true">📂</span> hub/ <span class="root-note">guided by AGENTS.md</span></div>
   <div class="folders">
     {folders.map(folder => <div class="folder" style={`--folder-color: ${folder.color}`}>
       <div class="folder-name"><span aria-hidden="true">{folder.icon}</span><strong>{folder.name}</strong></div>

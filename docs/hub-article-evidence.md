@@ -81,3 +81,49 @@ Visual revision verification passed: `rtk mise run check`, including 26 browser
 tests and a dependency audit with zero findings. Reviewed the three figures at
 1280px and 390px from test screenshots. Normal build output still excludes the
 draft from the homepage, post list, RSS, and draft routes.
+
+## Hub-first editorial revision — September 19, 2026
+
+The author clarified the central motivation: scattered repositories lacked a
+shared jumping-off point for creating new repositories, getting an overview of
+work, and choosing what to do next. Tooling preferences should have a smaller
+role. This directly supplies the motivation used in the revised opening; it is
+not inferred from commit messages.
+
+The revised article centers current workflows, replaces the opening deletion
+story with the need for a starting point, and reduces tooling details to one
+supporting section. It removes the preference-file tutorial and Jev evaluation
+digression. A new `HubLaunchpad` figure illustrates starting a project, finding
+the next step, and exploring a question. These are illustrative requests and
+workflow diagrams, not screenshots of a dashboard or reports of completed
+triage runs. The article explicitly describes an on-demand overview.
+
+Current evidence inspected in addition to the original sources:
+
+- Hub `README.md`, `AGENTS.md`, and repository-local creation/investigation
+  skills establish discovery, research, separate checkouts, and project handoff.
+  The README's old private-by-default wording conflicts with the current creation
+  skill; the article makes no visibility-default claim.
+- The installed shared `github-triage` and `project-compass` skills establish the
+  available attention/goal-assessment workflows. They are shared agent skills,
+  not implementations housed in the hub; the prose preserves that distinction.
+- Hub decision 0008 and committed name-research tooling (`c773d85`) support the
+  short naming-workflow mention. The reviewed hub HEAD was `63b27f3`; no naming
+  service was invoked for this editorial work.
+- This conversation and the blog commits `9e75bcb` / `f011f48` establish that the
+  article began with a hub discussion and moved into the blog checkout.
+
+Voice samples read in full: `2026-09-07_homelab-for-the-family.mdx`,
+`2026-08-23_shell-two-pipelines.mdx`, and
+`2026-07-17_saving-a-markdown-file.mdx`. Working profile: begin with a familiar
+need; use short first-person paragraphs, concrete examples, and occasional dry
+humor; explain machinery in relation to the user's task; let figures answer a
+specific question; end on the intended everyday experience. Avoid copying those
+articles' jokes or implying a longer operating history than the evidence shows.
+The tdx post discusses tasks inside one repository; this draft concerns the
+starting point across repositories and keeps project work in its owning checkout.
+
+Validation: the full `rtk mise run check` passed with the revised workflow tests.
+Reviewed the new figure's desktop and mobile screenshots, verified the local
+preview's final text, and opened the article visibly in Arc. The ordinary build
+still excludes the draft from public routes and feeds.

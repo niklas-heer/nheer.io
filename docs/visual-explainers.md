@@ -24,7 +24,7 @@ These are editorial references, not templates to reproduce. Keep the site's own 
 - tdx: a VHS recording demonstrates editing tasks inside a README; the separate save-conflict model explains why those ordinary files need careful handling.
 - Quirl: an actual terminal session demonstrates Normal mode, Data mode, Bash compatibility, and Lua. The prose supplies the author's motivation and the commands.
 - Overhead Overdrive: real screenshots carry a short personal story. An interactive physics diagram would distract from the reason the author made the game.
-- Hub: a before/after diagram shows the duplicate inventory disappearing; an interactive ownership map routes three concrete examples to dotfiles, hub, or project; a folder diagram distinguishes research, facts, decisions, and scratch. Numbered steps and native disclosures keep the copyable guide easy to scan.
+- Hub: an interactive starting-point diagram follows creating a repository, finding the next useful task, or investigating an idea. A folder diagram explains how useful context survives between those tasks. Numbered sections and expandable starter instructions support the story. The earlier index-deletion and ownership figures remain available as components, but no longer set the article's focus.
 
 ## Reusable article components
 
@@ -37,14 +37,15 @@ inside the content component; the frame does not impose a layout or interactions
 visual meaning from an emoji. Pass `id`, `number`, `icon`, and `title`. The number
 and icon are decorative; the heading text must make sense on its own.
 
-The hub article demonstrates both in MDX. Its `HubOwnership` custom element uses
-native buttons, a live textual explanation, and a visible destination label in
-addition to color. Buttons remain disabled until handlers are attached. All
-three destinations are readable without JavaScript, and the map stacks on narrow
-screens. `HubDiscovery` and `HubFolders` are static HTML/CSS/SVG figures. No React
-runtime or diagram dependency is needed for these interactions.
+The hub article demonstrates both in MDX. Its `HubLaunchpad` custom element uses
+native buttons to choose between three workflows, each with an example request,
+numbered steps, and a result. A live status announces the selected workflow and
+result. Buttons remain disabled until handlers are attached. The initial project
+creation example remains readable without JavaScript, and the article describes
+all three workflows in prose. The layout stacks on narrow screens. `HubFolders`
+is a static HTML/CSS figure. No React runtime or diagram dependency is needed.
 
 `tests/hub-article.spec.ts` exercises the draft on desktop/mobile, keyboard
-selection, native expandable instructions, no-JavaScript reading, and horizontal
+workflow selection, native expandable instructions, no-JavaScript reading, and horizontal
 overflow. Playwright's `draft-articles` project uses a separate local draft server;
 the normal static build and public-post checks keep drafts excluded.
