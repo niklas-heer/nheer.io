@@ -1,0 +1,105 @@
+---
+title: "Giving AI smaller questions"
+description: "How I’m using TypeSafe’s Jev for reusable notes, project names, shell-command experiments, and blog ideas—and where its judgment fits."
+date: "2026-09-19T20:00:00+02:00"
+icon: ":bulb:"
+tags: ["ai", "developer-tools", "experiments", "software-design"]
+draft: true
+lang: "en"
+---
+
+import JevWorkbench from '../../../components/JevWorkbench.astro';
+
+A project produces plenty of information that probably should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
+
+It also produces things worth keeping: why a tool behaves a certain way, which approach was chosen, or a preference that would save another round of explanation.
+
+I keep reusable notes in a hub repository that coordinates work across my projects. Deciding what belongs there involves a small judgment: does this observation deserve a record, and does the evidence support what the record would say?
+
+That is one place I have started using Jev, TypeSafe’s model for focused judgments. Other experiments cover project names, finding shell commands, and choosing blog stories.
+
+These are early tools and experiments. They share a division of work: code gathers evidence, Jev answers a bounded question, and the caller decides what happens next. A larger model handles work such as generating names or writing prose.
+
+<JevWorkbench kind="flow" />
+
+## Give the model something it can answer
+
+[TypeSafe describes Jev](https://docs.typesafe.ai/introduction) as a “System One” model: a model for focused judgments on supplied context. It returns typed answers and probabilities rather than explanations or prose.
+
+“Typed” means the answer has a defined shape. If I supply four categories, the result can identify one of those categories. Program code can consume that directly without extracting a decision from a paragraph.
+
+The supplied context is called *state*. In my integrations, Jev cannot follow a repository link or fetch missing information. The calling tool has to bring the relevant evidence.
+
+There are [three question types](https://docs.typesafe.ai/primitives) I use. Choice selects from known options. Score rates something along explicitly ordered levels. Noul, despite its unfamiliar name, serves a straightforward purpose: it gives a probability for a yes/no question.
+
+<JevWorkbench kind="questions" />
+
+Those distinctions matter. “Which candidate is best?” and “Is this candidate good enough?” are different questions. So are “How serious is this?” and “How likely is this to be serious?” A yes probability of 0.5 expresses uncertainty, not medium severity. The [Noul documentation](https://docs.typesafe.ai/primitives/noul) explains how to read that probability.
+
+Independent questions can share the same state in a batch. They cannot see each other’s answers; application code combines the results.
+
+A tidy output shape still cannot make the supplied facts true.
+
+## Keeping a note requires more than a category
+
+My knowledge-capture tool is a Rust command-line program. It accepts a candidate note, supporting evidence, and existing records, then asks Jev three questions: what kind of record is this, is it worth keeping, and does the evidence support it?
+
+The categories include fact, decision, preference, and skip. Code combines the answers into capture, review, or skip.
+
+Even “capture” does not write anything. The command returns a recommendation. The coding assistant still checks the actual evidence and, where relevant, whether I accepted the decision before writing a record. The [public capture workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/capture-knowledge/SKILL.md) describes that handoff.
+
+The live integration has been exercised, but its thresholds remain provisional. In the initial sanitized examples, even the positive cases went to review. That illustrates cautious settings, not measured accuracy.
+
+This is a useful boundary for the experiment: the model can help identify a note worth examining, while the evidence check remains a separate step.
+
+## A favorite name can still be mediocre
+
+Naming a project has a similar split.
+
+My [naming workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/find-project-name/SKILL.md) uses Codex to generate candidates. A Rust tool checks relevant registries and APIs. Jev can then assess naming fit, whether the supplied evidence suggests a confusing product in the same category, and which candidate to recommend. The recommendation includes a “none” option.
+
+Jev does not generate the names in this workflow. It also cannot turn a failed registry request into an availability result. Unknown stays unknown.
+
+In a live comparison of three candidates, it preferred Taplume. Its absolute fit assessments were only weak to acceptable.
+
+That is a useful result to keep intact. Winning a comparison does not mean clearing the bar. A shortlist can have a first place without having a name I should use.
+
+Later web searches found historical listings for a similarly named Android app in third-party catalogs. Those were leads to investigate, without independently verified first-party evidence establishing a conflict. No name was accepted.
+
+Registry checks, naming judgment, and legal clearance answer different questions. Putting their results next to each other does not merge them into one fact.
+
+## Finding a command starts with a catalog
+
+Quirl is my shell project. A shell interprets the commands you type into a terminal, including the flags that somehow become memorable only after you have looked them up again.
+
+For a command-discovery experiment, I gave Jev descriptions of 62 known commands. It could choose a command or return `NONE`, `CLARIFY`, or `COMPOSE` when nothing fit, more information was needed, or the request called for multiple commands.
+
+The experiment selected options. It did not assemble complete command lines or execute anything, and it is not a production integration.
+
+One case asked for recursive directory sizes. The expected answer was `NONE`. Jev selected `tree`.
+
+The catalog contained `tree --du` and `eza --total-size`, both of which supported the directory-total intent. The expected answer was corrected, with the original evidence retained alongside the correction. Exact filesystem accounting was outside the test.
+
+The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) records 112 unique handwritten cases: 111 acceptable validated results after that correction, plus one response that could not be assessed after the test runner rejected it. These were exploratory examples, without a comparison against everyday shell use.
+
+The useful lesson here is quite concrete. A model’s answer can expose a mistake in the expected answer. Resolving the disagreement still requires reading what the commands actually do.
+
+## Choosing a story does not finish the editorial work
+
+The draft behind this article went through another experiment.
+
+A new [storytelling workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/storytelling/SKILL.md) gathers repository evidence and checks existing posts and drafts. It supplies Jev with summarized story angles and coverage, then asks for a recommendation and readiness assessments.
+
+A pilot compared four possible stories. Jev recommended the Quirl benchmark story. Codex wrote the draft.
+
+I then asked for more context and a broader introduction to Jev through its uses across projects. The narrow benchmark story needed a reader who already understood why this model was involved.
+
+The recommendation helped select material. It did not settle the framing, write the article, or decide to publish it.
+
+## Keep the question small enough to inspect
+
+This pattern fits places where I can supply evidence and a finite set of choices, but relevance or fit still needs judgment. Ordinary code handles facts and calculations. Open-ended writing and reasoning belong with tools suited to that work. A similar approach could help sort an inbox by asking which messages need a reply, provided the relevant message context is available. That is a possible extension, not a mail integration I have built.
+
+The cutoff for trusting a recommendation needs testing against the actual task. A [confidence value](https://docs.typesafe.ai/confidence) describes how concentrated the model’s answer is; it is not a guarantee that the workflow is correct.
+
+The note-capture example makes that boundary tangible. A candidate record arrives with evidence. Jev helps assess it. Code routes it. Before a suggestion becomes a permanent decision record, someone still checks that I actually decided it.
