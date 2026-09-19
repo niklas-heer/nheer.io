@@ -112,7 +112,9 @@ author-controlled content, not arbitrary visitor input. Prefer concise labels;
 split complicated graphs instead of making the article depend on zooming.
 
 Readers can expand the diagram to at least 640px and scroll its own viewport, or
-fit it back to the article. Source uses native `details`; controls are disabled
+fit it back to the article. The SVG viewBox is recalculated from the mounted
+drawing's `getBBox()` with padding on every side; fitting also resets scrolling.
+Source uses native `details`; controls are disabled
 until the SVG exists. Without JavaScript, the description and source remain readable.
 A parse/load failure opens the source and shows a readable status instead of
 leaving a broken diagram or throwing an unhandled page error. Rendering is a
@@ -235,3 +237,14 @@ screenshots were inspected and the updated gallery was shown in Arc. The full
 check was interrupted by a concurrent page-view refactor removing
 `server/page-views.mjs` while a packaging test still referenced it. Those unrelated
 changes were not modified as part of this layout work.
+
+Mermaid clipping fix, 2026-09-19: Arc returned a viewBox ending near `(352, 490)`
+while the mounted drawing extended to `(418, 554)`, cutting off right and bottom
+nodes. Measuring the mounted SVG fixes this observed mismatch; the underlying
+cause of Mermaid's incorrect measurement remains unconfirmed. Regression coverage
+replays the incorrect boundary and checks complete content containment, including
+expand/fit and mobile scrolling. The gallery and Jev draft were visually checked
+at desktop/mobile widths, and the corrected gallery was verified in Arc. The
+sample build, unit tests, and all 37 browser tests passed; npm audit returned zero
+vulnerabilities. Tests used `PLAYWRIGHT_PORT=44323` because another process owned
+the default port.

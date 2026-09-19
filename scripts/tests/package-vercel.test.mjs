@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -7,12 +7,10 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { packageVercel } from '../package-vercel.mjs';
 
-test('Vercel package preserves tested assets, routes, redirects, 404 and the counter function', async t => {
+test('Vercel package preserves tested assets, routes, redirects, 404 and static page counters', async t => {
   const root = await mkdtemp(join(tmpdir(), 'nheer-vercel-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'dist/posts/example'), { recursive: true });
-  await mkdir(join(root, 'server'));
-  await cp(new URL('../../server/page-views.mjs', import.meta.url), join(root, 'server/page-views.mjs'));
   for (const file of ['index.html', '404.html', 'posts/example/index.html', 'cv.pdf']) {
     await writeFile(join(root, 'dist', file), 'unchanged-' + file);
   }
@@ -25,12 +23,9 @@ test('Vercel package preserves tested assets, routes, redirects, 404 and the cou
   assert.equal(route('/').dest, '/index.html');
   assert.equal(route('/posts/example').dest, '/posts/example/index.html');
   assert.equal(route('/posts/example/').dest, '/posts/example/index.html');
-  assert.equal(route('/api/views').dest, '/api/views');
   assert.equal(routes.at(-1).status, 404);
   assert.equal(routes.find(route => route.status === 301).headers.Location, 'https://github.com/niklas-heer/speed-comparison');
-  const fn = await readFile(join(output, 'functions/api/views.func/index.mjs'), 'utf8');
-  assert.match(fn, /\/posts\/example/);
-  assert.doesNotMatch(fn, /\/404/);
+  await assert.rejects(readFile(join(output, 'functions/api/views.func/index.mjs')), { code: 'ENOENT' });
   // Repackaging removes stale files from previous builds.
   await writeFile(join(output, 'static/stale.txt'), 'stale');
   await packageVercel({ root });

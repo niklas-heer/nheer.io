@@ -1,20 +1,22 @@
 ---
+import { fetchPageViews } from '../utils/page-views';
 const enabled = import.meta.env.PUBLIC_PAGE_VIEWS_ENABLED === 'true';
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const publicPage = !path.startsWith('/drafts') && !['/404', '/404.html'].includes(path);
+const snapshot = enabled && publicPage ? await fetchPageViews() : null;
+const views = snapshot?.totals.get(path) ?? 0;
 ---
 
-{enabled && publicPage && (
-  <p class="mt-2" data-page-views data-path={path} data-host={Astro.site?.hostname} hidden aria-live="polite"></p>
+{enabled && publicPage && snapshot && (
+  <p class="mt-2" data-page-views data-path={path} data-host={Astro.site?.hostname} title="Recorded since September 19, 2026; refreshed every three hours.">
+    {new Intl.NumberFormat('en-US').format(views)} {views === 1 ? 'view' : 'views'} on this page
+  </p>
 )}
 
 <script>
   import { inject, pageview } from '@vercel/analytics';
 
-  let controller: AbortController | undefined;
-  document.addEventListener('astro:before-swap', () => controller?.abort());
-  document.addEventListener('astro:page-load', async () => {
-    controller?.abort();
+  document.addEventListener('astro:page-load', () => {
     const counter = document.querySelector<HTMLElement>('[data-page-views]');
     if (!counter) return;
     const path = counter.dataset.path!;
@@ -33,20 +35,5 @@ const publicPage = !path.startsWith('/drafts') && !['/404', '/404.html'].include
       pageview({ path, route: path });
     }
 
-    const request = new AbortController();
-    controller = request;
-    const timeout = setTimeout(() => request.abort(), 5000);
-    try {
-      const response = await fetch(`/api/views?path=${encodeURIComponent(path)}`, { signal: request.signal });
-      if (!response.ok) return;
-      const { views } = await response.json();
-      if (!Number.isSafeInteger(views) || views < 0 || !counter.isConnected) return;
-      counter.textContent = `${new Intl.NumberFormat('en-US').format(views)} ${views === 1 ? 'view' : 'views'} on this page`;
-      counter.hidden = false;
-    } catch {
-      // A blocked or unavailable counter must never interfere with the page.
-    } finally {
-      clearTimeout(timeout);
-    }
   });
 </script>

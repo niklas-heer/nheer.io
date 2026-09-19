@@ -17,6 +17,7 @@ const stages = {
   install: { required: [], command: ['npm', 'ci', '--no-fund'] },
   'sync-pocketcasts': { required: ['DATABASE_URL', 'POCKETCASTS_EMAIL', 'POCKETCASTS_PASSWORD', 'OPENROUTER_API_KEY'], command: ['bun', 'run', 'scripts/sync-pocketcasts.ts'] },
   'sync-inky': { required: ['DATABASE_URL', 'OPENROUTER_API_KEY'], command: ['bun', 'run', 'scripts/sync-inky.ts'] },
+  'sync-page-views': { required: ['DATABASE_URL', 'VERCEL_TOKEN', 'VERCEL_PROJECT_ID', 'VERCEL_ORG_ID'], command: ['node', 'scripts/sync-page-views.mjs'] },
   build: { required: ['DATABASE_URL', 'HARDCOVER_API_TOKEN', 'GITHUB_TOKEN'], command: ['npm', 'run', 'build'] },
   'build-check': { required: [], command: ['npm', 'run', 'build'] },
   test: { required: [], command: ['npm', 'test'] },

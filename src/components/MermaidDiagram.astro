@@ -86,14 +86,27 @@ if (!code.trim() || code.length > 50_000) throw new Error(`${id}: supply Mermaid
         drawing.setAttribute('role', 'img');
         drawing.setAttribute('aria-labelledby', target.dataset.titleId!);
         drawing.setAttribute('aria-describedby', target.dataset.descriptionId!);
-        const width = Math.max(640, drawing.viewBox.baseVal.width);
-        target.style.setProperty('--natural-width', `${drawing.viewBox.baseVal.width}px`);
-        target.style.setProperty('--expanded-width', `${width}px`);
+        // Mermaid measures in a temporary container. Its returned viewBox can
+        // miss nodes in the actual page (observed in Arc). Fit the mounted SVG's
+        // own coordinate-space bounds, not screen pixels or the stale viewBox.
+        const bounds = drawing.getBBox();
+        const padding = 16;
+        const width = bounds.width + padding * 2;
+        const height = bounds.height + padding * 2;
+        if (![bounds.x, bounds.y, width, height].every(Number.isFinite) || bounds.width <= 0 || bounds.height <= 0) {
+          throw new Error('Diagram has no measurable content.');
+        }
+        drawing.setAttribute('viewBox', `${bounds.x - padding} ${bounds.y - padding} ${width} ${height}`);
+        drawing.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        drawing.removeAttribute('height');
+        target.style.setProperty('--natural-width', `${width}px`);
+        target.style.setProperty('--expanded-width', `${Math.max(640, width)}px`);
         button.addEventListener('click', () => {
           const expanded = button.getAttribute('aria-pressed') !== 'true';
           button.setAttribute('aria-pressed', String(expanded));
           button.textContent = expanded ? 'Fit diagram' : 'Expand diagram';
           target.classList.toggle('expanded', expanded);
+          if (!expanded) this.querySelector('[data-viewport]')!.scrollTo(0, 0);
         });
         button.disabled = false;
         status.textContent = 'Expand for a closer look; scroll to follow a wide diagram.';

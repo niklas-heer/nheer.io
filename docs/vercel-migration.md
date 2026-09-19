@@ -1,117 +1,125 @@
 # Vercel hosting and public page views
 
-## Direction and status — 2026-09-19
+## Decision — 2026-09-19
 
-Niklas explicitly requested a view count for each page, visible on that page.
-After considering self-hosted analytics, he favored Vercel because he already
-hosts other projects there. This change prepares that migration; it does not
-establish that the production site has moved. Netlify remains the default
-publishing target until analytics setup, the deployment and domain cutover are
-verified. Vercel CLI 59.23.2 is pinned in `mise.toml`; installation and login as
-`nheer` were verified on 2026-09-19. The checkout is linked to
-`niklas-heers-projects/nheer-io` (`prj_blqrNqJWMaL1edc0X83uojSOGkrP`).
+Niklas requested visible view totals on each page, chose Vercel and authorized the
+migration fixes. Keep the existing private homelab database and build pipeline.
+Persist daily Vercel analytics snapshots in PostgreSQL and render their cumulative
+sum in each page's HTML. This replaces the initial runtime Analytics API function,
+whose undated response was only today's count on the current Hobby plan.
 
-Web Analytics is now enabled: an authenticated count request returned HTTP 200
-on 2026-09-19. No deployment or production environment variables exist yet.
-CLI authentication does not provision the durable deployment and analytics
-tokens required by the pipeline/runtime.
+Tracking starts September 19, 2026; no historical Netlify visits are invented.
+Totals count recorded page views, not unique people. They refresh with the existing
+three-hourly pipeline. Only the canonical production hostname records visits;
+preview/local hosts, drafts and 404 pages do not. Query strings and fragments
+are stripped. Ad blockers and Vercel collection limits can cause undercounting.
 
-### Live API limitation — verified 2026-09-19
+## Verified API contract
 
-The earlier lifetime-count assumption is not supported by the live Hobby API.
-An undated `/v1/query/web-analytics/visits/count` request returned a query window
-from `2026-09-19T00:00:00.000Z` to `2026-09-20T00:00:00.000Z`. Supplying `since`
-alone returned HTTP 400 requiring `until`. An explicit range from 1970-01-01
-to 2026-09-19 returned HTTP 400: "the hobby plan only grants access to the latest
-31 days of data." These are observations for this project's current plan,
-despite the documentation describing lifetime counts.
+Live authenticated requests on September 19 established:
 
-The current endpoint must not ship labeled as a lifetime counter. Resolve this
-with durable totals (carefully accumulating non-overlapping periods) or a
-separate persistent counter backend, then verify it against live behavior.
-Neither alternative has been selected or implemented. Recheck the API contract
-if Vercel changes the plan or count endpoint.
+- Hobby permits only the latest 31 days, despite the documentation's lifetime
+  wording. Both since and until are required for explicit windows.
+- Aggregate grouping by requestPath permits limit <= 100. Extra groups become
+  Others; the sync fails rather than silently save incomplete per-page counts.
+- The API floors since and advances until to the next hour, including when until
+  already falls on an exact hour. Request 23:59:59.999 for an exact UTC day and
+  validate the returned window before saving. Adjacent days must never overlap.
+- Web Analytics is enabled. A real zero-data response was saved successfully into
+  the private database and consumed by a live Astro build.
 
-The counter lives in the shared footer. Its intended total is page views since
-tracking was enabled, not unique people; lifetime aggregation is unresolved as
-described above. Drafts, the 404 page and local or
-preview traffic are not tracked. An unavailable count stays hidden; a genuine
-zero remains zero. Counts can lag by several minutes because the endpoint is
-cached. Analytics collection limits and blockers can cause undercounting.
+Recheck on a plan/API change. Sources: [Analytics API](https://vercel.com/docs/analytics/web-analytics-api),
+[limits](https://vercel.com/docs/analytics/limits-and-pricing),
+[privacy](https://vercel.com/docs/analytics/privacy-policy).
 
-## Architecture
+## Architecture and recovery
 
-The site remains a static Astro build. Argo keeps its existing private-data
-sync → build → tests → publish workflow. `scripts/package-vercel.mjs` packages
-the tested `dist/` files into Vercel's Build Output API format with the existing
-redirects, security headers, page routes and custom 404. It includes one small
-Node.js function at `/api/views`, with an allowlist of the public pages in that
-build. No database credentials or analytics token enter the static output.
+`scripts/sync-page-views.mjs` uses a database advisory lock and replaces recent daily
+rows atomically. It refreshes up to 30 previous days plus today for late arrivals;
+older days remain. `site_page_views_daily` owns project/day/path totals and
+`site_page_views_sync` owns freshness metadata. Existing CNPG backups cover both.
+Network/format errors do not change counts, failed writes roll back, and retries
+do not add the same views twice. More than 30 days without a successful sync fails
+explicitly because missing history can no longer be recovered from the Hobby API.
+Investigate/restore coverage before resuming; never silently label partial history
+as a continuous total. More than 100 distinct paths/day requires extending the
+query strategy before publishing resumes.
 
-`@vercel/analytics` records one page view on each Astro page-load event, only
-on the canonical production hostname. Query strings and fragments are removed.
-The server function queries the fixed project's `visits/count` endpoint by
-exact path and exposes only `pageviews`. Successful responses are cached at
-Vercel for five minutes; failures return an uncacheable 503.
+The build reads one shared totals snapshot, renders each page's count, and rejects
+missing or stale (>24-hour) data. The publisher also checks live podcast data and
+view-count freshness and rejects sample/draft builds. No database or analytics
+credentials are sent to Vercel. `package-vercel.mjs` packages the tested static
+output using the [Build Output API](https://vercel.com/docs/build-output-api),
+preserving routes, security headers, redirects, assets and custom 404 status.
 
-Official documentation checked on 2026-09-19:
+## Deployment and credentials
 
-- [Count API](https://vercel.com/docs/analytics/web-analytics-api): describes
-  lifetime totals, but the live Hobby behavior above contradicts that assumption.
-- [Limits and pricing](https://vercel.com/docs/analytics/limits-and-pricing):
-  Hobby includes 50,000 events per month; collection pauses at the limit.
-- [Build Output API](https://vercel.com/docs/build-output-api) and
-  [prebuilt deployment](https://vercel.com/docs/cli/deploy).
-- [Analytics privacy](https://vercel.com/docs/analytics/privacy-policy).
+- CLI 59.23.2 is pinned in mise and logged in as nheer.
+- Project: `niklas-heers-projects/nheer-io`.
+- Project ID: `prj_blqrNqJWMaL1edc0X83uojSOGkrP`.
+- Team ID: `team_NN7LiyAr73wBUMYtlr3m84em`.
+- nheer.com is attached and ownership verified; DNS still points to Netlify.
+- Niklas saved the durable automation token in 1Password. CLI OAuth cannot create
+  one directly (HTTP 403: Cannot create tokens for this app).
 
-Recheck these provider contracts and account entitlements before cutover.
-Counter behavior and deployment packaging have been verified locally with
-fixtures. A live count response succeeded, but lifetime counts and deployment
-remain unverified.
+Create a token at [Vercel account tokens](https://vercel.com/account/tokens), scoped
+to niklas-heers-projects, and save it as VERCEL_TOKEN in the existing 1Password
+homelab/nheer Site Jobs item. The operator syncs that field into nheer-site-jobs.
+The homelab workflow has a deploy-target parameter; the scheduled default remains
+Netlify until the durable token and a full Vercel publishing run are verified.
 
-Local verification on 2026-09-19: the static build, 18 pipeline/API tests,
-30 unit tests and 27 browser tests passed. The final dependency audit could
-not complete: npm returned HTTP 503 with a maintenance notice on both attempts.
-Run the full check again before deployment; this is not a green release gate.
+```sh
+# From the homelab repository:
+rtk mise exec -- uv run invoke nheer.run --mode publish --target vercel
+```
 
-## Cutover
+After success, set the schedule's deploy-target to vercel and update the operator
+task default. Keep automatic Vercel Git builds disconnected: they cannot access
+private data. Retain Netlify credentials and prior deployment for rollback.
 
-1. The Vercel project `niklas-heers-projects/nheer-io` has been created and
-   linked, and Web Analytics is enabled. Resolve the lifetime-count limitation
-   above before shipping the public counter. Leave
-   automatic Git deployments off: the homelab is the source of tested builds
-   with live private data.
-2. Store `VERCEL_TOKEN`, `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID` in the existing
-   1Password `homelab/nheer Site Jobs` item. Keep the old Netlify credentials
-   available for rollback. The deployment CLI is pinned to 59.23.2.
-3. Configure Vercel runtime variables: `VERCEL_ANALYTICS_TOKEN` (a suitably
-   scoped Vercel access token), `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` for a
-   team-owned project. The analytics token must never have a `PUBLIC_` prefix.
-   Do not copy homelab database credentials into Vercel.
-4. In the homelab repository, update `cluster/apps/nheer/workflow.yaml`: set
-   `SITE_DEPLOY_TARGET=vercel` for both the build and publish templates; expose
-   the three deployment credentials only to the publish template. Initially
-   set `VERCEL_SKIP_DOMAIN=true` on publish. Update `plan.md` and
-   `docs/nheer-workflows.md` with the migration state. Keep existing syncs,
-   tests and the live-snapshot check.
-5. Run the live pipeline. The build stage enables `PUBLIC_PAGE_VIEWS_ENABLED`.
-   The publisher validates the live snapshot, packages the checked output and
-   runs `vercel deploy --prebuilt --prod --skip-domain`. Sample-data builds
-   and draft previews are rejected. Locally, `mise run check` exercises the
-   counter UI with mocked responses; `npm run package:vercel` inspects packaging
-   without deploying.
-6. Verify the staged deployment: pages, redirects, 404 status, CV downloads,
-   live podcasts, theme/navigation, and `/api/views?path=/`. Test the actual
-   authenticated Analytics API response; do not treat fixture tests as proof
-   of account access. Preview hosts must not increment counts.
-7. Inventory the current DNS records in the homelab's DNS source of truth and
-   prepare the desired records. Add/verify the canonical `nheer.com` domain
-   and its current aliases in Vercel, promote the verified deployment and
-   apply the planned DNS cutover. Remove `VERCEL_SKIP_DOMAIN` for subsequent
-   publishing only after verifying domain assignment. Verify one production
-   visit and the resulting analytics count (allowing for processing/cache
-   delay).
+## Exact DNS changes
 
-Rollback: restore the prior DNS/domain mapping and set the workflow's
-`SITE_DEPLOY_TARGET` back to `netlify`. The existing Netlify publisher and
-configuration are retained for this transition.
+Vercel domains verify returned these recommended records on September 19:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| A | @ | 216.198.79.1 |
+| A | @ | 64.29.17.1 |
+| CNAME | www | d6d10a4ee034c711.vercel-dns-017.com |
+
+Current authoritative nameservers are dns1.p06.nsone.net through dns4.p06.nsone.net
+(Netlify DNS). Keep them. Netlify's API confirms managed NETLIFY records for
+nheer.com and www.nheer.com, both targeting nheer.netlify.com. Replace those web
+hosting records with the A/CNAME records above once the Vercel deployment is ready.
+Leave mail, TXT and unrelated records untouched; do not delete the DNS zone or
+change nameservers. TTL 300 is suitable for cutover if the UI permits it.
+
+After propagation:
+
+```sh
+rtk mise exec -- vercel domains verify nheer.com --scope niklas-heers-projects
+rtk mise exec -- vercel domains verify www.nheer.com --scope niklas-heers-projects
+```
+
+Check HTTPS, pages, legacy /gh/sc redirect, CV download, custom 404, live
+/build-health.json and visible counts. Verify a real production visit appears in
+analytics and then the next build's count. A preview visit must not contribute.
+DNS changes remain a user action; none were applied during preparation.
+
+Rollback: restore the Netlify web-hosting DNS records and use deploy-target=netlify
+in the homelab. The database keeps the accumulated view history independently.
+
+## Local verification
+
+The real PostgreSQL integration test exercises retries, late data, rollback,
+invalid/overflow responses and 45 simulated days crossing retention. To repeat,
+use a disposable PostgreSQL database (the test creates and removes its own schema):
+
+```sh
+rtk env PAGE_VIEWS_TEST_DATABASE_URL=postgres://user:password@localhost/test mise exec -- npm run test:pipeline
+```
+
+The component gallery exists only in sample/draft builds; test it with build:check.
+Live builds intentionally omit it. A lodash-es override to patched 4.18.1 fixes
+the diagram renderer's vulnerable transitive dependency; remove the override when
+upstream permits the patched version naturally.

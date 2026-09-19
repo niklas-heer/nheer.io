@@ -3,29 +3,21 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { initReadingFilters } from '../src/utils/reading-filters';
 
-test('page views follow client navigation and hide when unavailable', async ({ page }) => {
-  test.skip(!readFileSync('dist/index.html', 'utf8').includes('data-page-views'), 'View counts are disabled for the current hosting target');
-  const calls: string[] = [];
-  await page.route('**/api/views?*', async route => {
-    const path = new URL(route.request().url()).searchParams.get('path')!;
-    calls.push(path);
-    if (path === '/about') return route.fulfill({ status: 503, json: { error: 'Unavailable' } });
-    await route.fulfill({ json: { views: path === '/' ? 1234 : 1 } });
-  });
+test('page views are rendered in HTML and follow client navigation', async ({ page, request }) => {
+  test.skip(!readFileSync('dist/index.html', 'utf8').includes('data-page-views'), 'View counts disabled');
+  const fixture = (await (await request.get('/build-health.json')).json()).pageViews.source === 'fixture';
   await page.goto('/');
-  await expect(page.locator('[data-page-views]')).toHaveText('1,234 views on this page');
+  await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1,234 views on this page' : /[0-9,]+ views? on this page/);
   await page.locator('.nav-menu-container').hover();
   await page.locator('header a[href="/posts"]').first().click();
-  await expect(page.locator('[data-page-views]')).toHaveText('1 view on this page');
+  await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1 view on this page' : /[0-9,]+ views? on this page/);
   await page.locator('.nav-menu-container').hover();
   await page.locator('header a[href="/about"]').first().click();
   await expect(page).toHaveURL(/\/about\/?$/);
-  await expect.poll(() => calls.includes('/about')).toBe(true);
-  await expect(page.locator('[data-page-views]')).toBeHidden();
+  await expect(page.locator('[data-page-views]')).toBeVisible();
+  expect(await page.locator('script[src*="insights/script"]').count()).toBe(0);
   await page.goto('/missing-page-counter-test');
   await expect(page.locator('[data-page-views]')).toHaveCount(0);
-  expect(calls).toEqual(['/', '/posts', '/about']);
-  expect(await page.locator('script[src*="insights/script"]').count()).toBe(0);
 });
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {

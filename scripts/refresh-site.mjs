@@ -20,7 +20,8 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
   }
   const deployment = deployTarget(env);
   const required = mode === 'check' ? [] : [...requiredSecrets,
-    ...(mode === 'publish' ? deployment.required : [])];
+    ...(mode === 'publish' ? deployment.required : []),
+    ...(env.SITE_DEPLOY_TARGET === 'vercel' ? ['VERCEL_TOKEN', 'VERCEL_PROJECT_ID', 'VERCEL_ORG_ID'] : [])];
   const missing = required.filter((name) => !env[name]);
   if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 
@@ -54,6 +55,7 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
       commandEnv.REQUIRE_LIVE_DATA = 'true';
       execute('bun', ['run', 'scripts/sync-pocketcasts.ts']);
       execute('bun', ['run', 'scripts/sync-inky.ts']);
+      if (env.SITE_DEPLOY_TARGET === 'vercel') execute('node', ['scripts/sync-page-views.mjs']);
     }
     execute('npm', ['run', 'build']);
     execute('npm', ['test']);

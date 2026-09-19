@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { existsSync } from 'node:fs';
+
+// The gallery deliberately exists only in sample/draft builds.
+test.skip(!existsSync('dist/component-preview/index.html'), 'Component gallery is excluded from live builds');
 
 for (const width of [1280, 390]) {
   test(`article components render and remain usable at ${width}px`, async ({ page }) => {

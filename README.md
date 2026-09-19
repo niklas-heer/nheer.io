@@ -2,9 +2,10 @@
 
 Personal website and blog by Niklas Heer.
 
-Vercel hosting and public per-page view counts are prepared. The CLI is installed
-and the `nheer-io` project is linked, with analytics enabled. Lifetime-count
-storage and production cutover remain pending. See [the migration runbook](docs/vercel-migration.md).
+Vercel hosting and persistent per-page view counts are implemented. Daily analytics
+snapshots stay in the private homelab PostgreSQL database; the footer displays
+cumulative totals from each build. See [the migration runbook](docs/vercel-migration.md)
+for deployment status, token setup and exact DNS records.
 
 Built with [Astro](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/).
 

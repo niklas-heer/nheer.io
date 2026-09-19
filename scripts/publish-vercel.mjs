@@ -5,7 +5,12 @@ import { packageVercel } from './package-vercel.mjs';
 
 const required = ['VERCEL_TOKEN', 'VERCEL_PROJECT_ID', 'VERCEL_ORG_ID'];
 if (required.some(key => !process.env[key])) throw new Error(`Publishing needs ${required.join(', ')}`);
-assertLiveSnapshot(JSON.parse(readFileSync('dist/build-health.json', 'utf8')));
+const report = JSON.parse(readFileSync('dist/build-health.json', 'utf8'));
+assertLiveSnapshot(report);
+const viewsAge = Date.now() - Date.parse(report.pageViews?.updatedAt);
+if (report.pageViews?.source !== 'live' || !Number.isFinite(viewsAge) || viewsAge < -60000 || viewsAge > 86400000) {
+  throw new Error('Publishing requires fresh persisted page-view totals');
+}
 if (!readFileSync('dist/index.html', 'utf8').includes('data-page-views')) {
   throw new Error('Rebuild with PUBLIC_PAGE_VIEWS_ENABLED=true before publishing to Vercel');
 }
