@@ -94,12 +94,9 @@ Vercel domains verify returned these recommended records on September 19:
 | A | @ | 64.29.17.1 |
 | CNAME | www | d6d10a4ee034c711.vercel-dns-017.com |
 
-Current authoritative nameservers are dns1.p06.nsone.net through dns4.p06.nsone.net
-(Netlify DNS). Keep them. Netlify's API confirms managed NETLIFY records for
-nheer.com and www.nheer.com, both targeting nheer.netlify.com. Replace those web
-hosting records with the A/CNAME records above once the Vercel deployment is ready.
-Leave mail, TXT and unrelated records untouched; do not delete the DNS zone or
-change nameservers. TTL 300 is suitable for cutover if the UI permits it.
+Those records now live in the hosting-infra catalog for `nheer.com`. INWX will serve them after apply; Namecheap still delegates to Netlify's NS1 nameservers (`dns1.p06.nsone.net` through `dns4.p06.nsone.net`). Do not edit the Netlify zone as a stepping stone, and do not freeze Netlify load-balancer IPs into DNS.
+
+After `mise run verify -- --zone nheer.com` passes against the INWX nameservers, switch the domain's nameservers at Namecheap to `ns.inwx.de`, `ns2.inwx.de`, and `ns3.inwx.eu`. Keep the Netlify zone for rollback through the cache window.
 
 After propagation:
 
