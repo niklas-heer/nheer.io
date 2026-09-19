@@ -1,0 +1,35 @@
+---
+interface Props {
+  id: string;
+  mediaSide?: 'left' | 'right';
+  balance?: 'equal' | 'media' | 'text';
+  align?: 'center' | 'top';
+  wide?: boolean;
+}
+const { id, mediaSide = 'left', balance = 'equal', align = 'center', wide = false } = Astro.props;
+if (!Astro.slots.has('media') || !Astro.slots.has('default')) {
+  throw new Error(`${id}: ArticleSplit needs prose in the default slot and a visual in slot="media".`);
+}
+---
+<div {id} class:list={['article-split', `media-${mediaSide}`, `balance-${balance}`, { wide, 'align-top': align === 'top' }]}>
+  <div class="split-copy"><slot /></div>
+  <div class="split-media"><slot name="media" /></div>
+</div>
+<style>
+  .article-split { --copy-size: 1fr; --media-size: 1fr; display: grid; grid-template-columns: minmax(0, var(--media-size)) minmax(0, var(--copy-size)); grid-template-areas: 'media copy'; align-items: center; gap: clamp(1.5rem, 4vw, 3rem); margin-block: 3rem; }
+  .media-right { grid-template-columns: minmax(0, var(--copy-size)) minmax(0, var(--media-size)); grid-template-areas: 'copy media'; }
+  .balance-media { --media-size: 1.4fr; }
+  .balance-text { --copy-size: 1.4fr; }
+  .align-top { align-items: start; }
+  .wide { width: min(64rem, calc(100vw - 2rem)); margin-inline-start: calc((100% - min(64rem, calc(100vw - 2rem))) / 2); }
+  .split-copy { grid-area: copy; min-width: 0; overflow-wrap: anywhere; }
+  .split-media { grid-area: media; min-width: 0; }
+  .split-copy > :global(:first-child), .split-media > :global(:first-child) { margin-top: 0; }
+  .split-copy > :global(:last-child), .split-media > :global(:last-child) { margin-bottom: 0; }
+  .split-media > :global(figure) { margin-inline: 0; }
+  .split-media :global(img), .split-media :global(video) { display: block; width: 100%; height: auto; border-radius: 12px; margin: 0; }
+  .split-media :global(figcaption) { color: var(--color-muted); font-size: .78rem; line-height: 1.7; margin-top: .8rem; text-align: left; }
+  @media (max-width: 720px) {
+    .article-split { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'copy' 'media'; gap: 1.25rem; margin-block: 2.2rem; }
+  }
+</style>

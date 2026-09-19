@@ -30,7 +30,7 @@ These are editorial references, not templates to reproduce. Keep the site's own 
 
 Start with the [component guide and MDX recipes](article-components.md) and the
 local `/component-preview/` gallery (linked from `/drafts/`). Available components
-now include `ArticleFlow`, `MermaidDiagram`, `ArticleMetrics`, and
+now include `ArticleSplit`, `ArticleFlow`, `MermaidDiagram`, `ArticleMetrics`, and
 `ArticleComparison`, alongside the shared frame below. Use them before creating
 another article-specific component when they answer the reader's question.
 Place visuals throughout the argument, including the ending when they explain
@@ -40,6 +40,13 @@ Mermaid rendering is now supported through an explicit component with a required
 text description, expand/fit controls, and source disclosure. Dashboard cards and
 bar comparisons display supplied measurements, units, context, and unknowns;
 they do not invent or fetch data. The gallery uses labeled illustrative values.
+
+`ArticleSplit` places a short passage beside an image, diagram, or existing
+component. It supports either media side, equal or unequal column widths, and an
+optional wider layout. Mobile and screen-reader order always put the explanation
+first. Use occasional split sections to vary the article's rhythm; preserve
+full-width visuals when the reader needs to inspect fine detail. See the guide
+for MDX slots, image dimensions, captions, and examples.
 
 `ArticleFigure.astro` supplies the shared dark figure surface, eyebrow, title,
 caption, and accessible label relationships. Pass a unique `id`, `label`, `title`,

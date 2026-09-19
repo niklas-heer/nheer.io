@@ -4,6 +4,7 @@ import ArticleFlow from '../../components/ArticleFlow.astro';
 import ArticleMetrics from '../../components/ArticleMetrics.astro';
 import ArticleComparison from '../../components/ArticleComparison.astro';
 import MermaidDiagram from '../../components/MermaidDiagram.astro';
+import SplitLayouts from '../../components/examples/SplitLayouts.mdx';
 
 export function getStaticPaths() {
   // Local authoring and sample-data test builds only. Never a live site route.
@@ -46,8 +47,12 @@ const mermaidExample = `<MermaidDiagram
   <article class="prose">
     <p class="eyebrow">LOCAL AUTHORING / COMPONENT GALLERY</p>
     <h1>More ways to tell the story.</h1>
-    <p>Diagrams for the mechanism. Numbers for the result. Context for both. These reusable components share the blog’s figure frame and remain readable on a phone.</p>
-    <p><strong>All dashboard and comparison numbers below are illustrative.</strong> This gallery is available only in local previews and sample-data test builds.</p>
+    <p>Pictures beside the prose. Diagrams for the mechanism. Numbers for the result. These reusable components give an article variety while remaining readable on a phone.</p>
+    <p><strong>The metric-card and bar-comparison demo numbers are illustrative.</strong> Screenshots are existing project images with their own captions. This gallery is available only in local previews and sample-data test builds.</p>
+
+    <h2 id="split-layouts">Pictures and prose, side by side</h2>
+    <p>Use <code>ArticleSplit</code> for a visual beside a short explanation. These examples use actual MDX, with a wider image on the left and a regular-width image on the right.</p>
+    <SplitLayouts />
 
     <h2>Simple process diagrams</h2>
     <p>Use <code>ArticleFlow</code> for a sequence. It needs no JavaScript and changes from left-to-right to top-to-bottom on small screens.</p>

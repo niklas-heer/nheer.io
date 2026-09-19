@@ -4,7 +4,8 @@ Open the local gallery at `http://127.0.0.1:4323/component-preview/` after start
 `rtk mise run preview:articles --port 4323`. The draft index links to it. It shows
 working examples, mobile layouts, an intentional Mermaid error, and copyable MDX.
 The gallery exists only with `PREVIEW_DRAFTS=true` or `SITE_TEST_DATA=true`; normal
-live builds omit it. All gallery measurements are explicitly illustrative.
+live builds omit it. Metric-card and bar-comparison demos use explicitly
+illustrative values; existing project screenshots have their own source captions.
 
 Import components in MDX. Paths below assume a post under `src/content/posts/2026/`.
 Each figure needs a unique, page-local `id`, a meaningful `title`, and a `caption`
@@ -16,15 +17,67 @@ figures where they answer questions throughout the article, including later sect
 
 | Reader question | Component | Behavior |
 | --- | --- | --- |
+| How can a picture and its explanation be read together? | `ArticleSplit` | Prose beside an image, diagram, or component; left/right placement; optional wider layout |
 | What happens in order? | `ArticleFlow` | HTML steps and connectors; stacks on mobile; no JavaScript |
 | What branches, relates, or communicates? | `MermaidDiagram` | Mermaid source becomes SVG; lazy renderer, expand/fit, source disclosure |
 | What are the headline measurements? | `ArticleMetrics` | Responsive number cards with units, context, optional labeled change |
 | How do measured values compare? | `ArticleComparison` | Horizontal bars on one zero-based scale, explicit units and unknowns |
 | Does the explanation need a custom illustration? | `ArticleFigure` | Existing accessible frame around HTML, SVG, or image content |
 
-All components share `ArticleFigure`'s dark surface in both site themes. Figures
+Figure components share `ArticleFigure`'s dark surface in both site themes. Figures
 use text labels rather than color alone, and avoid automatic animation. Flows,
 cards, and comparisons are static HTML/CSS; only Mermaid needs a browser renderer.
+`ArticleSplit` is an unframed layout using the article's normal typography and theme.
+
+## Text beside a visual
+
+```mdx
+import ArticleSplit from '../../../components/ArticleSplit.astro';
+
+<ArticleSplit id="projector-scene" mediaSide="left" balance="media" wide>
+  <h3>A familiar object in an unfamiliar place.</h3>
+  <p>The screenshot places an overhead projector beside a race track. Introduce
+  the scene here, then explain the detail the reader should notice.</p>
+  <figure slot="media">
+    <img
+      src="/assets/articles/2026/projector-courtyard.png"
+      alt="An overhead projector on wheels beside a school courtyard race track."
+      width="1280" height="900" loading="lazy" decoding="async"
+    />
+    <figcaption>Original Overhead Overdrive screenshot.</figcaption>
+  </figure>
+</ArticleSplit>
+```
+
+Put prose in the default slot and a visual in `slot="media"`. The media slot also
+accepts an existing diagram, video, or figure component; use a wrapper with the
+slot attribute when combining several elements. Both slots are required. For
+images imported from `src/assets`, use Astro's `Image` with responsive `widths`
+and a `sizes` value appropriate to the column; the gallery's right-hand example
+demonstrates this. Public images need accurate intrinsic dimensions and alt text.
+The layout preserves the complete image and its aspect ratio; it does not crop.
+Use a caption and an explicit full-size link for screenshots with small text.
+
+| Prop | Values | Default |
+| --- | --- | --- |
+| `id` | Unique anchor on this page | Required |
+| `mediaSide` | `left`, `right` | `left` |
+| `balance` | `equal`, `media` (wider visual), `text` (wider prose) | `equal` |
+| `align` | `center`, `top` | `center` |
+| `wide` | Boolean; allows up to 64rem while retaining viewport gutters | `false` |
+
+Below 721px, both variants stack with the explanation first and the visual
+second. That is also the document/screen-reader order at every width. Side
+placement changes the desktop layout only. The component adds no JavaScript,
+animation, sticky scrolling, or dependencies. Use `wide` at the article's top
+level, not inside another column or card.
+
+Use a split for one short passage closely related to one visual. Alternate sides
+when it helps the reading rhythm, with normal prose between them. Keep dense
+screenshots and detailed charts full-width when shrinking them would hide the
+point. A layout should clarify the relationship rather than make every section
+look like a landing page. The gallery's examples are real MDX in
+`src/components/examples/SplitLayouts.mdx` and reuse existing blog screenshots.
 
 ## Mermaid
 
@@ -172,3 +225,13 @@ five component browser tests passed again. The gallery and Jev draft were visual
 inspected at 1280px and 390px with no page errors or horizontal overflow; the gallery
 was opened in Arc. The final npm audit step remained unavailable (HTTP 503,
 registry maintenance), including a separate retry; no clean audit is claimed.
+
+Split-layout extension, 2026-09-19: added at Niklas's request for images alongside
+prose and more varied article layouts. Verified the actual MDX examples at 1280,
+768, 390, and 320px without JavaScript, including left/right placement, mobile
+reading order, image proportions, captions, full-size links, and page overflow.
+The final build and all nine component browser tests passed; desktop/mobile
+screenshots were inspected and the updated gallery was shown in Arc. The full
+check was interrupted by a concurrent page-view refactor removing
+`server/page-views.mjs` while a packaging test still referenced it. Those unrelated
+changes were not modified as part of this layout work.

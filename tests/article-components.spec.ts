@@ -94,3 +94,40 @@ test('a renderer download failure preserves the explanation and source', async (
   expect(blocked).toBe(true);
   expect(errors).toEqual([]);
 });
+
+for (const width of [1280, 768, 390, 320]) {
+  test(`split layouts preserve their images and reading order at ${width}px`, async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width, height: 900 } });
+    const page = await context.newPage();
+    await page.goto('/component-preview/');
+    for (const side of ['left', 'right']) {
+      const split = page.locator(`#gallery-split-${side}`);
+      await split.scrollIntoViewIfNeeded();
+      const image = split.getByRole('img');
+      await expect.poll(() => image.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+      await expect(image).toHaveAttribute('alt', /.+/);
+      await expect(split.locator('figcaption')).toBeVisible();
+      const copy = (await split.locator('.split-copy').boundingBox())!;
+      const media = (await split.locator('.split-media').boundingBox())!;
+      if (width <= 720) {
+        expect(media.y).toBeGreaterThanOrEqual(copy.y + copy.height);
+        expect(Math.abs(media.x - copy.x)).toBeLessThan(1);
+      } else if (side === 'left') {
+        expect(media.x + media.width).toBeLessThanOrEqual(copy.x);
+      } else {
+        expect(copy.x + copy.width).toBeLessThanOrEqual(media.x);
+      }
+      const imageBox = (await image.boundingBox())!;
+      const naturalRatio = await image.evaluate((el: HTMLImageElement) => el.naturalWidth / el.naturalHeight);
+      // Browsers round density-corrected srcset dimensions; allow a pixel-scale difference.
+      expect(Math.abs(imageBox.width / imageBox.height / naturalRatio - 1)).toBeLessThan(0.01);
+      const fullSize = split.getByRole('link', { name: /View the full-size/ });
+      expect((await page.request.get((await fullSize.getAttribute('href'))!)).status()).toBe(200);
+      await fullSize.focus();
+      await expect(fullSize).toBeFocused();
+      await split.screenshot({ path: test.info().outputPath(`split-${side}-${width}.png`) });
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await context.close();
+  });
+}

@@ -1,0 +1,24 @@
+import ArticleSplit from '../ArticleSplit.astro';
+import { Image } from 'astro:assets';
+import readingScreenshot from '../../assets/images/2025/reading-stats.png';
+
+<ArticleSplit id="gallery-split-left" balance="media" wide>
+  <h3>Give the picture room to tell its part.</h3>
+  <p>A school courtyard. An overhead projector on wheels. The screenshot introduces the world of Overhead Overdrive before the text has to explain it.</p>
+  <p>A wider image column gives the scene room, while a short passage beside it points out what matters. The picture and its explanation can be read together.</p>
+  <p><a href="/posts/2026/09/2026-09-04_projector-racing/">Read the projector story</a></p>
+  <figure slot="media">
+    <img src="/assets/articles/2026/projector-courtyard.png" alt="Overhead Overdrive’s starting screen, with a wheeled overhead projector beside a school courtyard race track." width="1280" height="900" loading="lazy" decoding="async" />
+    <figcaption>Original screenshot from the Overhead Overdrive article. <a href="/assets/articles/2026/projector-courtyard.png">View the full-size game screenshot</a>.</figcaption>
+  </figure>
+</ArticleSplit>
+
+<ArticleSplit id="gallery-split-right" mediaSide="right" align="top">
+  <h3>Then bring the reader closer.</h3>
+  <p>This earlier reading-page screenshot puts a goal, reading totals, and a year-by-year chart in one view.</p>
+  <p>Placing the image on the right changes the rhythm without changing how the article reads. On a phone, this explanation comes first and the image follows at full width.</p>
+  <figure slot="media">
+    <Image src={readingScreenshot} alt="The 2025 reading page showing a reading goal, book totals, and a books-per-year chart." widths={[400, 800, 1200]} sizes="(max-width: 720px) calc(100vw - 2rem), 340px" format="webp" loading="lazy" decoding="async" />
+    <figcaption>Existing 2025 screenshot; its numbers are a historical snapshot. <a href={readingScreenshot.src}>View the full-size reading screenshot</a>.</figcaption>
+  </figure>
+</ArticleSplit>
