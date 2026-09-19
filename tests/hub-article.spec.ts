@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const path = '/drafts/2026/2026-09-19_the-repository-between-my-repositories/';
+const path = '/posts/2026/09/2026-09-19_the-repository-between-my-repositories/';
 
 for (const width of [1280, 390]) {
   test(`hub guide routes examples and keeps copyable instructions at ${width}px`, async ({ page }) => {
@@ -8,7 +8,7 @@ for (const width of [1280, 390]) {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto('/drafts/');
+    await page.goto('/posts/');
     await page.getByRole('link', { name: 'The repository between my repositories' }).click();
     await expect(page.locator('.article-step')).toHaveCount(5);
     const map = page.locator('hub-launchpad');

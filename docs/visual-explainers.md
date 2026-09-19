@@ -45,7 +45,7 @@ creation example remains readable without JavaScript, and the article describes
 all three workflows in prose. The layout stacks on narrow screens. `HubFolders`
 is a static HTML/CSS figure. No React runtime or diagram dependency is needed.
 
-`tests/hub-article.spec.ts` exercises the draft on desktop/mobile, keyboard
+`tests/hub-article.spec.ts` exercises the published article on desktop/mobile, keyboard
 workflow selection, native expandable instructions, no-JavaScript reading, and horizontal
-overflow. Playwright's `draft-articles` project uses a separate local draft server;
-the normal static build and public-post checks keep drafts excluded.
+overflow. Playwright's `hub-article` project uses the normal static build. Public
+post checks also verify discovery through the homepage, post list, and RSS feed.

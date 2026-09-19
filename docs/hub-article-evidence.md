@@ -2,8 +2,9 @@
 
 Prepared September 19, 2026. Niklas requested a personal story combined with a
 practical guide readers can copy, useful details, and strong storytelling. He
-specified that the article belongs in the blog repository. The article remains
-`draft: true` for local preview; no publication was requested. First-person
+specified that the article belongs in the blog repository. The article began as
+`draft: true` for local preview. Niklas approved publication on September 19, 2026;
+it is now `draft: false`, and browser checks target its public post route. First-person
 interpretation and humor are proposed editorial copy, not recovered quotations.
 
 The source is the sibling private `hub` checkout. This was an editorial review of
