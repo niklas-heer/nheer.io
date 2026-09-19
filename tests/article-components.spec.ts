@@ -1,8 +1,21 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { existsSync } from 'node:fs';
 
 // The gallery deliberately exists only in sample/draft builds.
 test.skip(!existsSync('dist/component-preview/index.html'), 'Component gallery is excluded from live builds');
+
+async function expectWholeDiagram(svg: Locator) {
+  const bounds = await svg.evaluate((element: SVGSVGElement) => {
+    const content = element.getBBox();
+    const view = element.viewBox.baseVal;
+    return {
+      left: content.x - view.x, top: content.y - view.y,
+      right: view.x + view.width - content.x - content.width,
+      bottom: view.y + view.height - content.y - content.height,
+    };
+  });
+  for (const margin of Object.values(bounds)) expect(margin).toBeGreaterThanOrEqual(8);
+}
 
 for (const width of [1280, 390]) {
   test(`article components render and remain usable at ${width}px`, async ({ page }) => {
@@ -26,16 +39,19 @@ for (const width of [1280, 390]) {
       await expect(svg).toBeVisible();
       await expect(svg).toHaveAttribute('role', 'img');
       await expect(svg).toHaveAttribute('aria-describedby', `${id}-description`);
+      await expectWholeDiagram(svg);
       const expand = figure.getByRole('button', { name: /^(Expand|Fit) diagram$/ });
       await expect(expand).toBeEnabled();
       await expand.focus();
       await page.keyboard.press('Enter');
       await expect(expand).toHaveAttribute('aria-pressed', 'true');
       await expect(expand).toHaveText('Fit diagram');
+      await expectWholeDiagram(svg);
       if (width === 390) expect(await figure.locator('[data-viewport]').evaluate(el => el.scrollWidth > el.clientWidth)).toBe(true);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.keyboard.press('Space');
       await expect(expand).toHaveAttribute('aria-pressed', 'false');
+      await expectWholeDiagram(svg);
       await figure.getByText('View Mermaid source', { exact: true }).click();
       await expect(figure.locator('[data-source]')).toBeVisible();
       await figure.screenshot({ path: test.info().outputPath(`${id}-${width}.png`) });
@@ -56,6 +72,7 @@ for (const width of [1280, 390]) {
     await returned.scrollIntoViewIfNeeded();
     await expect(returned.locator('svg')).toBeVisible();
     await expect(returned.locator('button')).toBeEnabled();
+    await expectWholeDiagram(returned.locator('svg'));
     expect(errors).toEqual([]);
   });
 }
@@ -97,6 +114,37 @@ test('a renderer download failure preserves the explanation and source', async (
   await expect(diagram.locator('button')).toBeDisabled();
   expect(blocked).toBe(true);
   expect(errors).toEqual([]);
+});
+
+test('fit includes every node when the renderer returns the clipped Arc viewBox', async ({ page }) => {
+  // Recorded in Arc: viewBox [-100.7, -101.2, 452.877, 591.2], while visible
+  // geometry ran from [8, 8] to [418, 554.2]. The right and bottom were cut off.
+  await page.route('**/mermaid.core.*.js', route => route.fulfill({
+    contentType: 'application/javascript',
+    body: `export default {
+      initialize() {},
+      async render() { return { svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100.7 -101.2 452.877 591.2"><rect x="8" y="8" width="160" height="48"/><rect x="258" y="506.2" width="160" height="48"/><path d="M88 56L338 506.2" stroke="white"/></svg>' }; }
+    };`,
+  }));
+  await page.goto('/component-preview/');
+  const diagram = page.locator('article-mermaid').first();
+  await diagram.scrollIntoViewIfNeeded();
+  await expect(diagram.locator('button')).toBeEnabled();
+  await expectWholeDiagram(diagram.locator('svg'));
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 844 });
+    await diagram.getByRole('button', { name: 'Expand diagram' }).click();
+    const viewport = diagram.locator('[data-viewport]');
+    await viewport.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+    await diagram.getByRole('button', { name: 'Fit diagram' }).click();
+    await expectWholeDiagram(diagram.locator('svg'));
+    expect(await viewport.evaluate(el => ({ left: el.scrollLeft, overflow: el.scrollWidth > el.clientWidth + 1 }))).toEqual({ left: 0, overflow: false });
+    const svgBox = (await diagram.locator('svg').boundingBox())!;
+    const viewportBox = (await viewport.boundingBox())!;
+    expect(svgBox.x).toBeGreaterThanOrEqual(viewportBox.x);
+    expect(svgBox.x + svgBox.width).toBeLessThanOrEqual(viewportBox.x + viewportBox.width);
+    expect(svgBox.y + svgBox.height).toBeLessThanOrEqual(viewportBox.y + viewportBox.height);
+  }
 });
 
 for (const width of [1280, 768, 390, 320]) {
