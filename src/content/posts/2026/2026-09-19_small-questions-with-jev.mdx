@@ -4,7 +4,7 @@ description: "How I’m using TypeSafe’s Jev for reusable notes, project names
 date: "2026-09-19T20:00:00+02:00"
 icon: ":bulb:"
 tags: ["ai", "developer-tools", "experiments", "software-design"]
-draft: true
+draft: false
 lang: "en"
 ---
 
@@ -12,6 +12,9 @@ import JevWorkbench from '../../../components/JevWorkbench.astro';
 import JevCases from '../../../components/JevCases.astro';
 import MermaidDiagram from '../../../components/MermaidDiagram.astro';
 import ArticleMetrics from '../../../components/ArticleMetrics.astro';
+import ArticleFlow from '../../../components/ArticleFlow.astro';
+import ArticleSplit from '../../../components/ArticleSplit.astro';
+import ArticleStep from '../../../components/ArticleStep.astro';
 
 A project produces plenty of information that probably should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
 
@@ -37,7 +40,7 @@ These are early tools and experiments. They share a division of work: code gathe
     E --> A`}
 />
 
-## Give the model something it can answer
+<ArticleStep id="give-the-model-something-it-can-answer" number="01" icon="🎯" title="Give the model something it can answer" />
 
 [TypeSafe describes Jev](https://docs.typesafe.ai/introduction) as a “System One” model: a model for focused judgments on supplied context. It returns typed answers and probabilities rather than explanations or prose.
 
@@ -55,11 +58,24 @@ Independent questions can share the same state in a batch. They cannot see each 
 
 A tidy output shape still cannot make the supplied facts true.
 
-## Keeping a note requires more than a category
+<ArticleStep id="keeping-a-note" number="02" icon="🗒️" title="Keeping a note requires more than a category" />
 
 My knowledge-capture tool is a Rust command-line program. It accepts a candidate note, supporting evidence, and existing records, then asks Jev three questions: what kind of record is this, is it worth keeping, and does the evidence support it?
 
 The categories include fact, decision, preference, and skip. Code combines the answers into capture, review, or skip.
+
+<ArticleFlow
+  id="capture-handoff"
+  label="Knowledge capture / Hub"
+  title="Three answers, one recommendation, nothing written yet."
+  caption="The recorded shape of the capture command. It describes the handoff between the tool and the assistant, not a measured success rate."
+  steps={[
+    { label: 'Gather', title: 'Collect the candidate', detail: 'The command receives a proposed note, its supporting evidence, and the records the hub already keeps.' },
+    { label: 'Ask', title: 'Three bounded questions', detail: 'What kind of record is this, is it worth keeping, and does the evidence support it?' },
+    { label: 'Combine', title: 'Capture, review, or skip', detail: 'Code turns the three typed answers into a single recommendation.' },
+    { label: 'Verify', title: 'Check before writing', detail: 'The assistant re-reads the actual evidence, and whether I accepted the decision, before a record exists.' }
+  ]}
+/>
 
 Even “capture” does not write anything. The command returns a recommendation. The coding assistant still checks the actual evidence and, where relevant, whether I accepted the decision before writing a record. The [public capture workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/capture-knowledge/SKILL.md) describes that handoff.
 
@@ -67,7 +83,7 @@ The live integration has been exercised, but its thresholds remain provisional. 
 
 This is a useful boundary for the experiment: the model can help identify a note worth examining, while the evidence check remains a separate step.
 
-## A favorite name can still be mediocre
+<ArticleStep id="a-favorite-name" number="03" icon="🏷️" title="A favorite name can still be mediocre" />
 
 Naming a project has a similar split.
 
@@ -85,7 +101,7 @@ Later web searches found historical listings for a similarly named Android app i
 
 The naming tool helps me build a shortlist. It does not provide legal clearance.
 
-## Finding a command starts with a catalog
+<ArticleStep id="finding-a-command" number="04" icon="🐚" title="Finding a command starts with a catalog" />
 
 Quirl is my shell project. A shell interprets the commands you type into a terminal, including the flags that somehow become memorable only after you have looked them up again.
 
@@ -115,19 +131,21 @@ The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4b
 
 That is a reason to keep the evidence close to the recommendation. “The model disagreed” is the start of an investigation; the command descriptions are what let me resolve it.
 
-## Choosing a story does not finish the editorial work
+<ArticleStep id="choosing-a-story" number="05" icon="✍️" title="Choosing a story does not finish the editorial work" />
 
 The draft behind this article went through another experiment.
 
 A new [storytelling workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/storytelling/SKILL.md) gathers repository evidence and checks existing posts and drafts. It supplies Jev with summarized story angles and coverage, then asks for a recommendation and readiness assessments.
 
-A pilot compared four possible stories. Jev recommended the Quirl benchmark story, and Codex wrote the draft. Then the question changed from “which event is interesting?” to “what does a reader need to understand it?”
-
-<JevCases kind="editorial" />
+<ArticleSplit id="editorial-sequence" mediaSide="right" balance="media" align="top" wide>
+  <p>A pilot compared four possible stories. Jev recommended the Quirl benchmark story, and Codex wrote the draft. Then the question changed from “which event is interesting?” to “what does a reader need to understand it?”</p>
+  <p>These four steps are the actual sequence that produced the article you are reading, including the point where my own feedback changed its scope.</p>
+  <JevCases slot="media" kind="editorial" />
+</ArticleSplit>
 
 The first recommendation was useful: the benchmark disagreement survived into this article. It just needed a wider frame. Before asking a reader to care about Jev choosing a shell command, I needed to explain what Jev was doing in my projects in the first place.
 
-## Keep the question small enough to inspect
+<ArticleStep id="keep-the-question-small" number="06" icon="🔍" title="Keep the question small enough to inspect" />
 
 The use case I keep returning to is a small decision between gathering information and doing something with it. Is this note worth keeping? Does this name fit? Which command deserves a closer look? Which piece of work could become a story?
 

@@ -122,3 +122,46 @@ The actual revised draft rendered successfully at 1280px and 390px. Inspected th
 Mermaid workflow and result cards at both widths, with no browser page errors or
 horizontal overflow. The broader site/component checks and npm audit limitation
 are recorded in that component guide. The article retains `draft: true`.
+
+## Publication and layout components
+
+Niklas asked for the article to use the newer reusable components where they make
+sense, and for the draft flag to be removed. Added on 2026-09-19:
+
+- `ArticleStep` numbers the six sections (01–06) with an icon, matching the hub
+  article's treatment. The headings still read on their own; the numbers and icons
+  are decorative and marked `aria-hidden`.
+- `ArticleFlow` shows the knowledge-capture handoff as four steps: gather the
+  candidate and its evidence, ask the three bounded questions, combine the typed
+  answers into one recommendation, verify before anything is written. This section
+  previously had no figure. The steps restate the documented command behaviour;
+  no new measurement or threshold is claimed.
+- `ArticleSplit` (`wide`, media right, top aligned) places the editorial paragraphs
+  beside the existing `JevCases` timeline. The copy avoids spatial wording, because
+  the visual moves below the prose under 721px.
+
+`ArticleComparison` was deliberately not used. The only measured values in the
+article are the Quirl totals (112 unique cases, 111 acceptable, 1 unassessed).
+Those are a part-to-whole count already carried by `ArticleMetrics`; rendering
+them as bars on a shared zero-based scale would show two near-identical bars and
+imply a comparison the experiment did not make. No illustrative numbers were
+invented to justify a chart.
+
+Frontmatter now carries `draft: false` rather than omitting the key. The schema
+defaults `draft` to false, but `tests/site.spec.ts` selects published interactive
+articles by matching a literal `draft: false` line; omitting it let the article
+reach the homepage while the test's expected "latest three" still named an older
+post, which failed that check.
+
+Verification on 2026-09-19 after this revision:
+
+- `rtk mise run check` passed: sample-data production build, 14 pipeline checks,
+  30 unit tests, 37 browser tests. `rtk mise run audit` found 0 vulnerabilities.
+- The article was rendered at 1280px and 390px with no page errors and no
+  horizontal document overflow. The new flow, split and numbered headings were
+  inspected in screenshots at both widths. The one element extending past the
+  viewport at 390px is the pre-existing Mermaid source inside its scrollable
+  disclosure.
+- The normal sample-data build now contains `/posts/2026/09/2026-09-19_small-questions-with-jev/`
+  and the slug in `rss.xml`, `/posts/` and the homepage; `/drafts/` is absent.
+  No deployment or publish task was run.
