@@ -1,0 +1,21 @@
+{
+  "project": "/absolute/path/to/nheer.io",
+  "purpose": "Run the site refresh and CV sync jobs with their API credentials",
+  "ttl_seconds": 28800,
+  "timeout_seconds": 1800,
+  "cache_ttl_seconds": 900,
+  "provider": "one_password",
+  "op_path": "/absolute/path/to/op",
+  "credentials": {
+    "GITHUB_TOKEN": "op://<vault>/nheer Site Jobs/<field>",
+    "HARDCOVER_API_TOKEN": "op://<vault>/nheer Site Jobs/<field>",
+    "OPENROUTER_API_KEY": "op://<vault>/nheer Site Jobs/<field>",
+    "VERCEL_TOKEN": "op://<vault>/nheer Site Jobs/<field>",
+    "DATABASE_URL": "op://<vault>/nheer Site Jobs/<field>"
+  },
+  "commands": [
+    {"executable": "/absolute/path/to/node", "args": ["scripts/refresh-site.mjs", "refresh"]},
+    {"executable": "/absolute/path/to/node", "args": ["scripts/refresh-site.mjs", "publish"]},
+    {"executable": "/absolute/path/to/node", "args": ["scripts/sync-cv.mjs"]}
+  ]
+}

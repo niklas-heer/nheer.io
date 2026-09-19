@@ -32,3 +32,6 @@ _hugo_backup/
 # Browser test artifacts
 playwright-report/
 test-results/
+
+# Machine-specific Latchrun profile (absolute paths)
+.latchrun/local.json
