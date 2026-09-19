@@ -41,5 +41,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0"
+  },
+  "overrides": {
+    "lodash-es": "4.18.1"
   }
 }
