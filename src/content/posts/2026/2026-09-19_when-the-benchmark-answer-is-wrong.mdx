@@ -1,0 +1,65 @@
+---
+title: "The benchmark said the answer was wrong"
+description: "Jev picked a command. The answer key disagreed. A small Quirl experiment became a useful reminder to inspect the evaluator too."
+date: "2026-09-19T20:00:00+02:00"
+icon: ":mag:"
+tags: ["ai", "testing", "shell", "developer-tools"]
+draft: true
+lang: "en"
+---
+
+import EvaluationEvidence from '../../../components/EvaluationEvidence.astro';
+
+The benchmark expected `NONE`. Jev returned `tree`. The saved result marked the answer wrong.
+
+So far, an ordinary day in testing. A request, an expected answer, a small red result.
+
+Except `tree` could do the thing the request was asking for.
+
+## The answer hiding in the catalog
+
+This came from a [command-selection experiment in Quirl](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md), my shell project. The question was whether Jev could connect an ordinary description of a task to an appropriate entry in a known catalog.
+
+The catalog contained 62 commands. The model could select one, or choose `NONE`, `CLARIFY`, or `COMPOSE` when a single command was not the right answer. It was a research experiment; it did not execute the selections or add a new feature to Quirl.
+
+Here is the disagreement. Open the catalog below before deciding which side needs fixing.
+
+<EvaluationEvidence kind="case" />
+
+The expected label had missed two capabilities already present in the catalog. `tree --du` computes directory sizes from their contents; `eza --total-size` also offers recursive totals. For this case, selecting `tree` was acceptable.
+
+The label had encoded a claim: none of these commands can satisfy the request. Once that claim became an expected value, the harness treated it as settled. It could compare two labels perfectly and still deliver the wrong verdict.
+
+Automation is quite happy to make a clerical error reproducible.
+
+## Keep the red result
+
+The useful repair was to record the mistaken expectation and correct it. The [original evidence](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/spikes/jev-command-search/evidence.json) still contains the expected `NONE`, the returned `tree`, and `correct: false`. A separate correction records `tree` and `eza` as acceptable selections.
+
+That leaves a trail somebody else can inspect. The original result is still there. The reason for changing its interpretation is there too. There was no extra attempt quietly substituted for the inconvenient one.
+
+The correction also has a boundary. This was catalog inspection, not a demonstration of either command on a test filesystem. Disk allocation versus apparent size was not separately tested. The evidence supports correcting the selector's label; it does not establish that two tools account for every filesystem in the same way.
+
+That is enough to make this disagreement useful without making it bigger than it was.
+
+## One square stays unresolved
+
+Across 112 distinct hand-authored cases, 111 produced validated answers that were acceptable under the corrected labels. One response failed the harness validator. The service returned HTTP 200, but the original response was not saved, so the reason for the rejection cannot be recovered.
+
+That case belongs in the picture too.
+
+<EvaluationEvidence kind="results" />
+
+It would be convenient to explain the missing case as an API problem, or dismiss it as an overly strict check. The retained evidence cannot tell us which happened. The harness was subsequently changed to preserve parsed response fields before validation; that helps the next investigation, but it cannot recover this one.
+
+The experiment also included repeated requests with reversed candidate order: 144 main calls, not 144 distinct cases. The challenge set was written after the initial results, making it exploratory. There was no production baseline or comparison with another model. A small synthetic experiment can help decide what to investigate next; it cannot supply a real-world accuracy figure on its own.
+
+## Read the disagreement
+
+What makes this worth keeping is the small, inspectable mistake. There is a request, a catalog, an answer, and an assumption that failed when checked against the catalog.
+
+When a model disagrees with an evaluator, those are four useful things to put next to each other. Sometimes the model will be wrong. Sometimes the request needs clarifying. Sometimes `NONE` should have been `tree`.
+
+Keep the original result. Put the correction beside it. The next person reading the benchmark should be able to see why the square changed color.
+
+*The [experiment materials](https://github.com/niklas-heer/quirl/tree/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/spikes/jev-command-search) include the recorded responses, label correction, and reproduction instructions. This article describes those recorded results; it is not a fresh benchmark run.*
