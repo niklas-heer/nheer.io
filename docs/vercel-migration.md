@@ -58,24 +58,31 @@ preserving routes, security headers, redirects, assets and custom 404 status.
 - Project: `niklas-heers-projects/nheer-io`.
 - Project ID: `prj_blqrNqJWMaL1edc0X83uojSOGkrP`.
 - Team ID: `team_NN7LiyAr73wBUMYtlr3m84em`.
-- nheer.com is attached and ownership verified; DNS still points to Netlify.
+- nheer.com and www.nheer.com are attached and ownership verified. www redirects
+  to nheer.com with HTTP 308. DNS still points to Netlify.
+- Production deployment dpl_FGEdb5ZRmqfW6Bt22sJVGZejz5QX is READY, with aliases
+  nheer.com, www.nheer.com and nheer-io.vercel.app. Homelab workflow
+  nheer-manual-jk9vf succeeded. /build-health.json confirms fresh live podcast
+  and page-view snapshots, with draftPreview=false.
 - Niklas saved the durable automation token in 1Password. CLI OAuth cannot create
   one directly (HTTP 403: Cannot create tokens for this app).
 
-Create a token at [Vercel account tokens](https://vercel.com/account/tokens), scoped
-to niklas-heers-projects, and save it as VERCEL_TOKEN in the existing 1Password
-homelab/nheer Site Jobs item. The operator syncs that field into nheer-site-jobs.
-The homelab workflow has a deploy-target parameter; the scheduled default remains
-Netlify until the durable token and a full Vercel publishing run are verified.
+The token is stored as VERCEL_TOKEN in the existing 1Password homelab/nheer Site Jobs
+item and synchronized into nheer-site-jobs. Project and analytics access returned
+HTTP 200. The first workflow retries preceded the operator's five-minute poll;
+synchronizing that saved field allowed the next attempt to complete. The original
+separate token item is preserved. Rotation uses [Vercel account tokens](https://vercel.com/account/tokens).
+The homelab workflow and three-hour schedule now select Vercel.
 
 ```sh
 # From the homelab repository:
 rtk mise exec -- uv run invoke nheer.run --mode publish --target vercel
 ```
 
-After success, set the schedule's deploy-target to vercel and update the operator
-task default. Keep automatic Vercel Git builds disconnected: they cannot access
-private data. Retain Netlify credentials and prior deployment for rollback.
+The site scripts also default to Vercel; use SITE_DEPLOY_TARGET=netlify or
+--target netlify explicitly for rollback. Keep automatic Vercel Git builds
+disconnected: they cannot access private data. Retain Netlify credentials and
+prior deployment for rollback.
 
 ## Exact DNS changes
 
@@ -109,7 +116,14 @@ DNS changes remain a user action; none were applied during preparation.
 Rollback: restore the Netlify web-hosting DNS records and use deploy-target=netlify
 in the homelab. The database keeps the accumulated view history independently.
 
-## Local verification
+## Verification
+
+The isolated sample build passed 15 pipeline/integration tests, 30 unit tests,
+36 browser tests and npm audit (zero vulnerabilities). The cluster production
+build passed its pipeline/unit checks, 27 production browser tests and npm audit.
+The gallery-only browser tests are skipped in live builds because that route is
+intentionally excluded; they passed in the sample build. Homelab Dagger CI also
+passed Python checks and strict workflow validation.
 
 The real PostgreSQL integration test exercises retries, late data, rollback,
 invalid/overflow responses and 45 simulated days crossing retention. To repeat,

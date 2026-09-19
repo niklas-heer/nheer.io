@@ -10,6 +10,7 @@ export const requiredSecrets = [
 export async function refreshSite({ mode = 'check', env = process.env, run, connect } = {}) {
   if (!['check', 'refresh', 'publish'].includes(mode)) throw new Error('Expected check, refresh, or publish');
   env = { ...env };
+  env.SITE_DEPLOY_TARGET ||= 'vercel';
   if (!env.DATABASE_URL && env.PGHOST && env.PGDATABASE && env.PGUSER && env.PGPASSWORD) {
     const url = new URL(`postgresql://${env.PGHOST}:${env.PGPORT || '5432'}`);
     url.username = env.PGUSER;

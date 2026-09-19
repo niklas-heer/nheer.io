@@ -5,6 +5,7 @@ import { deployTarget } from './deploy-target.mjs';
 
 const stage = process.argv[2];
 const env = { ...process.env, CI: 'true' };
+env.SITE_DEPLOY_TARGET ||= 'vercel';
 if (!env.DATABASE_URL && env.PGHOST && env.PGDATABASE && env.PGUSER && env.PGPASSWORD) {
   const url = new URL(`postgresql://${env.PGHOST}:${env.PGPORT || '5432'}`);
   url.username = env.PGUSER;

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { refreshSite, requiredSecrets } from '../refresh-site.mjs';
 
-const env = Object.fromEntries([...requiredSecrets, 'NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'].map((key) => [key, 'test']));
+const env = { SITE_DEPLOY_TARGET: 'netlify', ...Object.fromEntries([...requiredSecrets, 'NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'].map((key) => [key, 'test'])) };
 function fixture({ locked = true, fail } = {}) {
   const commands = [];
   let closed = false;
@@ -48,7 +48,7 @@ test('publishing follows both syncs, build and browser checks', async () => {
 
 test('Vercel publishing preserves checks and uses the guarded prebuilt publisher', async () => {
   const x = fixture();
-  await refreshSite({ ...x.options, env: { ...env, SITE_DEPLOY_TARGET: 'vercel', VERCEL_TOKEN: 'test', VERCEL_PROJECT_ID: 'test', VERCEL_ORG_ID: 'test' } });
+  await refreshSite({ ...x.options, env: { ...Object.fromEntries(Object.entries(env).filter(([key]) => key !== 'SITE_DEPLOY_TARGET')), VERCEL_TOKEN: 'test', VERCEL_PROJECT_ID: 'test', VERCEL_ORG_ID: 'test' } });
   assert.deepEqual(x.commands[3], ['node', 'scripts/sync-page-views.mjs']);
   assert.deepEqual(x.commands.at(-2), ['node', 'scripts/verify-build.mjs']);
   assert.deepEqual(x.commands.at(-1), ['node', 'scripts/publish-vercel.mjs']);

@@ -1,5 +1,5 @@
 export function deployTarget(env) {
-  const target = env.SITE_DEPLOY_TARGET || 'netlify';
+  const target = env.SITE_DEPLOY_TARGET || 'vercel';
   if (target === 'vercel') return {
     required: ['VERCEL_TOKEN', 'VERCEL_PROJECT_ID', 'VERCEL_ORG_ID'],
     command: ['node', 'scripts/publish-vercel.mjs'],
