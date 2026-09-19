@@ -9,6 +9,7 @@ lang: "en"
 ---
 
 import JevWorkbench from '../../../components/JevWorkbench.astro';
+import JevCases from '../../../components/JevCases.astro';
 
 A project produces plenty of information that probably should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
 
@@ -60,13 +61,15 @@ My [naming workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_ag
 
 Jev does not generate the names in this workflow. It also cannot turn a failed registry request into an availability result. Unknown stays unknown.
 
-In a live comparison of three candidates, it preferred Taplume. Its absolute fit assessments were only weak to acceptable.
+In a live comparison of three candidates, it preferred Taplume. Asking about absolute fit made that recommendation less flattering:
+
+<JevCases kind="naming" />
 
 That is a useful result to keep intact. Winning a comparison does not mean clearing the bar. A shortlist can have a first place without having a name I should use.
 
 Later web searches found historical listings for a similarly named Android app in third-party catalogs. Those were leads to investigate, without independently verified first-party evidence establishing a conflict. No name was accepted.
 
-Registry checks, naming judgment, and legal clearance answer different questions. Putting their results next to each other does not merge them into one fact.
+The naming tool helps me build a shortlist. It does not provide legal clearance.
 
 ## Finding a command starts with a catalog
 
@@ -76,13 +79,15 @@ For a command-discovery experiment, I gave Jev descriptions of 62 known commands
 
 The experiment selected options. It did not assemble complete command lines or execute anything, and it is not a production integration.
 
-One case asked for recursive directory sizes. The expected answer was `NONE`. Jev selected `tree`.
+One case asked for recursive directory sizes. The expected answer and Jev disagreed. Open the catalog evidence before deciding which one was wrong:
 
-The catalog contained `tree --du` and `eza --total-size`, both of which supported the directory-total intent. The expected answer was corrected, with the original evidence retained alongside the correction. Exact filesystem accounting was outside the test.
+<JevCases kind="command" />
+
+The catalog contained options that supported directory totals. The expected answer was corrected, with the original evidence retained alongside the correction. A mismatch had caught a problem in the test itself.
 
 The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) records 112 unique handwritten cases: 111 acceptable validated results after that correction, plus one response that could not be assessed after the test runner rejected it. These were exploratory examples, without a comparison against everyday shell use.
 
-The useful lesson here is quite concrete. A model’s answer can expose a mistake in the expected answer. Resolving the disagreement still requires reading what the commands actually do.
+That is a reason to keep the evidence close to the recommendation. “The model disagreed” is the start of an investigation; the command descriptions are what let me resolve it.
 
 ## Choosing a story does not finish the editorial work
 
@@ -90,16 +95,16 @@ The draft behind this article went through another experiment.
 
 A new [storytelling workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/storytelling/SKILL.md) gathers repository evidence and checks existing posts and drafts. It supplies Jev with summarized story angles and coverage, then asks for a recommendation and readiness assessments.
 
-A pilot compared four possible stories. Jev recommended the Quirl benchmark story. Codex wrote the draft.
+A pilot compared four possible stories. Jev recommended the Quirl benchmark story, and Codex wrote the draft. Then the question changed from “which event is interesting?” to “what does a reader need to understand it?”
 
-I then asked for more context and a broader introduction to Jev through its uses across projects. The narrow benchmark story needed a reader who already understood why this model was involved.
+<JevCases kind="editorial" />
 
-The recommendation helped select material. It did not settle the framing, write the article, or decide to publish it.
+The first recommendation was useful: the benchmark disagreement survived into this article. It just needed a wider frame. Before asking a reader to care about Jev choosing a shell command, I needed to explain what Jev was doing in my projects in the first place.
 
 ## Keep the question small enough to inspect
 
-This pattern fits places where I can supply evidence and a finite set of choices, but relevance or fit still needs judgment. Ordinary code handles facts and calculations. Open-ended writing and reasoning belong with tools suited to that work. A similar approach could help sort an inbox by asking which messages need a reply, provided the relevant message context is available. That is a possible extension, not a mail integration I have built.
+The use case I keep returning to is a small decision between gathering information and doing something with it. Is this note worth keeping? Does this name fit? Which command deserves a closer look? Which piece of work could become a story?
 
-The cutoff for trusting a recommendation needs testing against the actual task. A [confidence value](https://docs.typesafe.ai/confidence) describes how concentrated the model’s answer is; it is not a guarantee that the workflow is correct.
+Those questions have something in common: I can put the evidence beside the answer and inspect the disagreement. The cutoff for trusting an answer still needs testing. A [confidence value](https://docs.typesafe.ai/confidence) describes how concentrated the model’s answer is; it cannot tell me that the question was well chosen.
 
-The note-capture example makes that boundary tangible. A candidate record arrives with evidence. Jev helps assess it. Code routes it. Before a suggestion becomes a permanent decision record, someone still checks that I actually decided it.
+For the next integration, that is where I would start: one recurring judgment, the context it needs, and a way to leave it unresolved. A name can remain unchosen. A note can wait for review. And a perfectly reasonable story recommendation can turn into a different article.

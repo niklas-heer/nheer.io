@@ -37,7 +37,6 @@ links public workflow guidance, not inaccessible private repository URLs.
 | Taplume example | Recorded relative preference and weak-to-acceptable fit assessments; subsequent third-party app listings | Listings are leads, not verified first-party conflicts |
 | Quirl | Public commit `593af98bb7e6e4ba56d7de1d3f81ebc109274aa9`, benchmark report and original response bundle | Experiment, no command execution or shipped integration; corrected label and unresolved rejection |
 | Blog selection | Actual four-candidate oracle batch in this workflow; Codex prose generation; author's follow-up messages | Jev recommended the narrow benchmark story; the author supplied the broader framing |
-| Inbox triage | Possible extension described as such | No completed mail integration is claimed |
 
 Public source links:
 
@@ -74,3 +73,37 @@ Verification of the revised article:
 - The normal build excludes its article HTML route/content and its homepage,
   post-index and RSS entries. It retains `draft: true`; no publication was run.
 - Local preview: `http://127.0.0.1:4323/drafts/2026/2026-09-19_small-questions-with-jev/`.
+
+## Visual revision after local review
+
+Niklas found the latter half dry and asked about existing components and Mermaid.
+The site has no Mermaid integration. Reused `ArticleFigure.astro` for both existing
+Jev figures and three new `JevCases.astro` figures instead of adding a renderer:
+
+- A side-by-side comparison separates Taplume's relative preference from its
+  weak-to-acceptable absolute fit. No numerical scale or clearance is invented.
+- A command-selection disagreement lets the reader reveal the recorded catalog
+  evidence with a native disclosure. The exact request and command flags come
+  from the preserved Quirl case, not an interactive shell or a new model call.
+- A vertical timeline follows the actual recommendation, Codex draft, author
+  feedback, and broader article. It explains why selecting a story and framing
+  it for readers are distinct parts of writing.
+
+Figures now accompany the naming, command, and editorial sections. The closing
+returns to these concrete examples; speculative inbox use and repeated general
+caveats were removed. All figures are HTML/CSS with textual labels, no animations,
+no API requests, and no new runtime dependency. Native disclosures work without
+JavaScript. These are explanations of recorded work, not product demonstrations.
+
+Verification of this visual revision:
+
+- Production build, pipeline/unit checks, and all 26 browser tests passed.
+  The final dependency audit could not run: npm returned HTTP 503 maintenance,
+  including on a separate retry. This revision adds no dependencies.
+- All five figures checked at 1280px and 390px. Every disclosure toggles with
+  Enter and Space; the new evidence reveal also works with JavaScript disabled.
+  No horizontal overflow or browser page errors after refreshing the preview's
+  stale dependency cache through Astro's stop/start commands.
+- Inspected desktop/mobile figure screenshots and the actual refreshed Arc tab.
+  The preview remains at the same URL. Normal-build HTML and feeds exclude the
+  draft title and slug.

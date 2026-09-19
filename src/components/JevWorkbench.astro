@@ -1,4 +1,5 @@
 ---
+import ArticleFigure from './ArticleFigure.astro';
 interface Props { kind: 'flow' | 'questions'; }
 const { kind } = Astro.props;
 const questions = [
@@ -26,19 +27,21 @@ const questions = [
 ];
 ---
 
-<figure class="jev-workbench">
+<ArticleFigure
+  id={`jev-${kind}`}
+  label={kind === 'flow' ? 'One pattern / Different jobs' : 'Three question shapes'}
+  title={kind === 'flow' ? 'Give the judgment a place in the workflow.' : 'The answer starts with the question.'}
+  caption={kind === 'flow'
+    ? 'Jev receives the context the caller supplies. It does not fetch repository evidence or carry out the next action in these integrations.'
+    : 'Examples of the questions used by the editorial and knowledge tools, simplified for explanation. This figure makes no API calls and displays no invented model scores.'}
+>
   {kind === 'flow' ? <>
-    <div class="eyebrow">ONE PATTERN / DIFFERENT JOBS</div>
-    <h3>Give the judgment a place in the workflow.</h3>
     <ol class="flow">
       <li><span class="step">01 · TOOLS + CALLER</span><h4>Gather the evidence</h4><p>A note and its sources. A name and search results. A request and known commands.</p></li>
       <li class="model"><span class="step">02 · JEV</span><h4>Ask a focused question</h4><p>Choose an option, assess a defined scale, or judge a yes/no question.</p></li>
       <li><span class="step">03 · CODE + REVIEW</span><h4>Decide what happens</h4><p>Inspect uncertainty, gather more evidence, recommend a next step, or leave the decision open.</p></li>
     </ol>
-    <figcaption>Jev receives the context the caller supplies. It does not fetch repository evidence or carry out the next action in these integrations.</figcaption>
   </> : <>
-    <div class="eyebrow">THREE QUESTION SHAPES</div>
-    <h3>The answer starts with the question.</h3>
     <p class="intro">Open a question type to see how it fits these tools.</p>
     <div class="questions">
       {questions.map((item, i) => <details open={i === 0}>
@@ -54,14 +57,10 @@ const questions = [
         </div>
       </details>)}
     </div>
-    <figcaption>Examples of the questions used by the editorial and knowledge tools, simplified for explanation. This figure makes no API calls and displays no invented model scores.</figcaption>
   </>}
-</figure>
+</ArticleFigure>
 
 <style>
-  .jev-workbench { margin: 2.2rem 0; padding: clamp(1.1rem, 4vw, 1.8rem); background: #191527; border: 1px solid #57456e; border-radius: 20px; color: #eee9fa; text-align: left; }
-  .eyebrow { color: #c2aaff; font: 600 .67rem/1.5 ui-monospace, monospace; letter-spacing: .12em; }
-  h3 { color: #f1edfa; margin: .5rem 0 1.2rem; font-size: clamp(1.2rem, 3vw, 1.65rem); line-height: 1.3; }
   .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; list-style: none; padding: 0; margin: 0; }
   .flow li { padding: 1rem .85rem; margin: 0; border: 1px solid #4d3c62; border-radius: 10px; background: #241e32; }
   .flow li::marker { content: ''; }
@@ -83,7 +82,6 @@ const questions = [
   dt { color: #c9ace7; font-weight: 600; }
   dd { color: #d8cce5; margin: 0; }
   .question-body a { display: inline-block; color: #d8b7ff; font-size: .8rem; margin-top: .7rem; }
-  figcaption { color: #bdb1cd; font-size: .78rem; line-height: 1.75; margin-top: 1.2rem; text-align: left; }
   @media (max-width: 560px) {
     .flow { grid-template-columns: 1fr; }
     .flow li { padding: .85rem 1rem; }
