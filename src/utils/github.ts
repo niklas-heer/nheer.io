@@ -107,7 +107,23 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
 
     const data = await response.json();
 
-    if (data.errors) {
+    const user = data.data?.user;
+    const nodes: (Repository | null)[] | undefined = user?.pinnedItems?.nodes;
+    const pinnedRepos = nodes?.filter((repo): repo is Repository => repo !== null);
+    // GitHub can return a live profile and accessible pins alongside a null
+    // repository denied by its organization's token policy. Only that precise
+    // partial failure is optional; auth, rate limits and other errors still fail.
+    const inaccessiblePinsOnly = data.errors?.length > 0 && (pinnedRepos?.length ?? 0) > 0 &&
+      data.errors.every((error: { type?: string; path?: unknown[] }) => {
+        const path = error.path;
+        return error.type === "FORBIDDEN" && Array.isArray(path) &&
+          path.length === 4 && path[0] === "user" &&
+          path[1] === "pinnedItems" && path[2] === "nodes" &&
+          typeof path[3] === "number" && Number.isInteger(path[3]) &&
+          nodes?.[path[3]] === null;
+      });
+
+    if (data.errors?.length && !inaccessiblePinsOnly) {
       console.error("GitHub GraphQL errors:", data.errors);
       if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
         throw new Error("Required GitHub data unavailable");
@@ -115,8 +131,7 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
       return null;
     }
 
-    const user = data.data?.user;
-    if (!user) {
+    if (!user || !pinnedRepos || (nodes?.length && !pinnedRepos.length)) {
       console.error("No user data returned from GitHub");
       if ((process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true") {
         throw new Error("Required GitHub data unavailable");
@@ -124,8 +139,12 @@ export async function fetchGitHubData(): Promise<GitHubData | null> {
       return null;
     }
 
+    if (inaccessiblePinsOnly) {
+      console.warn(`GitHub denied access to ${data.errors.length} pinned repository item(s); publishing ${pinnedRepos.length} accessible live repositories`);
+    }
+
     return {
-      pinnedRepos: user.pinnedItems.nodes as Repository[],
+      pinnedRepos,
       username: GITHUB_USERNAME,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
