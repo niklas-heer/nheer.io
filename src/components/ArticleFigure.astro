@@ -1,0 +1,19 @@
+---
+interface Props { id: string; label: string; title: string; caption: string }
+const { id, label, title, caption } = Astro.props;
+---
+<figure class="article-figure" aria-labelledby={`${id}-title`} aria-describedby={`${id}-caption`}>
+  <header>
+    <span class="figure-label">{label}</span>
+    <h3 id={`${id}-title`}>{title}</h3>
+  </header>
+  <slot />
+  <figcaption id={`${id}-caption`}>{caption}</figcaption>
+</figure>
+<style>
+  .article-figure { --figure-purple: #c6adff; --figure-mint: #8ae0c6; --figure-gold: #f0cd8e; margin: 2.2rem 0; padding: clamp(1rem, 4vw, 1.6rem); border: 1px solid #58486e; border-radius: 18px; background: radial-gradient(ellipse at top left, #2c2240, transparent 70%), #191623; color: #f0eafa; text-align: left; font: .9rem/1.6 system-ui, sans-serif; }
+  .article-figure header { margin-bottom: 1.4rem; }
+  .article-figure .figure-label { font: 650 .67rem/1.5 ui-monospace, monospace; letter-spacing: .09em; text-transform: uppercase; color: var(--figure-purple); }
+  .article-figure h3 { margin: .4rem 0 0; color: #f0eafa; font-size: clamp(1.15rem, 3vw, 1.45rem); line-height: 1.3; }
+  .article-figure figcaption { margin-top: 1.25rem; padding-top: .9rem; border-top: 1px solid #47394f; color: #c4b8d3; font: .76rem/1.65 system-ui, sans-serif; text-align: left; }
+</style>

@@ -1,0 +1,30 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+const folders = [
+  { icon: '🔎', name: 'research/', question: 'What did we investigate?', example: '“Which scripting language fits?”', keeps: 'Options, evidence, uncertainty', color: '#c6adff' },
+  { icon: '📌', name: 'facts/', question: 'What can we reuse?', example: '“The audit checks root manifests.”', keeps: 'Claim, scope, verification date', color: '#8ae0c6' },
+  { icon: '📝', name: 'decisions/', question: 'What did we choose?', example: '“Use live project discovery.”', keeps: 'Accepted choice and rationale', color: '#f0cd8e' },
+  { icon: '🧪', name: 'scratch/', question: 'What can we throw away?', example: 'A temporary experiment log', keeps: 'Disposable output · Git ignores it', color: '#b9b5c8' },
+];
+---
+<ArticleFigure id="hub-folders" label="02 / Inside the hub" title="Four folders. Four different jobs." caption="These are different kinds of records, not mandatory stages. An investigation can end without a new fact or an accepted decision.">
+  <div class="root"><span aria-hidden="true">📂</span> agent-hub/ <span class="root-note">guided by AGENTS.md</span></div>
+  <div class="folders">
+    {folders.map(folder => <div class="folder" style={`--folder-color: ${folder.color}`}>
+      <div class="folder-name"><span aria-hidden="true">{folder.icon}</span><strong>{folder.name}</strong></div>
+      <p class="question">{folder.question}</p><p class="example">{folder.example}</p><span class="keeps">{folder.keeps}</span>
+    </div>)}
+  </div>
+</ArticleFigure>
+<style>
+  .root { border: 1px solid #756085; padding: .8rem 1rem; border-radius: 8px; font: 600 .9rem/1.7 ui-monospace, monospace; background: #30243f; }
+  .root-note { display: block; font: .7rem/1.6 system-ui, sans-serif; color: #cdbedb; margin-left: 1.6rem; }
+  .folders { margin-left: 1rem; padding: 1rem 0 0 1rem; border-left: 1px solid #756085; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+  .folder { min-width: 0; border: 1px solid #594869; border-top: 3px solid var(--folder-color); padding: .8rem; border-radius: 8px; background: #221c2e; }
+  .folder-name { display: flex; gap: .5rem; align-items: center; }
+  .folder-name strong { color: var(--folder-color); font: 600 .9rem/1.6 ui-monospace, monospace; }
+  p.question { font-size: .8rem; font-weight: 600; margin: .7rem 0 .4rem; }
+  p.example { color: #d0c1dd; font-size: .75rem; margin: 0 0 .8rem; }
+  .keeps { display: block; border-top: 1px solid #4d3e58; padding-top: .5rem; color: #b9adc9; font-size: .65rem; }
+  @media (max-width: 520px) { .folders { grid-template-columns: 1fr; margin-left: .5rem; padding-left: .8rem; } }
+</style>

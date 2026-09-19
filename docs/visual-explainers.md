@@ -24,3 +24,27 @@ These are editorial references, not templates to reproduce. Keep the site's own 
 - tdx: a VHS recording demonstrates editing tasks inside a README; the separate save-conflict model explains why those ordinary files need careful handling.
 - Quirl: an actual terminal session demonstrates Normal mode, Data mode, Bash compatibility, and Lua. The prose supplies the author's motivation and the commands.
 - Overhead Overdrive: real screenshots carry a short personal story. An interactive physics diagram would distract from the reason the author made the game.
+- Hub: a before/after diagram shows the duplicate inventory disappearing; an interactive ownership map routes three concrete examples to dotfiles, hub, or project; a folder diagram distinguishes research, facts, decisions, and scratch. Numbered steps and native disclosures keep the copyable guide easy to scan.
+
+## Reusable article components
+
+`ArticleFigure.astro` supplies the shared dark figure surface, eyebrow, title,
+caption, and accessible label relationships. Pass a unique `id`, `label`, `title`,
+and `caption`, and place diagram content in its default slot. Keep diagram styles
+inside the content component; the frame does not impose a layout or interactions.
+
+`ArticleStep.astro` supplies a section heading with a numbered badge and optional
+visual meaning from an emoji. Pass `id`, `number`, `icon`, and `title`. The number
+and icon are decorative; the heading text must make sense on its own.
+
+The hub article demonstrates both in MDX. Its `HubOwnership` custom element uses
+native buttons, a live textual explanation, and a visible destination label in
+addition to color. Buttons remain disabled until handlers are attached. All
+three destinations are readable without JavaScript, and the map stacks on narrow
+screens. `HubDiscovery` and `HubFolders` are static HTML/CSS/SVG figures. No React
+runtime or diagram dependency is needed for these interactions.
+
+`tests/hub-article.spec.ts` exercises the draft on desktop/mobile, keyboard
+selection, native expandable instructions, no-JavaScript reading, and horizontal
+overflow. Playwright's `draft-articles` project uses a separate local draft server;
+the normal static build and public-post checks keep drafts excluded.

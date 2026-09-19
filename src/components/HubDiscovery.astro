@@ -1,0 +1,47 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+---
+<ArticleFigure id="hub-discovery" label="The first useful deletion" title="One new checkout. Two ways to find it." caption="The manual index duplicated current state. Live discovery queries the configured GHQ roots; the decision record preserves why I chose that approach.">
+  <div class="comparison">
+    <section class="before" aria-label="Before: maintain a second copy">
+      <span class="era">BEFORE</span><h4>A second copy to maintain</h4>
+      <div class="node"><span aria-hidden="true">📦</span><div><strong>Clone a project</strong><small>The checkout exists on disk</small></div></div>
+      <div class="arrow" aria-hidden="true">↓</div>
+      <div class="node manual"><span aria-hidden="true">✍️</span><div><strong>Edit projects.md</strong><small>Remember to add its location</small></div></div>
+      <div class="arrow" aria-hidden="true">↓</div>
+      <div class="outcome">The list is current…<br /><strong>until a checkout changes.</strong></div>
+    </section>
+    <section class="after" aria-label="After: ask the filesystem">
+      <span class="era">AFTER</span><h4>Ask when you need it</h4>
+      <div class="node"><span aria-hidden="true">📦</span><div><strong>Clone a project</strong><small>The checkout exists on disk</small></div></div>
+      <div class="arrow" aria-hidden="true">↓</div>
+      <div class="node command"><span aria-hidden="true">⌘</span><div><strong>ghq list --full-path</strong><small>Discover current checkouts</small></div></div>
+      <div class="arrow" aria-hidden="true">↓</div>
+      <div class="outcome">Read the current inventory.<br /><strong>No registration step.</strong></div>
+    </section>
+  </div>
+  <div class="retained"><span aria-hidden="true">📝</span><div><strong>What I kept: the reason.</strong><span>A decision record explains why the index went away.</span></div></div>
+</ArticleFigure>
+<style>
+  .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  section { min-width: 0; border: 1px solid #68516e; padding: 1rem; border-radius: 12px; background: #251d2d; }
+  .after { border-color: #518b7a; background: #1c2929; }
+  .era { font: 650 .65rem ui-monospace, monospace; letter-spacing: .1em; color: #efc59f; }
+  .after .era { color: #8ae0c6; }
+  h4 { color: #f0eafa; font-size: .95rem; margin: .4rem 0 1rem; }
+  .node { display: flex; gap: .5rem; align-items: center; padding: .7rem; border: 1px solid #65536e; border-radius: 8px; background: #1b1722; }
+  .node > span { font-size: 1.2rem; flex-shrink: 0; }
+  .node strong, .node small { display: block; }
+  .node strong { font: 600 .75rem/1.6 ui-monospace, monospace; overflow-wrap: anywhere; }
+  .node small { color: #cbbdd5; font-size: .7rem; }
+  .manual { border-style: dashed; border-color: #ba8f70; }
+  .command { border-color: #8ae0c6; }
+  .arrow { text-align: center; color: #af99c1; font-size: 1.3rem; line-height: 1.6; }
+  .after .arrow { color: #8ae0c6; }
+  .outcome { color: #d1c4db; font-size: .75rem; text-align: center; }
+  .after .outcome strong { color: #8ae0c6; }
+  .retained { display: flex; gap: .7rem; margin-top: 1.2rem; padding: .85rem; border-left: 3px solid #c6adff; background: #2a2138; }
+  .retained strong, .retained span { display: block; font-size: .8rem; }
+  .retained div > span { color: #c9bbd7; font-size: .75rem; }
+  @media (max-width: 520px) { .comparison { grid-template-columns: 1fr; } }
+</style>

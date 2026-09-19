@@ -1,0 +1,10 @@
+---
+interface Props { id: string; number: string; icon: string; title: string }
+const { id, number, icon, title } = Astro.props;
+---
+<h2 id={id} class="article-step"><span class="step-number" aria-hidden="true">{number}</span><span><span class="step-icon" aria-hidden="true">{icon}</span>{title}</span></h2>
+<style>
+  h2.article-step { display: flex; align-items: center; gap: .85rem; margin-top: 3rem; padding-bottom: .9rem; font-size: clamp(1.25rem, 3vw, 1.6rem); }
+  .step-number { flex: 0 0 2.7rem; display: grid; place-items: center; height: 2.7rem; background: color-mix(in srgb, var(--color-accent) 13%, transparent); border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent); border-radius: 10px; color: var(--color-accent); font: 600 1rem ui-monospace, monospace; }
+  .step-icon { margin-right: .5rem; font-size: 1.15rem; }
+</style>

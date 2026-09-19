@@ -1,0 +1,91 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+const homes = [
+  { key: 'dotfiles', icon: '⚙️', title: 'Dotfiles', detail: 'How I work', files: 'Machine setup · helpers · shared preferences', example: '“Use mise for my development tasks.”', reason: 'A personal preference should follow me between repositories. Dotfiles installs the shared guidance.', color: '#8ae0c6' },
+  { key: 'hub', icon: '🧭', title: 'Hub', detail: 'What crosses projects', files: 'Research · reusable facts · decisions', example: '“Discover checkouts with GHQ.”', reason: 'This decision affects work across repositories. Keep the choice and its rationale in the hub.', color: '#c6adff' },
+  { key: 'project', icon: '📦', title: 'Project', detail: 'What belongs to this code', files: 'Implementation · tests · local knowledge', example: '“This parser rejects empty input.”', reason: 'The finding concerns one implementation. Keep the explanation and test beside that project’s code.', color: '#f0cd8e' },
+];
+---
+<hub-ownership>
+  <ArticleFigure id="hub-ownership" label="01 / A map of responsibilities" title="Where should this knowledge live?" caption="Choose an example to trace its destination. These are ownership examples, not an automatic classifier; the agent still needs to check the evidence.">
+    <div class="examples" role="group" aria-label="Choose a knowledge example">
+      {homes.map(home => <button type="button" disabled data-home={home.key} aria-pressed={home.key === 'hub'}>{home.key === 'dotfiles' ? 'A personal preference' : home.key === 'hub' ? 'A shared decision' : 'A parser finding'}</button>)}
+    </div>
+    <div class="source"><span class="source-label">SOMETHING WORTH KEEPING</span><strong data-example>{homes[1].example}</strong></div>
+    <svg class="branches" viewBox="0 0 600 65" fill="none" aria-hidden="true">
+      <path data-wire="dotfiles" d="M300 0 V15 Q300 25 290 25 H105 Q95 25 95 35 V57 M90 51 L95 58 L100 51" />
+      <path data-wire="hub" data-active d="M300 0 V57 M295 51 L300 58 L305 51" />
+      <path data-wire="project" d="M300 0 V15 Q300 25 310 25 H495 Q505 25 505 35 V57 M500 51 L505 58 L510 51" />
+    </svg>
+    <div class="homes">
+      {homes.map(home => <div class="home" data-destination={home.key} data-active={home.key === 'hub' ? '' : undefined} style={`--home-color: ${home.color}`}>
+        <span class="destination-state">{home.key === 'hub' ? '↓ Keep it here' : 'Available home'}</span>
+        <span class="home-icon" aria-hidden="true">{home.icon}</span>
+        <strong>{home.title}</strong><span class="detail">{home.detail}</span><p>{home.files}</p>
+      </div>)}
+    </div>
+    <p class="explanation" role="status" aria-live="polite" aria-atomic="true" data-explanation>{homes[1].reason}</p>
+    <noscript><p>The full map is visible without JavaScript. Shared preferences go in dotfiles, cross-project decisions in the hub, and parser findings in the project.</p></noscript>
+  </ArticleFigure>
+  <script type="application/json" data-examples set:html={JSON.stringify(homes).replace(/</g, '\\u003c')} />
+</hub-ownership>
+<script>
+  class HubOwnership extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+      const examples: { key: string; example: string; reason: string }[] = JSON.parse(this.querySelector('[data-examples]')!.textContent!);
+      this.addEventListener('click', event => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('button[data-home]');
+        const example = examples.find(item => item.key === button?.dataset.home);
+        if (!example) return;
+        this.querySelector('[data-example]')!.textContent = example.example;
+        this.querySelector('[data-explanation]')!.textContent = example.reason;
+        for (const control of this.querySelectorAll<HTMLButtonElement>('button[data-home]')) control.setAttribute('aria-pressed', String(control === button));
+        for (const home of this.querySelectorAll<HTMLElement>('[data-destination]')) {
+          const active = home.dataset.destination === example.key;
+          home.toggleAttribute('data-active', active);
+          home.querySelector('.destination-state')!.textContent = active ? '↓ Keep it here' : 'Available home';
+        }
+        for (const wire of this.querySelectorAll<SVGElement>('[data-wire]')) wire.toggleAttribute('data-active', wire.dataset.wire === example.key);
+      });
+      for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-home]')) button.disabled = false;
+    }
+  }
+  if (!customElements.get('hub-ownership')) customElements.define('hub-ownership', HubOwnership);
+</script>
+<style>
+  hub-ownership { display: block; }
+  .examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.2rem; }
+  button { border: 1px solid #79668e; border-radius: 999px; padding: .5rem .7rem; background: #241c32; color: #eee6fa; font: inherit; font-size: .76rem; cursor: pointer; }
+  button[aria-pressed="true"] { color: #22152f; background: #c6adff; border-color: #c6adff; }
+  button:disabled { cursor: default; }
+  button:focus-visible { outline: 3px solid #8ae0c6; outline-offset: 3px; }
+  .source { width: 90%; margin: 0 auto; border: 1px solid #746080; background: #30253e; padding: .8rem; text-align: center; border-radius: 10px; }
+  .source-label { display: block; color: #c9b6db; font: .6rem/1.6 ui-monospace, monospace; letter-spacing: .09em; }
+  .source strong { display: block; font-size: .9rem; margin-top: .3rem; }
+  .branches { width: 100%; height: auto; display: block; }
+  path { stroke: #574764; stroke-width: 2; }
+  path[data-active] { stroke: #e2d4ff; stroke-width: 3; }
+  .homes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+  .home { padding: .8rem; border: 1px solid #544260; border-top: 3px solid var(--home-color); border-radius: 10px; background: #211c2d; }
+  .home[data-active] { outline: 2px solid var(--home-color); outline-offset: 3px; background: #332841; }
+  .destination-state { display: block; font: .58rem/1.5 ui-monospace, monospace; color: #bbadc8; white-space: nowrap; }
+  [data-active] .destination-state { color: var(--home-color); }
+  .home-icon { display: block; margin: .65rem 0 .35rem; font-size: 1.5rem; }
+  .home strong { display: block; font-size: 1.05rem; }
+  .detail { display: block; color: var(--home-color); font-size: .72rem; margin: .2rem 0 .6rem; min-height: 2.4em; }
+  .home p { margin: 0; color: #c9bed6; font-size: .72rem; }
+  p.explanation { margin: 1.25rem 0 0; padding-left: .85rem; border-left: 2px solid #c6adff; color: #e0d5ee; font-size: .83rem; min-height: 4.8em; }
+  @media (max-width: 520px) {
+    .source { width: 100%; }
+    .branches { display: none; }
+    .homes { grid-template-columns: 1fr; margin-top: 1.25rem; gap: .7rem; }
+    .home { display: grid; grid-template-columns: 2.2rem 1fr; column-gap: .65rem; padding: .7rem .8rem; }
+    .destination-state { grid-column: 2; }
+    .home-icon { grid-column: 1; grid-row: 1 / 5; align-self: center; margin: 0; }
+    .home strong, .detail, .home p { grid-column: 2; }
+    .detail { min-height: 0; margin: .1rem 0 .25rem; }
+    .explanation { min-height: 6.4em; }
+  }
+</style>

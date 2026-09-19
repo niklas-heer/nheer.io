@@ -43,7 +43,7 @@ The article links these public references, not private hub paths. It contains no
 credentials, secret references, personal machine paths, or incidental private
 research. It makes no measured productivity or guaranteed agent-adherence claim.
 
-Verification for this draft:
+Verification for the initial prose draft:
 
 - `rtk mise run check` passed (sample-data build, pipeline/unit/browser checks,
   and dependency audit).
@@ -55,3 +55,29 @@ Verification for this draft:
 - Browser automation was unavailable for a manual visual review of this new
   article. Existing browser tests passed; the article-specific preview check
   inspected rendered HTML.
+
+## Visual revision — September 19, 2026
+
+Niklas requested a more visual article using MDX, components, emoji, numbers, and
+diagrams. The post now uses MDX and three original figures: index maintenance
+before/after, an interactive map of ownership, and four knowledge folders. Five
+numbered headings organize the guide. Native disclosures hold the full starter
+instructions and the optional model experiment. The narrative and draft status
+remain intact.
+
+Diagram examples are illustrative adaptations of the existing evidence, not new
+measurements or additional events. In particular, the parser example is a teaching
+example, and the folder diagram does not imply that all research becomes a fact
+or accepted decision. The before/after retains GHQ's configured-root limitation.
+
+The implementation follows the blog's existing Astro/custom-element approach.
+`ArticleFigure` and `ArticleStep` are reusable; their usage is documented in
+`docs/visual-explainers.md`. No dependency was added. The new browser checks cover
+keyboard selection, client navigation, mobile overflow, expandable copyable
+instructions, and a no-JavaScript fallback. Screenshots from these checks support
+visual review, superseding the initial prose draft's browser-review limitation.
+
+Visual revision verification passed: `rtk mise run check`, including 26 browser
+tests and a dependency audit with zero findings. Reviewed the three figures at
+1280px and 390px from test screenshots. Normal build output still excludes the
+draft from the homepage, post list, RSS, and draft routes.
