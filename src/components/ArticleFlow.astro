@@ -1,0 +1,36 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+interface Props {
+  id: string;
+  title: string;
+  caption: string;
+  label?: string;
+  steps: { title: string; detail: string; label?: string }[];
+}
+const { id, title, caption, label = 'How it works', steps } = Astro.props;
+if (!steps.length) throw new Error(`${id}: a flow needs at least one step.`);
+---
+<ArticleFigure {id} {label} {title} {caption}>
+  <ol class:list={['flow', { long: steps.length > 3 }]} style={`--columns: ${Math.min(steps.length, 3)}`}>
+    {steps.map((step, index) => <li>
+      <span class="number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+      {step.label && <span class="label">{step.label}</span>}
+      <h4>{step.title}</h4><p>{step.detail}</p>
+    </li>)}
+  </ol>
+</ArticleFigure>
+<style>
+  .flow { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: 1.3rem; list-style: none; padding: 0; margin: 0; }
+  li { position: relative; min-width: 0; padding: 1rem; margin: 0; border: 1px solid #665075; border-radius: 10px; background: #241c31; }
+  li:not(:last-child)::after { content: '→'; position: absolute; right: -1.2rem; top: 50%; color: #8ae0c6; font-size: 1rem; }
+  .number { display: block; color: #8ae0c6; font: 600 1.25rem/1.4 ui-monospace, monospace; margin-bottom: .7rem; }
+  .label { display: block; color: #c6adff; font: .63rem/1.6 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .06em; }
+  h4 { color: #f0eafa; font-size: .95rem; line-height: 1.5; margin: .35rem 0 .5rem; }
+  p { color: #c4b8d3; font-size: .8rem; line-height: 1.7; margin: 0; }
+  .flow.long { grid-template-columns: 1fr; }
+  .flow.long li:not(:last-child)::after { content: '↓'; top: auto; bottom: -1.3rem; right: calc(50% - .3rem); }
+  @media (max-width: 600px) {
+    .flow { grid-template-columns: 1fr; }
+    li:not(:last-child)::after { content: '↓'; top: auto; bottom: -1.3rem; right: calc(50% - .3rem); }
+  }
+</style>

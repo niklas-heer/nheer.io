@@ -1,0 +1,128 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+interface Props {
+  id: string;
+  title: string;
+  description: string;
+  code: string;
+  caption: string;
+  label?: string;
+}
+const { id, title, description, code, caption, label = 'Diagram' } = Astro.props;
+if (!code.trim() || code.length > 50_000) throw new Error(`${id}: supply Mermaid source between 1 and 50,000 characters.`);
+---
+<article-mermaid>
+  <ArticleFigure {id} {label} {title} {caption}>
+    <p id={`${id}-description`} class="description">{description}</p>
+    <div class="diagram-viewport" data-viewport tabindex="0" role="region" aria-label={`${title} — scrollable diagram`}>
+      <div data-diagram data-title-id={`${id}-title`} data-description-id={`${id}-description`}></div>
+    </div>
+    <div class="toolbar">
+      <button type="button" data-expand disabled aria-pressed="false">Expand diagram</button>
+      <span class="status" role="status" data-status>Diagram description and source remain available.</span>
+    </div>
+    <details>
+      <summary>View Mermaid source</summary>
+      <pre tabindex="0"><code data-source>{code.trim()}</code></pre>
+    </details>
+    <noscript><p class="description">JavaScript is needed to draw this diagram. Its description and source remain available.</p></noscript>
+  </ArticleFigure>
+</article-mermaid>
+<script>
+  let renderer: Promise<typeof import('mermaid')['default']> | undefined;
+  function getRenderer() {
+    return renderer ??= import('mermaid').then(({ default: mermaid }) => {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        suppressErrorRendering: true,
+        maxTextSize: 50_000,
+        theme: 'base',
+        look: 'classic',
+        layout: 'dagre',
+        fontFamily: 'system-ui, sans-serif',
+        htmlLabels: false,
+        themeVariables: {
+          darkMode: true, background: '#191623',
+          primaryColor: '#342644', primaryTextColor: '#f0eafa', primaryBorderColor: '#c6adff',
+          secondaryColor: '#203b36', secondaryTextColor: '#f0eafa', secondaryBorderColor: '#8ae0c6',
+          tertiaryColor: '#3b3226', tertiaryTextColor: '#f0eafa', tertiaryBorderColor: '#f0cd8e',
+          lineColor: '#c6adff', textColor: '#f0eafa', edgeLabelBackground: '#241c31',
+          actorBkg: '#342644', actorBorder: '#c6adff', actorTextColor: '#f0eafa',
+          signalColor: '#c6adff', signalTextColor: '#f0eafa',
+          noteBkgColor: '#3b3226', noteTextColor: '#f0eafa', noteBorderColor: '#f0cd8e',
+        },
+      });
+      return mermaid;
+    });
+  }
+
+  class ArticleMermaid extends HTMLElement {
+    observer?: IntersectionObserver;
+    connectedCallback() {
+      if (this.dataset.state) return;
+      // Observe only when near the reader, including after Astro client navigation.
+      this.observer = new IntersectionObserver(entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        this.observer?.disconnect();
+        void this.renderDiagram();
+      }, { rootMargin: '200px' });
+      this.observer.observe(this);
+    }
+    disconnectedCallback() { this.observer?.disconnect(); }
+    async renderDiagram() {
+      if (this.dataset.state) return;
+      this.dataset.state = 'loading';
+      const status = this.querySelector<HTMLElement>('[data-status]')!;
+      const target = this.querySelector<HTMLElement>('[data-diagram]')!;
+      const button = this.querySelector<HTMLButtonElement>('[data-expand]')!;
+      status.textContent = 'Drawing diagram…';
+      try {
+        const mermaid = await getRenderer();
+        await document.fonts.ready;
+        const { svg } = await mermaid.render(`mermaid-${crypto.randomUUID()}`, this.querySelector('[data-source]')!.textContent!);
+        target.innerHTML = svg;
+        const drawing = target.querySelector('svg')!;
+        drawing.setAttribute('role', 'img');
+        drawing.setAttribute('aria-labelledby', target.dataset.titleId!);
+        drawing.setAttribute('aria-describedby', target.dataset.descriptionId!);
+        const width = Math.max(640, drawing.viewBox.baseVal.width);
+        target.style.setProperty('--natural-width', `${drawing.viewBox.baseVal.width}px`);
+        target.style.setProperty('--expanded-width', `${width}px`);
+        button.addEventListener('click', () => {
+          const expanded = button.getAttribute('aria-pressed') !== 'true';
+          button.setAttribute('aria-pressed', String(expanded));
+          button.textContent = expanded ? 'Fit diagram' : 'Expand diagram';
+          target.classList.toggle('expanded', expanded);
+        });
+        button.disabled = false;
+        status.textContent = 'Expand for a closer look; scroll to follow a wide diagram.';
+        this.dataset.state = 'ready';
+      } catch {
+        target.replaceChildren();
+        status.textContent = 'Diagram could not be rendered. Read its description or open the source below.';
+        this.querySelector('details')!.open = true;
+        this.dataset.state = 'error';
+      }
+    }
+  }
+  if (!customElements.get('article-mermaid')) customElements.define('article-mermaid', ArticleMermaid);
+</script>
+<style>
+  article-mermaid { display: block; min-width: 0; }
+  .description { color: #d5c8e2; font-size: .88rem; line-height: 1.75; margin: 0 0 1rem; }
+  .diagram-viewport { overflow: auto; max-width: 100%; border: 1px solid #594869; border-radius: 10px; padding: .7rem; background: #191623; }
+  [data-diagram]:empty { min-height: 4rem; }
+  [data-diagram] :global(svg) { display: block; width: 100%; max-width: var(--natural-width) !important; height: auto; margin: auto; }
+  [data-diagram].expanded { width: var(--expanded-width); }
+  [data-diagram].expanded :global(svg) { max-width: none !important; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin: .9rem 0; }
+  button { font: 600 .78rem/1.5 system-ui, sans-serif; color: #e4d2ff; background: #342644; border: 1px solid #9a7fba; border-radius: 7px; padding: .55rem .8rem; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { flex: 1 1 12rem; font-size: .72rem; line-height: 1.6; color: #c4b8d3; }
+  details { border-top: 1px solid #594869; padding-top: .75rem; }
+  summary { cursor: pointer; color: #d6bdff; font-size: .8rem; }
+  pre { max-height: 24rem; overflow: auto; background: #131019; padding: 1rem; border-radius: 8px; }
+  pre code { color: #d6c7e9; font: .75rem/1.7 ui-monospace, monospace; background: none; padding: 0; }
+  button:focus-visible, summary:focus-visible, .diagram-viewport:focus-visible, pre:focus-visible { outline: 3px solid #8ae0c6; outline-offset: 3px; }
+</style>

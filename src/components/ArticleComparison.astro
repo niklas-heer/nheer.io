@@ -1,0 +1,42 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+interface Props {
+  id: string;
+  title: string;
+  caption: string;
+  label?: string;
+  unit: string;
+  max?: number;
+  items: { label: string; value: number | null; detail?: string }[];
+}
+const { id, title, caption, label = 'Comparison', unit, items, max } = Astro.props;
+if (!items.length || items.some(item => item.value !== null && (!Number.isFinite(item.value) || item.value < 0))) {
+  throw new Error(`${id}: comparison values must be nonnegative finite numbers, or null for unknown.`);
+}
+const observedMax = Math.max(0, ...items.map(item => item.value ?? 0));
+const scaleMax = max ?? (observedMax || 1);
+if (!Number.isFinite(scaleMax) || scaleMax <= 0 || scaleMax < observedMax) throw new Error(`${id}: max must be positive and include every value.`);
+---
+<ArticleFigure {id} {label} {title} {caption}>
+  <p class="scale">Shared scale: 0–{scaleMax} {unit}</p>
+  <dl class="comparison">
+    {items.map(item => <div class="row">
+      <dt>{item.label}</dt>
+      <dd class="measurement">{item.value === null ? 'Not measured' : `${item.value} ${unit}`}</dd>
+      <dd class="track" aria-hidden="true">{item.value !== null && <span style={`width: ${item.value / scaleMax * 100}%`}></span>}</dd>
+      {item.detail && <dd class="detail">{item.detail}</dd>}
+    </div>)}
+  </dl>
+</ArticleFigure>
+<style>
+  .scale { color: #bfb1ce; font: .72rem/1.6 ui-monospace, monospace; margin: 0 0 1.1rem; }
+  .comparison { display: grid; gap: 1.2rem; margin: 0; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem .8rem; }
+  dt { color: #f0eafa; font-size: .87rem; line-height: 1.6; }
+  dd { margin: 0; }
+  .measurement { color: #c6adff; font: 600 .83rem/1.6 ui-monospace, monospace; text-align: right; }
+  .track { grid-column: 1 / -1; height: .8rem; border-radius: 4px; background: #3a2e48; overflow: hidden; }
+  .track span { display: block; height: 100%; background: linear-gradient(90deg, #a78adf, #8ae0c6); border-radius: 4px; }
+  .detail { grid-column: 1 / -1; color: #bfb1ce; font-size: .72rem; line-height: 1.7; }
+  @media (max-width: 420px) { .row { grid-template-columns: 1fr; } .measurement { text-align: left; } }
+</style>

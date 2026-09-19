@@ -17,6 +17,7 @@ const Content = post ? (await render(post)).Content : null;
 <BaseLayout title="Article drafts" description="Local previews of new articles">
   <h1>Article drafts</h1>
   <p>Private draft preview. These routes are excluded from normal production builds.</p>
+  <p><a href="/component-preview/">Explore the article component gallery</a></p>
   {posts.length === 0 && <p>No unpublished articles. <a href="/posts/">Read the published posts</a>.</p>}
   <ul>{posts.map(entry => <li style="margin: 1.25rem 0"><a href={`/drafts/${entry.id}/`}>{entry.data.title}</a><br /><small>{entry.data.date.toISOString().slice(0, 10)} · {entry.data.description}</small></li>)}</ul>
 </BaseLayout>}

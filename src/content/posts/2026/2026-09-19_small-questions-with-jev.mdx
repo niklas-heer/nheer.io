@@ -10,6 +10,8 @@ lang: "en"
 
 import JevWorkbench from '../../../components/JevWorkbench.astro';
 import JevCases from '../../../components/JevCases.astro';
+import MermaidDiagram from '../../../components/MermaidDiagram.astro';
+import ArticleMetrics from '../../../components/ArticleMetrics.astro';
 
 A project produces plenty of information that probably should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
 
@@ -21,7 +23,19 @@ That is one place I have started using Jev, TypeSafe’s model for focused judgm
 
 These are early tools and experiments. They share a division of work: code gathers evidence, Jev answers a bounded question, and the caller decides what happens next. A larger model handles work such as generating names or writing prose.
 
-<JevWorkbench kind="flow" />
+<MermaidDiagram
+  id="jev-workflow"
+  label="One pattern / Different jobs"
+  title="Give the judgment a place in the workflow."
+  description="Tools gather evidence and supply it to Jev. Jev returns a focused judgment. The caller then reviews the answer and either takes the next step or asks for more evidence."
+  caption="The division of work in these integrations. Jev does not fetch the evidence or carry out the next action."
+  code={`flowchart TD
+    A[Tools gather evidence] --> B[Jev answers a focused question]
+    B --> C[Code and reviewer inspect the answer]
+    C --> D[Take the next step]
+    C --> E[Review or gather more evidence]
+    E --> A`}
+/>
 
 ## Give the model something it can answer
 
@@ -85,7 +99,19 @@ One case asked for recursive directory sizes. The expected answer and Jev disagr
 
 The catalog contained options that supported directory totals. The expected answer was corrected, with the original evidence retained alongside the correction. A mismatch had caught a problem in the test itself.
 
-The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) records 112 unique handwritten cases: 111 acceptable validated results after that correction, plus one response that could not be assessed after the test runner rejected it. These were exploratory examples, without a comparison against everyday shell use.
+The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) keeps the unresolved case visible alongside the validated results:
+
+<ArticleMetrics
+  id="jev-command-results"
+  label="Quirl / Exploratory command selection"
+  title="What the test actually accounted for."
+  caption="Handwritten exploratory cases, after correcting the expected answer above. This is not an accuracy estimate for everyday shell use."
+  metrics={[
+    { label: 'Unique cases', value: 112, detail: 'The denominator for this experiment.' },
+    { label: 'Acceptable results', value: 111, detail: 'Validated after the label correction.' },
+    { label: 'Unassessed response', value: 1, detail: 'The test runner rejected it; it is not counted as a success.' }
+  ]}
+/>
 
 That is a reason to keep the evidence close to the recommendation. “The model disagreed” is the start of an investigation; the command descriptions are what let me resolve it.
 

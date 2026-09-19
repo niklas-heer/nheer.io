@@ -107,3 +107,18 @@ Verification of this visual revision:
 - Inspected desktop/mobile figure screenshots and the actual refreshed Arc tab.
   The preview remains at the same URL. Normal-build HTML and feeds exclude the
   draft title and slug.
+
+## Reusable component integration
+
+Niklas subsequently explicitly requested Mermaid support and reusable dashboard
+numbers. This supersedes the earlier choice to leave Mermaid unsupported. The
+introductory workflow now uses `MermaidDiagram`; the recorded Quirl totals use
+`ArticleMetrics` (112 cases, 111 acceptable after correction, 1 unassessed).
+No new measurements were introduced. The remaining explanatory components stay
+in place. The shared library, tradeoffs, gallery, and authoring recipes are in
+`docs/article-components.md`.
+
+The actual revised draft rendered successfully at 1280px and 390px. Inspected the
+Mermaid workflow and result cards at both widths, with no browser page errors or
+horizontal overflow. The broader site/component checks and npm audit limitation
+are recorded in that component guide. The article retains `draft: true`.

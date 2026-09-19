@@ -28,6 +28,19 @@ These are editorial references, not templates to reproduce. Keep the site's own 
 
 ## Reusable article components
 
+Start with the [component guide and MDX recipes](article-components.md) and the
+local `/component-preview/` gallery (linked from `/drafts/`). Available components
+now include `ArticleFlow`, `MermaidDiagram`, `ArticleMetrics`, and
+`ArticleComparison`, alongside the shared frame below. Use them before creating
+another article-specific component when they answer the reader's question.
+Place visuals throughout the argument, including the ending when they explain
+something useful; a rich introduction does not make later text walls visual.
+
+Mermaid rendering is now supported through an explicit component with a required
+text description, expand/fit controls, and source disclosure. Dashboard cards and
+bar comparisons display supplied measurements, units, context, and unknowns;
+they do not invent or fetch data. The gallery uses labeled illustrative values.
+
 `ArticleFigure.astro` supplies the shared dark figure surface, eyebrow, title,
 caption, and accessible label relationships. Pass a unique `id`, `label`, `title`,
 and `caption`, and place diagram content in its default slot. Keep diagram styles

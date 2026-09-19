@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleFlow from '../../components/ArticleFlow.astro';
+import ArticleMetrics from '../../components/ArticleMetrics.astro';
+import ArticleComparison from '../../components/ArticleComparison.astro';
+import MermaidDiagram from '../../components/MermaidDiagram.astro';
+
+export function getStaticPaths() {
+  // Local authoring and sample-data test builds only. Never a live site route.
+  return process.env.PREVIEW_DRAFTS === 'true' || process.env.SITE_TEST_DATA === 'true'
+    ? [{ params: { example: undefined } }] : [];
+}
+const flowCode = `flowchart TD
+  A[Gather evidence] --> B{Enough context?}
+  B -->|Yes| C[Ask a focused question]
+  B -->|No| D[Investigate further]
+  C --> E[Review the answer]
+  D --> A`;
+const sequenceCode = `sequenceDiagram
+  participant Reader
+  participant Article
+  Reader->>Article: Open a diagram
+  Article-->>Reader: Show the explanation
+  Reader->>Article: Expand for detail
+  Article-->>Reader: Keep labels readable`;
+const metricExample = `<ArticleMetrics
+  id="latency" title="A result needs context."
+  caption="Illustrative example, not a measured project result."
+  metrics={[
+    { label: 'Median latency', value: 90, unit: 'ms',
+      change: { text: '62.5% lower than 240 ms', tone: 'positive' } },
+    { label: 'Production latency', value: null, detail: 'Not yet tested.' }
+  ]}
+/>`;
+const mermaidExample = `<MermaidDiagram
+  id="decision" title="What happens next?"
+  description="Gather evidence, then either ask a question or investigate further."
+  caption="An explanatory workflow, not a running system."
+  code={\`flowchart TD
+    A[Evidence] --> B{Enough context?}
+    B -->|Yes| C[Ask]
+    B -->|No| D[Investigate]\`}
+/>`;
+---
+<BaseLayout title="Article component gallery" description="Local examples for visual blog writing">
+  <article class="prose">
+    <p class="eyebrow">LOCAL AUTHORING / COMPONENT GALLERY</p>
+    <h1>More ways to tell the story.</h1>
+    <p>Diagrams for the mechanism. Numbers for the result. Context for both. These reusable components share the blog’s figure frame and remain readable on a phone.</p>
+    <p><strong>All dashboard and comparison numbers below are illustrative.</strong> This gallery is available only in local previews and sample-data test builds.</p>
+
+    <h2>Simple process diagrams</h2>
+    <p>Use <code>ArticleFlow</code> for a sequence. It needs no JavaScript and changes from left-to-right to top-to-bottom on small screens.</p>
+    <ArticleFlow id="gallery-flow" title="From evidence to explanation" caption="A three-step teaching example. Branches and cycles belong in a Mermaid diagram." steps={[
+      { label: 'Observe', title: 'Find the useful detail', detail: 'Read the source and identify a concrete change.' },
+      { label: 'Explain', title: 'Show how it works', detail: 'Choose a diagram that answers one reader question.' },
+      { label: 'Review', title: 'Check the result', detail: 'Inspect the evidence, wording, and mobile layout.' },
+    ]} />
+
+    <h2>Dashboard numbers</h2>
+    <p>Use <code>ArticleMetrics</code> for a small set of headline measurements. Units, comparison baselines, and unknowns belong beside the numbers.</p>
+    <ArticleMetrics id="gallery-metrics" title="A result needs context." label="Illustrative dashboard" caption="Invented teaching data. The latency change compares 90 ms with a 240 ms baseline; it is not a project benchmark." metrics={[
+      { label: 'Sample requests', value: '1,200', detail: 'An illustrative sample size.' },
+      { label: 'Median latency', value: 90, unit: 'ms', change: { text: '62.5% lower than 240 ms', tone: 'positive' }, detail: 'The baseline matters as much as the delta.' },
+      { label: 'Observed errors', value: 0, detail: 'Zero is a measurement, not missing data.' },
+      { label: 'Production latency', value: null, detail: 'No production run has been made.' },
+    ]} />
+    <details class="example"><summary>MDX example: metric cards</summary><pre><code>{metricExample}</code></pre></details>
+
+    <h2>Measured comparisons</h2>
+    <p>Use <code>ArticleComparison</code> when length makes a difference easier to see. Bars share a zero baseline; values and units remain explicit.</p>
+    <ArticleComparison id="gallery-comparison" title="Same scale. Visible difference." label="Illustrative comparison" unit="ms" caption="Invented teaching values, not performance claims. The empty zero bar is deliberate; an unknown measurement has its own label." items={[
+      { label: 'Baseline', value: 240, detail: 'Before the imagined change.' },
+      { label: 'Revised approach', value: 90, detail: 'The value used in the dashboard above.' },
+      { label: 'Zero-value example', value: 0 },
+      { label: 'Production run', value: null },
+    ]} />
+
+    <h2>Mermaid diagrams</h2>
+    <p>Use <code>MermaidDiagram</code> for branches, relationships, and conversations. Expand either diagram, scroll it on a phone, or inspect its source.</p>
+    <MermaidDiagram id="gallery-mermaid-flow" title="What happens next?" description="Gather evidence. If there is enough context, ask a focused question and review the answer. Otherwise investigate further and return to the evidence." caption="A Mermaid flowchart. Its plain-language description remains available if JavaScript or the renderer is unavailable." code={flowCode} />
+    <details class="example"><summary>MDX example: Mermaid</summary><pre><code>{mermaidExample}</code></pre></details>
+    <MermaidDiagram id="gallery-mermaid-sequence" title="Follow the conversation." description="The reader opens a diagram; the article shows an explanation. The reader expands it to inspect readable labels." caption="A Mermaid sequence diagram using the same component and theme." code={sequenceCode} />
+    <details class="example"><summary>Preview a diagram error</summary>
+      <p>This intentionally invalid example demonstrates the readable fallback.</p>
+      <MermaidDiagram id="gallery-mermaid-error" title="An unavailable diagram" description="The article still explains what the diagram was meant to show, even when its source is invalid." caption="Deliberately invalid Mermaid source for testing the fallback." code="not-a-diagram" />
+    </details>
+    <h2>Custom illustrations</h2>
+    <p>Use the existing <code>ArticleFigure</code> frame around an original SVG, HTML diagram, or image when the story needs a custom visual. Its title and caption provide the same structure as these components.</p>
+    <p><a href="/drafts/">Back to article drafts</a> · <a href="/posts/">Read the blog</a></p>
+  </article>
+</BaseLayout>
+<style>
+  .eyebrow { color: var(--color-accent); font: .7rem/1.6 ui-monospace, monospace; letter-spacing: .08em; }
+  .example { margin: 1rem 0 2rem; padding: 1rem; border: 1px solid var(--color-border); border-radius: 10px; }
+  .example > summary { cursor: pointer; font-size: .9rem; }
+  .example > summary:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 4px; }
+  .example pre { overflow: auto; font-size: .75rem; }
+</style>
