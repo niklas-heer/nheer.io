@@ -1,0 +1,90 @@
+# Vercel hosting and public page views
+
+## Direction and status — 2026-09-19
+
+Niklas explicitly requested a view count for each page, visible on that page.
+After considering self-hosted analytics, he favored Vercel because he already
+hosts other projects there. This change prepares that migration; it does not
+establish that the production site has moved. Netlify remains the default
+publishing target until Vercel access, the deployment and domain cutover are
+verified.
+
+The counter lives in the shared footer. It displays page views since Vercel
+Web Analytics was enabled, not unique people. Drafts, the 404 page and local or
+preview traffic are not tracked. An unavailable count stays hidden; a genuine
+zero remains zero. Counts can lag by several minutes because the endpoint is
+cached. Analytics collection limits and blockers can cause undercounting.
+
+## Architecture
+
+The site remains a static Astro build. Argo keeps its existing private-data
+sync → build → tests → publish workflow. `scripts/package-vercel.mjs` packages
+the tested `dist/` files into Vercel's Build Output API format with the existing
+redirects, security headers, page routes and custom 404. It includes one small
+Node.js function at `/api/views`, with an allowlist of the public pages in that
+build. No database credentials or analytics token enter the static output.
+
+`@vercel/analytics` records one page view on each Astro page-load event, only
+on the canonical production hostname. Query strings and fragments are removed.
+The server function queries the fixed project's `visits/count` endpoint by
+exact path and exposes only `pageviews`. Successful responses are cached at
+Vercel for five minutes; failures return an uncacheable 503.
+
+Official documentation checked on 2026-09-19:
+
+- [Count API](https://vercel.com/docs/analytics/web-analytics-api): lifetime
+  production totals are separate from the aggregate reporting window.
+- [Limits and pricing](https://vercel.com/docs/analytics/limits-and-pricing):
+  Hobby includes 50,000 events per month; collection pauses at the limit.
+- [Build Output API](https://vercel.com/docs/build-output-api) and
+  [prebuilt deployment](https://vercel.com/docs/cli/deploy).
+- [Analytics privacy](https://vercel.com/docs/analytics/privacy-policy).
+
+Recheck these provider contracts and account entitlements before cutover.
+The API and deployment have only been exercised locally with fixtures until
+Vercel access is configured.
+
+Local verification on 2026-09-19: the static build, 18 pipeline/API tests,
+30 unit tests and 27 browser tests passed. The final dependency audit could
+not complete: npm returned HTTP 503 with a maintenance notice on both attempts.
+Run the full check again before deployment; this is not a green release gate.
+
+## Cutover
+
+1. Create or select the Vercel project under Niklas's existing account/team.
+   Enable Web Analytics. Leave automatic Git deployments off: the homelab is
+   the source of tested builds with live private data.
+2. Store `VERCEL_TOKEN`, `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID` in the existing
+   1Password `homelab/nheer Site Jobs` item. Keep the old Netlify credentials
+   available for rollback. The deployment CLI is pinned to 59.23.2.
+3. Configure Vercel runtime variables: `VERCEL_ANALYTICS_TOKEN` (a suitably
+   scoped Vercel access token), `VERCEL_PROJECT_ID`, and `VERCEL_TEAM_ID` for a
+   team-owned project. The analytics token must never have a `PUBLIC_` prefix.
+   Do not copy homelab database credentials into Vercel.
+4. In the homelab repository, update `cluster/apps/nheer/workflow.yaml`: set
+   `SITE_DEPLOY_TARGET=vercel` for both the build and publish templates; expose
+   the three deployment credentials only to the publish template. Initially
+   set `VERCEL_SKIP_DOMAIN=true` on publish. Update `plan.md` and
+   `docs/nheer-workflows.md` with the migration state. Keep existing syncs,
+   tests and the live-snapshot check.
+5. Run the live pipeline. The build stage enables `PUBLIC_PAGE_VIEWS_ENABLED`.
+   The publisher validates the live snapshot, packages the checked output and
+   runs `vercel deploy --prebuilt --prod --skip-domain`. Sample-data builds
+   and draft previews are rejected. Locally, `mise run check` exercises the
+   counter UI with mocked responses; `npm run package:vercel` inspects packaging
+   without deploying.
+6. Verify the staged deployment: pages, redirects, 404 status, CV downloads,
+   live podcasts, theme/navigation, and `/api/views?path=/`. Test the actual
+   authenticated Analytics API response; do not treat fixture tests as proof
+   of account access. Preview hosts must not increment counts.
+7. Inventory the current DNS records in the homelab's DNS source of truth and
+   prepare the desired records. Add/verify the canonical `nheer.com` domain
+   and its current aliases in Vercel, promote the verified deployment and
+   apply the planned DNS cutover. Remove `VERCEL_SKIP_DOMAIN` for subsequent
+   publishing only after verifying domain assignment. Verify one production
+   visit and the resulting analytics count (allowing for processing/cache
+   delay).
+
+Rollback: restore the prior DNS/domain mapping and set the workflow's
+`SITE_DEPLOY_TARGET` back to `netlify`. The existing Netlify publisher and
+configuration are retained for this transition.

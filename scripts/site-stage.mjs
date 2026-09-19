@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { assertLiveSnapshot } from '../src/utils/podcast-health.mjs';
+import { deployTarget } from './deploy-target.mjs';
 
 const stage = process.argv[2];
 const env = { ...process.env, CI: 'true' };
@@ -19,18 +20,20 @@ const stages = {
   build: { required: ['DATABASE_URL', 'HARDCOVER_API_TOKEN', 'GITHUB_TOKEN'], command: ['npm', 'run', 'build'] },
   'build-check': { required: [], command: ['npm', 'run', 'build'] },
   test: { required: [], command: ['npm', 'test'] },
-  publish: { required: ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'], command: ['npm', 'exec', '--yes', '--package=netlify-cli@27.5.2', '--', 'netlify', 'deploy', '--prod', '--no-build', '--dir=dist', '--message=Homelab Argo workflow'] },
+  publish: deployTarget(env),
 };
 const config = stages[stage];
 if (!config) throw new Error('Unknown site pipeline stage');
 const missing = config.required.filter((name) => !env[name]);
 if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 if (stage === 'build') {
+  if (env.SITE_DEPLOY_TARGET === 'vercel') env.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
   env.REQUIRE_LIVE_DATA = 'true';
   delete env.SITE_TEST_DATA;
   delete env.PREVIEW_DRAFTS;
 }
 if (stage === 'build-check') {
+  env.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
   env.SITE_TEST_DATA = 'true';
   delete env.REQUIRE_LIVE_DATA;
 }

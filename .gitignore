@@ -17,6 +17,8 @@ bun.lock
 # environment variables
 .env
 .env.production
+.env.local
+.vercel/
 
 # macOS-specific files
 .DS_Store

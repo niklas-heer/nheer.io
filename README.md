@@ -2,6 +2,9 @@
 
 Personal website and blog by Niklas Heer.
 
+Vercel hosting and public per-page view counts are prepared; production cutover
+is pending account setup and verification. See [the migration runbook](docs/vercel-migration.md).
+
 Built with [Astro](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/).
 
 ## Setup and development

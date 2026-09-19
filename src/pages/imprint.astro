@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+const pageViewsEnabled = import.meta.env.PUBLIC_PAGE_VIEWS_ENABLED === 'true';
 ---
 
 <BaseLayout title="Imprint" description="Legal information and privacy policy">
@@ -26,6 +27,21 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         <h2>Privacy Policy</h2>
 
+        {pageViewsEnabled ? <>
+        <p>
+            This site uses Vercel Web Analytics to count page views and display
+            each page's total. Vercel processes aggregate traffic information,
+            including the page visited, referring site, browser, device and
+            approximate location. The integration removes URL query parameters
+            and fragments before sending page views.
+        </p>
+        <p>
+            Vercel Web Analytics uses no third-party tracking cookies. Its visitor identifier
+            expires after 24 hours. Public counters show page views, not unique
+            people, and may update with a delay. For details, see
+            <a href="https://vercel.com/docs/analytics/privacy-policy">Vercel's analytics privacy documentation</a>.
+        </p>
+        </> : <>
         <p>
             Out of a long tradition of interest and deep love for data
             protection, we inform you in our privacy policy that we do not want
@@ -39,6 +55,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             not collect any data about your user behaviour and do not record
             server logs.
         </p>
+        </>}
 
         <p>
             Data protection always begins and ends with personal data. Because

@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { deployTarget } from './deploy-target.mjs';
 
 export const requiredSecrets = [
   'DATABASE_URL', 'POCKETCASTS_EMAIL', 'POCKETCASTS_PASSWORD',
@@ -17,12 +18,14 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
     url.searchParams.set('sslmode', env.PGSSLMODE || 'verify-full');
     env.DATABASE_URL = url.href;
   }
+  const deployment = deployTarget(env);
   const required = mode === 'check' ? [] : [...requiredSecrets,
-    ...(mode === 'publish' ? ['NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'] : [])];
+    ...(mode === 'publish' ? deployment.required : [])];
   const missing = required.filter((name) => !env[name]);
   if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 
   const commandEnv = { ...env, CI: 'true' };
+  if (mode === 'check' || env.SITE_DEPLOY_TARGET === 'vercel') commandEnv.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
   if (mode === 'check') {
     commandEnv.SITE_TEST_DATA = 'true';
     delete commandEnv.REQUIRE_LIVE_DATA;
@@ -56,10 +59,8 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
     execute('npm', ['test']);
     if (mode === 'publish') {
       execute('node', ['scripts/verify-build.mjs']);
-      // Netlify receives only the tested static output. It never connects to Postgres.
-      execute('npm', ['exec', '--yes', '--package=netlify-cli@27.5.2', '--',
-        'netlify', 'deploy', '--prod', '--no-build', '--dir=dist',
-        '--message=Homelab scheduled refresh']);
+      // Both providers receive tested output; neither connects to Postgres.
+      execute(deployment.command[0], deployment.command.slice(1));
     }
   } finally {
     if (client) await client.end();
