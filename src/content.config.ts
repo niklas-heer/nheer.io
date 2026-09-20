@@ -15,6 +15,10 @@ const posts = defineCollection({
     archive: z.boolean().default(false),
     lang: z.enum(["en", "de"]).default("en"),
     icon: z.string().optional(),
+    // Inky's pre-generated heckles, one per section id (see scripts/inky-heckle.ts).
+    inky: z
+      .array(z.object({ section: z.string(), comment: z.string() }))
+      .optional(),
   }),
 });
 

@@ -12,7 +12,8 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, date, author, tags, icon } = post.data;
+const { title, date, author, tags, icon, inky } = post.data;
+const heckles = inky?.length ? JSON.stringify(inky).replace(/</g, "\\u003c") : null;
 const description = getPostDescription(post);
 const parsedTitle = parseText(title);
 const parsedIcon = icon ? parseText(icon) : null;
@@ -32,6 +33,7 @@ const readingTime = Math.ceil(words / 200);
 ---
 
 <BaseLayout title={title} description={description} lang={post.data.lang}>
+    {heckles && <script type="application/json" id="inky-heckles" set:html={heckles} />}
     <ReadingProgress />
     <a href="/posts" class="back-link">Back to posts</a>
 

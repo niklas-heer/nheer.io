@@ -84,6 +84,30 @@ sample lines in the article's evidence are original. `--regenerate` on the
 sync drops the pool and refills it, and was run once on 2026-09-20 so the live
 corner does not mix voices.
 
+## Section heckles (2026-09-20)
+
+Niklas asked for Inky to comment on blog post sections, generated beforehand
+and stored in the post metadata, with Inky following the mouse along his side
+of the page. Implemented as:
+
+- `inky:` frontmatter field (`section`, `comment`) in the posts schema.
+- `scripts/inky-heckle.ts`: splits a post into intro plus one section per
+  `<ArticleStep>` or `## heading` (ids follow rehype-slug), sends the sections
+  with `INKY_PERSONA` to the sync model, writes the block into the frontmatter.
+  Rerunning replaces the block. Unit-tested splitter and writer.
+- `PostLayout.astro` emits the heckles as a JSON script; `Inky.astro` follows
+  the cursor's vertical position along the left edge on such posts, flips the
+  bubble below him near the top of the viewport, and speaks each section's
+  line once per page view when the cursor first rests on it. Reduced motion
+  keeps him in the corner but still speaks. Clicking still yields news lines.
+- Generated for every post from 2025 onward (13 published posts plus this
+  draft) on 2026-09-20 with Luna. The lines are content in the post files and
+  should be reviewed; several read as summaries in costume rather than jokes,
+  and a rerun of the script replaces a post's block.
+- Browser test on the saving-a-markdown-file post: roaming class, hover on a
+  heckled heading shows that heading's line, no repeat on re-hover, click
+  still yields a news line.
+
 ## Visuals
 
 - `InkyDemo.astro`: the actual Lottie octopus (lazy-loaded when the figure

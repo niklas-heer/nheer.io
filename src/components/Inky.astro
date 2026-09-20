@@ -102,10 +102,82 @@ const comments = await getInkyComments();
     });
 
     // Astro swaps the document on client navigation; drop the old animation first.
+    let roaming: AbortController | null = null;
     document.addEventListener("astro:before-swap", () => {
         lottieModule?.default.destroy(ANIMATION);
+        roaming?.abort();
+        roaming = null;
         active = null;
     });
+
+    interface Heckle { section: string; comment: string }
+
+    /**
+     * On a post with pre-generated heckles, Inky follows the cursor along the
+     * left edge and, the first time the cursor rests on a section, surfaces
+     * beside it with that section's line. Once per section per page view.
+     */
+    function startRoaming(
+        container: HTMLElement,
+        article: HTMLElement,
+        heckles: Heckle[],
+        speak: (comment: string) => void,
+    ) {
+        roaming?.abort();
+        roaming = new AbortController();
+        const { signal } = roaming;
+        const MASCOT = 200;
+        const MARGIN = 12;
+        const follow = !reducedMotion.matches;
+        const spoken = new Set<string>();
+        let clientY = window.innerHeight - MASCOT / 2;
+        let pending = false;
+
+        if (follow) container.classList.add("inky-roaming");
+
+        function ranges() {
+            const tops = heckles
+                .map((h) => ({ h, el: h.section === "intro" ? article : document.getElementById(h.section) }))
+                .filter((m): m is { h: Heckle; el: HTMLElement } => Boolean(m.el))
+                .map((m) => ({ h: m.h, top: m.el.getBoundingClientRect().top + window.scrollY }))
+                .sort((a, b) => a.top - b.top);
+            const end = article.getBoundingClientRect().bottom + window.scrollY;
+            return tops.map((t, i) => ({ h: t.h, top: t.top, bottom: tops[i + 1]?.top ?? end }));
+        }
+
+        function place() {
+            if (!follow) return;
+            const top = Math.max(MARGIN, Math.min(window.innerHeight - MASCOT - MARGIN, clientY - MASCOT / 2));
+            container.style.setProperty("--inky-top", `${top}px`);
+            container.classList.toggle("inky-bubble-below", top < 260);
+        }
+
+        function heckle() {
+            const pageY = clientY + window.scrollY;
+            const hit = ranges().find((r) => pageY >= r.top && pageY < r.bottom);
+            if (!hit || spoken.has(hit.h.section)) return;
+            spoken.add(hit.h.section);
+            speak(hit.h.comment);
+        }
+
+        function update() {
+            if (pending) return;
+            pending = true;
+            requestAnimationFrame(() => {
+                pending = false;
+                try {
+                    place();
+                    heckle();
+                } catch (error) {
+                    console.error("Inky could not place a heckle", error);
+                }
+            });
+        }
+
+        document.addEventListener("mousemove", (event) => { clientY = event.clientY; update(); }, { signal });
+        document.addEventListener("scroll", update, { passive: true, signal });
+        place();
+    }
 
     async function initInky() {
         const container = document.getElementById("inky-container");
@@ -185,6 +257,26 @@ const comments = await getInkyComments();
         mascot.addEventListener("mouseenter", () => {
             if (isActivated) resetDeactivateTimer();
         });
+
+        // Posts may carry pre-generated heckles in their frontmatter.
+        const heckleNode = document.getElementById("inky-heckles");
+        const article = document.querySelector<HTMLElement>("article");
+        let heckles: Heckle[] = [];
+        try {
+            heckles = heckleNode ? JSON.parse(heckleNode.textContent ?? "[]") : [];
+        } catch {
+            heckles = [];
+        }
+        if (heckles.length > 0 && article) {
+            startRoaming(container, article, heckles, (comment) => {
+                isActivated = true;
+                mascot.classList.add("activated");
+                text.textContent = comment;
+                updateSourceIcon({ text: comment, source: null, shown: deck.shown, total: deck.total, exhausted: false });
+                bubble.classList.add("visible");
+                resetDeactivateTimer();
+            });
+        }
     }
 
     // Initialize on first load and after View Transitions navigation
@@ -204,6 +296,38 @@ const comments = await getInkyComments();
     @media (min-width: 1200px) {
         .inky-container {
             display: block;
+        }
+    }
+
+    /* On heckled posts the container follows the cursor along the left edge. */
+    .inky-container.inky-roaming {
+        bottom: auto;
+        top: var(--inky-top, calc(100vh - 200px));
+        transition: top 0.45s ease-out;
+    }
+
+    .inky-container.inky-bubble-below .inky-bubble {
+        bottom: auto;
+        top: 180px;
+    }
+
+    .inky-container.inky-bubble-below .inky-bubble::after {
+        bottom: auto;
+        top: -10px;
+        border-width: 0 10px 10px;
+        border-color: transparent transparent var(--color-surface);
+    }
+
+    .inky-container.inky-bubble-below .inky-bubble::before {
+        bottom: auto;
+        top: -14px;
+        border-width: 0 12px 12px;
+        border-color: transparent transparent var(--color-accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .inky-container.inky-roaming {
+            transition: none;
         }
     }
 

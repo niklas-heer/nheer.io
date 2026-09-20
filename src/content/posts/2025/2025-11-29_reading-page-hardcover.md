@@ -7,6 +7,29 @@ description: "How I built a personal reading dashboard using Hardcover's GraphQL
 toc: false
 tags: ["hardcover", "astro", "graphql", "reading"]
 lang: "en"
+inky:
+  - section: "intro"
+    comment: "New achievement! Reading Page, Finally. You turned a long-standing wish into an Astro feature after migrating the site. Reward: one static shelf for your dynamic intentions."
+  - section: "why-hardcover"
+    comment: "Patch 0.1.0: Replaced Goodreads with a faster GraphQL dependency and a cleaner interface, proudly moving your reading habits into another platform's API."
+  - section: "the-architecture"
+    comment: "Incident #410: The dashboard is only as current as the last deploy. Severity: Scheduled nostalgia. A finished book may wait below the surface until the next build."
+  - section: "fetching-the-data"
+    comment: "Surface announcement: One GraphQL query now fetches your profile, goals, current books, progress, and entire reading history, because asking for less would have been suspicious."
+  - section: "the-stats-dashboard"
+    comment: "New achievement! Dashboard of Decorative Metrics. You made pages per day, lifetime books, and average days per book wear different costumes. Reward: seven ways to measure procrastination."
+  - section: "currently-reading"
+    comment: "Patch 0.2.0: Added cover art, percentage bars, and journal-derived reading days, proudly converting unfinished books into progress indicators."
+  - section: "reading-timeline"
+    comment: "Incident #411: Years of finished books have been arranged along a dotted timeline for enjoyable browsing. Severity: Archivally cheerful. Your reading backlog has received a visual promenade."
+  - section: "environment-setup"
+    comment: "Surface announcement: Add a Hardcover API token to your environment and hosting platform, ensuring the public reading page remains powered by a secret stored in two places."
+  - section: "the-code"
+    comment: "New achievement! Utility File With Responsibilities. hardcover.ts now handles GraphQL, authentication, author names, and reading duration, sparing the page component from one more identity crisis. Reward: type-safe arithmetic."
+  - section: "lessons-learned"
+    comment: "Patch 0.3.0: Promoted schema introspection, build-time fetching, and timeline dots to lessons learned, proudly replacing documentation with educated querying and fresh-ish HTML."
+  - section: "try-it-out"
+    comment: "Incident #412: The open-source reading dashboard is now available for imitation, including a follow request and a recommendation pipeline. Severity: Generously recursive. Your bookshelf has entered the networking phase."
 ---
 
 I've always wanted a dedicated space on my website to showcase my reading journey. With the recent migration to Astro, I finally built it - a [reading page](/reading) that pulls data directly from [Hardcover](https://hardcover.app), my book tracking platform of choice.

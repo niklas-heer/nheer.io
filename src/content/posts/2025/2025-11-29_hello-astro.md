@@ -7,6 +7,19 @@ description: "Why I migrated my personal site from Hugo to Astro"
 toc: false
 tags: ["astro", "hugo", "migration", "web"]
 lang: "en"
+inky:
+  - section: "a-decade-of-static-site-generators"
+    comment: "New achievement! Generator Hopping: 2014 Jekyll, 2015 Hugo, 2025 Astro. You have successfully turned one blog into a decade-long migration report. Reward: one portable config file."
+  - section: "why-leave-hugo"
+    comment: "Patch 1.0.0: Replaced Hugo's fast, reliable output with Astro's more fashionable component syntax, so Go templates can finally be missed. Re-learning your templates remains fully supported."
+  - section: "why-astro"
+    comment: "Incident #2025: Hugo's partials and vanilla JavaScript were declared insufficient after a theme toggle and reading indicator went missing. Severity: Mildly self-inflicted. The build system has been notified and feels important."
+  - section: "the-migration"
+    comment: "Surface, the migration is complete: Markdown moved, frontmatter was adjusted, and a YouTube shortcode became a component. New features include dark mode, book data, transitions, highlighting, and progress bars—because one page was not busy enough."
+  - section: "performance"
+    comment: "New achievement! Measured Progress: Hugo builds in ~100ms while Astro takes ~1.5s, but the developer experience apparently fills the 1.4-second trench. Reward: a green lighthouse badge."
+  - section: "conclusion"
+    comment: "Patch 2.0.0: Declared Astro the clear choice, then scheduled the next decade of static-site migrations. Hugo remains fantastic, which is the traditional prelude to replacing it."
 ---
 
 ## A Decade of Static Site Generators

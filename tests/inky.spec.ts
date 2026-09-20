@@ -123,3 +123,42 @@ test('reduced motion keeps the poster and skips the animation download', async (
   expect(requests).toEqual([]);
   await context.close();
 });
+
+test('on a heckled post the mascot follows the cursor and heckles the section under it', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/posts/2026/07/2026-07-17_saving-a-markdown-file/');
+  const heckles: { section: string; comment: string }[] = await page
+    .locator('#inky-heckles')
+    .evaluate(el => JSON.parse(el.textContent ?? '[]'));
+  expect(heckles.length).toBeGreaterThan(1);
+  await expect(page.locator('#inky-lottie svg')).toBeVisible();
+  const container = page.locator('#inky-container');
+  await expect(container).toHaveClass(/inky-roaming/);
+
+  const target = heckles.find(h => h.section !== 'intro')!;
+  const heading = page.locator(`#${target.section}`);
+  await heading.scrollIntoViewIfNeeded();
+  await heading.hover();
+  const bubble = page.locator('#inky-bubble');
+  await expect(bubble).toHaveClass(/visible/);
+  await expect(page.locator('#inky-text')).toHaveText(target.comment);
+  await expect(page.locator('#inky-source')).toBeHidden();
+  const top = await container.evaluate(el => parseFloat(getComputedStyle(el).top));
+  expect(top).toBeGreaterThanOrEqual(0);
+  expect(top).toBeLessThanOrEqual(844 - 200);
+
+  // Entering the intro speaks its line; returning to the first section does not repeat it.
+  const intro = heckles.find(h => h.section === 'intro')!;
+  await page.locator('article h1').first().hover();
+  await expect(page.locator('#inky-text')).toHaveText(intro.comment);
+  await heading.hover();
+  await page.waitForTimeout(300);
+  await expect(page.locator('#inky-text')).toHaveText(intro.comment);
+  // Clicking him still gives a news line, not a heckle.
+  await page.locator('#inky-mascot').click();
+  const spoken = (await page.locator('#inky-text').textContent())?.trim();
+  expect(heckles.map(h => h.comment)).not.toContain(spoken);
+  expect(errors).toEqual([]);
+});
