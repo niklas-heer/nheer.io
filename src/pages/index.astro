@@ -1085,8 +1085,11 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
             // Without storage the intro simply replays on every visit.
         }
 
+        // A click or any key press finishes the intro early.
         let skip = false;
-        terminal.addEventListener("click", () => { skip = true; }, { once: true });
+        const requestSkip = () => { skip = true; };
+        terminal.addEventListener("click", requestSkip, { once: true });
+        document.addEventListener("keydown", requestSkip, { once: true });
         const pause = (ms: number) => (skip ? Promise.resolve() : wait(ms));
 
         // Types every text node inside an element, in document order.
@@ -1135,6 +1138,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
             }
         }
         delete terminal.dataset.playing;
+        document.removeEventListener("keydown", requestSkip);
     }
 
     playTerminal();

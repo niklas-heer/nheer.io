@@ -26,7 +26,9 @@ const postsByYear = listedPosts.reduce((acc, post) => {
 
 // Get years sorted descending
 const years = Object.keys(postsByYear).map(Number).sort((a, b) => b - a);
-const firstYear = Math.min(...sortedPosts.map((post) => new Date(post.data.date).getFullYear()));
+const firstYear = sortedPosts.length > 0
+  ? new Date(sortedPosts[sortedPosts.length - 1].data.date).getFullYear()
+  : null;
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
@@ -60,7 +62,7 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
 <BaseLayout title="Blog" description="Blog posts by Niklas Heer about Leadership, DevSecOps, and Quality">
   <div class="page-header">
     <h1 class="page-title" style="view-transition-name: page-title;">Blog</h1>
-    <p class="page-subtitle">Small tools, engineering leadership, and the occasional detour. {sortedPosts.length} posts since {firstYear}.</p>
+    <p class="page-subtitle">Small tools, engineering leadership, and the occasional detour.{firstYear !== null && ` ${sortedPosts.length} posts since ${firstYear}.`}</p>
   </div>
 
   {newestPost && (
