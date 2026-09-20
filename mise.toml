@@ -64,7 +64,7 @@ description = "Run the existing live data sync, build, and test pipeline"
 run = "npm run refresh"
 
 [tasks.publish]
-description = "Run the existing live pipeline and publish its verified output to Netlify"
+description = "Run the existing live pipeline and publish its verified output to Vercel"
 run = "npm run publish:site"
 
 [tasks.new-post]

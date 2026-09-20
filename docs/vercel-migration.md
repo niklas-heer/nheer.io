@@ -59,7 +59,8 @@ preserving routes, security headers, redirects, assets and custom 404 status.
 - Project ID: `prj_blqrNqJWMaL1edc0X83uojSOGkrP`.
 - Team ID: `team_NN7LiyAr73wBUMYtlr3m84em`.
 - nheer.com and www.nheer.com are attached and ownership verified. www redirects
-  to nheer.com with HTTP 308. DNS still points to Netlify.
+  to nheer.com with HTTP 308. DNS is delegated to INWX and points at Vercel
+  since 2026-09-20 (see "Cutover" below).
 - Production deployment dpl_FGEdb5ZRmqfW6Bt22sJVGZejz5QX is READY, with aliases
   nheer.com, www.nheer.com and nheer-io.vercel.app. Homelab workflow
   nheer-manual-jk9vf succeeded. /build-health.json confirms fresh live podcast
@@ -94,22 +95,41 @@ Vercel domains verify returned these recommended records on September 19:
 | A | @ | 64.29.17.1 |
 | CNAME | www | d6d10a4ee034c711.vercel-dns-017.com |
 
-Those records now live in the hosting-infra catalog for `nheer.com` and at INWX. Namecheap Custom DNS was pointed at `ns.inwx.de`, `ns2.inwx.de`, and `ns3.inwx.eu` on 2026-09-20. Public resolvers may still answer from NS1 until that propagates. Keep the Netlify zone for rollback through the cache window. Do not freeze Netlify load-balancer IPs into DNS.
+Those records live in the hosting-infra catalog for `nheer.com` and at INWX. Namecheap Custom DNS was pointed at `ns.inwx.de`, `ns2.inwx.de`, and `ns3.inwx.eu` on 2026-09-20. Do not freeze Netlify load-balancer IPs into DNS.
 
-After propagation:
+## Cutover — 2026-09-20
+
+Verified on 2026-09-20, the same day as the delegation change:
+
+- The `.com` servers, Google (8.8.8.8) and Cloudflare (1.1.1.1) return the INWX
+  nameservers and the Vercel apex addresses. Resolvers still holding the old NS1
+  delegation lag for at most its 48-hour TTL, so until 2026-09-22 some visitors
+  may still reach Netlify.
+- Over the Vercel addresses: `nheer.com` serves 200 with a Let's Encrypt
+  certificate issued by Vercel on 2026-09-19; `www` redirects with 308; `/gh/sc`
+  redirects 301 to GitHub; an unknown path returns the custom 404; the analytics
+  script is served; `/build-health.json` reports a live page-view snapshot; the
+  footer renders the counter.
+- `vercel domains verify` passes for `nheer.com` and `www.nheer.com`.
 
 ```sh
 rtk mise exec -- vercel domains verify nheer.com --scope niklas-heers-projects
 rtk mise exec -- vercel domains verify www.nheer.com --scope niklas-heers-projects
 ```
 
-Check HTTPS, pages, legacy /gh/sc redirect, CV download, custom 404, live
-/build-health.json and visible counts. Verify a real production visit appears in
-analytics and then the next build's count. A preview visit must not contribute.
-DNS changes remain a user action; none were applied during preparation.
+Counts start from zero on Vercel: no visits were recorded there before the
+delegation, so the first non-zero totals appear in the build after real traffic
+reaches Vercel. The three-hourly pipeline refreshes them. A preview visit must
+not contribute.
 
-Rollback: restore the Netlify web-hosting DNS records and use deploy-target=netlify
-in the homelab. The database keeps the accumulated view history independently.
+Rollback until 2026-09-22: restore the Netlify records at INWX (the catalog in
+hosting-infra) and use deploy-target=netlify in the homelab. The database keeps
+the accumulated view history independently.
+
+Remaining cleanup after 2026-09-22: delete the Netlify DNS zone and site for
+`nheer.com`, then remove `netlify.toml`, the `netlify` deploy target in
+`scripts/deploy-target.mjs`, the `NETLIFY_*` variables in `.env.example` and in
+the homelab `nheer Site Jobs` item.
 
 ## Verification
 

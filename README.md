@@ -105,12 +105,11 @@ updates are grouped; major updates remain separate for review. Action references
 are pinned to release commits. This configuration takes effect after it reaches
 the default branch; it does not merge updates automatically.
 
-Runtime versions are pinned in `mise.toml`; keep Netlify's `NODE_VERSION` in
-`netlify.toml` aligned with Node when updating it. `mise outdated` checks runtime
+Runtime versions are pinned in `mise.toml`. `mise outdated` checks runtime
 updates. Update the pins deliberately, run `mise install` and `mise run setup`,
 then verify with `mise run check`. Dependabot does not currently support mise
-runtime pins. Netlify builds use `npm ci --include=dev` and the committed npm
-lockfile, matching local setup without downloading an unpinned Bun installer.
+runtime pins. `netlify.toml` and `build.sh` remain only for the Netlify rollback
+path; keep their `NODE_VERSION` aligned with Node until they are removed.
 
 ## CV downloads and preview
 
@@ -137,20 +136,22 @@ maintained separately and should be checked when updating the CV.
 ## Homelab pipelines
 
 Argo Workflows owns the recurring refresh pipeline in the homelab repository:
-checkout → install → Pocket Casts sync → Inky sync → build → browser tests → Netlify.
-The public website stays on Netlify; PostgreSQL stays private inside the cluster.
+checkout → install → Pocket Casts sync → Inky sync → page-view sync → build →
+browser tests → Vercel. The public website is served by Vercel from `nheer.com`;
+PostgreSQL stays private inside the cluster.
 
 `node scripts/site-stage.mjs <stage>` runs a single Argo stage. For a local full
 run, use `mise run refresh` (sync/build/test) or `mise run publish` (also deploys).
 Both require the environment variables documented in `.env.example`; publishing
-also requires the existing Netlify site ID and deployment token. Production builds
+also requires the Vercel token, project ID and team ID. Production builds
 fail if required live data is unavailable. Ordinary `mise run build` retains the
 credential-free development fallback.
 
 Run `mise run test:pipeline` to check the local pipeline's failure and overlap guards.
 Cluster configuration and migration operations are documented in the homelab
-repository's `docs/nheer-workflows.md`. Keep the old GitHub sync workflow disabled
-after cutover, and stop Netlify Git builds so only the tested cluster output deploys.
+repository's `docs/nheer-workflows.md`. Keep the old GitHub sync workflow and
+Netlify Git builds disabled so only the tested cluster output deploys, and do not
+connect Vercel Git builds.
 
 ## Tech Stack
 
@@ -159,7 +160,7 @@ after cutover, and stop Netlify Git builds so only the tested cluster output dep
 - **Theme**: Tokyo Night
 - **Syntax Highlighting**: Expressive Code
 - **Tooling**: mise, npm (locked installs), Bun (tests and sync scripts)
-- **Deployment**: Netlify
+- **Deployment**: Vercel (DNS at INWX, managed in hosting-infra)
 
 ## License
 
