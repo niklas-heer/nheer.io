@@ -150,3 +150,8 @@ summary in the session for the exact commands and results.
 ## Revisions
 
 - 2026-09-21: prose pass at the author's request so the article reads less like generated text; plainer section titles, no factual or visual changes. Inky lines kept.
+- 2026-09-21: the production sync had failed three scheduled runs since the
+  article was published because the model's reply for fifteen headlines was cut
+  off at 1,000 tokens (the local probe only ever sent three). The budget is now
+  sized per line; see the homelab runbook `docs/nheer-workflows.md`.
+

@@ -12,7 +12,7 @@
  * model while the page is served. Review the lines like any other content.
  */
 import { readFile, writeFile } from "node:fs/promises";
-import { INKY_MODEL, INKY_PERSONA, requestCommentArray } from "./sync-inky";
+import { INKY_MODEL, INKY_PERSONA, outputBudget, requestCommentArray } from "./sync-inky";
 
 export interface Section {
   id: string;
@@ -120,7 +120,7 @@ export async function heckleFile(path: string, apiKey: string, model = INKY_MODE
   const { frontmatter, sections } = splitSections(mdx);
   const title = frontmatter.match(/^title:\s*"?(.+?)"?\s*$/m)?.[1] ?? path;
   if (sections.length === 0) return [];
-  const lines = await requestCommentArray(hecklePrompt(title, sections), apiKey, model, 2000);
+  const lines = await requestCommentArray(hecklePrompt(title, sections), apiKey, model, outputBudget(sections.length));
   if (lines.length !== sections.length) {
     throw new Error(`${path}: asked for ${sections.length} lines, received ${lines.length}`);
   }

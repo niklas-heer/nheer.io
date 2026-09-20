@@ -16,6 +16,18 @@ export class InkyGenerationError extends Error {}
  * or a reply without an array throws: a silent empty list is how the corner
  * went quiet for weeks without anyone noticing.
  */
+/**
+ * Output budget per requested line. A line is under 230 characters, so about
+ * 80 tokens of JSON, but the model may also spend reasoning tokens from the
+ * same budget. A run with 15 headlines was cut off at 1,000 tokens in
+ * production on 2026-09-20; this leaves room for every line and the reasoning.
+ */
+export const TOKENS_PER_LINE = 400;
+
+export function outputBudget(lines: number): number {
+  return Math.max(1500, lines * TOKENS_PER_LINE);
+}
+
 export async function requestCommentArray(
   prompt: string,
   apiKey: string,
@@ -40,10 +52,16 @@ export async function requestCommentArray(
     const message = data.error?.message ?? `HTTP ${response.status}`;
     throw new InkyGenerationError(`OpenRouter rejected model ${model}: ${message}`);
   }
-  const content: string = data.choices?.[0]?.message?.content ?? "";
+  const choice = data.choices?.[0] ?? {};
+  const content: string = choice.message?.content ?? "";
   const jsonMatch = content.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    throw new InkyGenerationError(`No JSON array in reply from ${model}: ${content.slice(0, 120)}`);
+    const finish = choice.finish_reason ?? "unknown";
+    const used = data.usage?.completion_tokens;
+    const reason = finish === "length"
+      ? `reply cut off at ${used ?? maxTokens} of ${maxTokens} completion tokens`
+      : `finish_reason ${finish}, ${content.length} characters`;
+    throw new InkyGenerationError(`No JSON array in reply from ${model} (${reason}): ${content.slice(0, 120)}`);
   }
   const parsed = JSON.parse(jsonMatch[0]);
   if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
@@ -198,7 +216,7 @@ export async function generateNewsComments(
   model = INKY_MODEL,
 ): Promise<GeneratedComment[]> {
   if (news.length === 0) return [];
-  const comments = await requestCommentArray(newsPrompt(news), apiKey, model, 1000);
+  const comments = await requestCommentArray(newsPrompt(news), apiKey, model, outputBudget(news.length));
   if (comments.length !== news.length) {
     throw new InkyGenerationError(
       `Asked ${model} for ${news.length} comments, received ${comments.length}`,
@@ -229,7 +247,7 @@ export async function generateGeneralComments(
   apiKey: string,
   model = INKY_MODEL,
 ): Promise<GeneratedComment[]> {
-  const comments = await requestCommentArray(generalPrompt(count), apiKey, model, 1500);
+  const comments = await requestCommentArray(generalPrompt(count), apiKey, model, outputBudget(count));
   return comments.map((comment) => ({
     comment,
     sourceTitle: null as any,
