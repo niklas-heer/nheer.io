@@ -109,8 +109,16 @@ The homepage has a small terminal. `inky` prints one of the same comments. `sudo
 
 Those are jokes in the same costume. They use the comment list already on the page; they are not a second personality.
 
+<ArticleStep id="he-reads-the-posts" number="06" icon="📝" title="He reads the posts too" />
+
+Since this week, Inky also has opinions about the articles. Move your mouse over a section of this post on a wide screen and he surfaces beside it with a line about what that section claims, builds, or skips over. Each section gets one line, once per visit. Clicking him still gives you the news.
+
+Those lines are not generated while you read. A small script runs once per post: it splits the article into its introduction and sections, sends each section to the same model with the same persona, and writes the answers into the post's frontmatter next to the title and tags. They are content, reviewed like everything else in the file, and they change only when I rerun the script.
+
+On a heckled post he also stops sitting in the corner. He follows the cursor along the left edge, so the bubble opens next to whatever you are reading. Readers who prefer reduced motion keep him in the corner; the lines still appear there.
+
 ## Why he stays in the corner
 
-The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. A phone reader loses a purple octopus and a few sentences of snark.
+The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. Even the heckles are frontmatter. A phone reader loses a purple octopus and a few sentences of snark.
 
 That is also why the corner could be empty for a while without anyone noticing, and why a summer without news went unremarked. He is optional by design. The model writes the jokes. The site decides when you hear them. And there is now a test that checks whether he showed up, and a sync that complains when he has nothing to say.
