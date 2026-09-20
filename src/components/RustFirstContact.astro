@@ -1,8 +1,62 @@
 ---
 import ArticleFigure from './ArticleFigure.astro';
+import { highlightDark } from '../utils/highlight';
 
 interface Props { id: string }
 const { id } = Astro.props;
+
+const python = `with open("rounds.txt") as file:
+    rounds = int(file.read())
+
+x = 1
+pi = 1
+
+for i in range(2, rounds + 2):
+    x *= -1
+    pi += x / (2 * i - 1)
+
+pi *= 4
+
+print("π = " + str(pi))`;
+
+const rust = `use std::fs::File;
+use std::io::prelude::*;
+
+fn main() {
+    let mut file = File::open("./rounds.txt").expect("file not found");
+
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)
+        .expect("something went wrong reading the file");
+
+    let rounds = &contents.trim().parse::<i32>().unwrap();
+
+    // We need to use f64 instead of f32 because otherwise the precision would be off
+    let mut x: f64 = 1.0;
+    let mut pi: f64 = 1.0;
+
+    for i in 2..(rounds + 2) {
+        x *= -1.0;
+        pi = pi + (x / (2.0 * i as f64 - 1.0));
+    }
+
+    pi = pi * 4.0;
+
+    println!("π = {}", pi);
+}`;
+
+const marks = [
+  { mark: '1', text: 'let mut file = File::open("./rounds.txt").expect("file not found");' },
+  { mark: '1', text: 'file.read_to_string(&mut contents)\n        .expect("something went wrong reading the file");' },
+  { mark: '2', text: 'let rounds = &contents.trim().parse::<i32>().unwrap();' },
+  { mark: '3', text: 'let mut x: f64 = 1.0;\n    let mut pi: f64 = 1.0;' },
+  { mark: '4', text: 'i as f64' },
+];
+
+const [pythonHtml, rustHtml] = await Promise.all([
+  highlightDark(python, 'python'),
+  highlightDark(rust, 'rust', marks),
+]);
 
 const notes = [
   { mark: '1', code: '.expect("file not found")', text: 'Opening a file can fail. Rust makes that possibility part of the value, so the program has to say what happens when it does.' },
@@ -20,47 +74,11 @@ const notes = [
   <div class="first-contact">
     <div class="pane">
       <p class="pane-title"><span>leibniz.py</span>Python 3.6</p>
-      <pre tabindex="0"><code>with open("rounds.txt") as file:
-    rounds = int(file.read())
-
-x = 1
-pi = 1
-
-for i in range(2, rounds + 2):
-    x *= -1
-    pi += x / (2 * i - 1)
-
-pi *= 4
-
-print("π = " + str(pi))</code></pre>
+      <Fragment set:html={pythonHtml} />
     </div>
     <div class="pane">
       <p class="pane-title"><span>leibniz.rs</span>Rust 1.22</p>
-      <pre tabindex="0"><code>use std::fs::File;
-use std::io::prelude::*;
-
-fn main() &#123;
-    <mark data-mark="1">let mut file = File::open("./rounds.txt").expect("file not found");</mark>
-
-    let mut contents = String::new();
-    <mark data-mark="1">file.read_to_string(&amp;mut contents)
-        .expect("something went wrong reading the file");</mark>
-
-    <mark data-mark="2">let rounds = &amp;contents.trim().parse::&lt;i32&gt;().unwrap();</mark>
-
-    // We need to use f64 instead of f32 because otherwise the precision would be off
-    <mark data-mark="3">let mut x: f64 = 1.0;
-    let mut pi: f64 = 1.0;</mark>
-
-    for i in 2..(rounds + 2) &#123;
-        x *= -1.0;
-        pi = pi + (x / (2.0 * <mark data-mark="4">i as f64</mark> - 1.0));
-    &#125;
-
-    pi = pi * 4.0;
-
-    println!("π = &#123;&#125;", pi);
-&#125;</code></pre>
+      <Fragment set:html={rustHtml} />
     </div>
   </div>
   <ol class="notes" aria-label="What the marked Rust lines do">
@@ -77,11 +95,11 @@ fn main() &#123;
   .pane { min-width: 0; border: 1px solid #47394f; border-radius: 12px; background: #120f1a; overflow: hidden; }
   .pane-title { display: flex; justify-content: space-between; gap: .75rem; margin: 0; padding: .55rem .85rem; border-bottom: 1px solid #47394f; color: #c4b8d3; font: .7rem/1.5 ui-monospace, monospace; }
   .pane-title span { color: #f0eafa; font-weight: 650; }
-  pre { margin: 0; padding: .9rem .85rem; overflow-x: auto; font: .72rem/1.55 ui-monospace, monospace; color: #e8e2f2; tab-size: 4; white-space: pre-wrap; overflow-wrap: anywhere; }
-  pre:focus-visible { outline: 3px solid #8ae0c6; outline-offset: -3px; }
-  code { font: inherit; }
-  mark { position: relative; display: inline; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: .05rem .2rem; margin: 0 -.2rem; border-radius: 4px; background: rgba(240, 205, 142, .18); color: #fbe9c4; box-shadow: inset 2px 0 0 #f0cd8e; }
-  mark::after { content: attr(data-mark); display: inline-grid; place-items: center; margin-left: .45rem; width: 1.05rem; height: 1.05rem; border-radius: 999px; background: #f0cd8e; color: #241c10; font: 700 .6rem/1 ui-monospace, monospace; vertical-align: .1em; }
+  .pane :global(pre) { margin: 0; padding: .9rem .85rem; overflow-x: auto; background: transparent; font: .72rem/1.55 ui-monospace, monospace; color: #e8e2f2; tab-size: 4; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pane :global(pre:focus-visible) { outline: 3px solid #8ae0c6; outline-offset: -3px; }
+  .pane :global(code) { font: inherit; }
+  .pane :global(mark) { position: relative; display: inline; box-decoration-break: clone; -webkit-box-decoration-break: clone; padding: .05rem .2rem; margin: 0 -.2rem; border-radius: 4px; background: rgba(240, 205, 142, .18); color: inherit; box-shadow: inset 2px 0 0 #f0cd8e; }
+  .pane :global(mark::after) { content: attr(data-mark); display: inline-grid; place-items: center; margin-left: .45rem; width: 1.05rem; height: 1.05rem; border-radius: 999px; background: #f0cd8e; color: #241c10; font: 700 .6rem/1 ui-monospace, monospace; vertical-align: .1em; }
   .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1.2rem; margin: 1.2rem 0 0; padding: 0; list-style: none; }
   .notes li { display: flex; gap: .65rem; align-items: flex-start; min-width: 0; }
   .mark-badge { flex: 0 0 1.4rem; display: grid; place-items: center; height: 1.4rem; border-radius: 999px; background: #f0cd8e; color: #241c10; font: 700 .7rem/1 ui-monospace, monospace; margin-top: .1rem; }

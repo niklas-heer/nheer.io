@@ -1,0 +1,104 @@
+---
+/**
+ * One prompt to copy: an instruction plus the files it refers to. The files
+ * are shown with syntax highlighting; the button copies the whole text at once.
+ */
+import ArticleFigure from './ArticleFigure.astro';
+import { highlightDark } from '../utils/highlight';
+
+interface PromptFile { name: string; lang: string; code: string }
+interface Props { id: string; label: string; title: string; caption: string; instruction: string; files: PromptFile[] }
+const { id, label, title, caption, instruction, files } = Astro.props;
+
+const text = instruction.trim();
+const rendered = await Promise.all(
+  files.map(async (file) => ({ ...file, code: file.code.trim(), html: await highlightDark(file.code.trim(), file.lang) })),
+);
+const fullPrompt = [text, ...rendered.map((file) => `# ${file.name}\n${file.code}`)].join('\n\n') + '\n';
+---
+<prompt-card>
+  <ArticleFigure id={id} label={label} title={title} caption={caption}>
+    <div class="toolbar">
+      <p class="hint">One prompt: the instruction and both files below.</p>
+      <button type="button" class="copy" data-copy hidden>Copy the whole prompt</button>
+    </div>
+    <textarea class="prompt-source" readonly aria-hidden="true" tabindex="-1" set:text={fullPrompt}></textarea>
+    <pre class="instruction" tabindex="0">{text}</pre>
+    {rendered.map((file) => (
+      <div class="pane">
+        <p class="pane-title"><span>{file.name}</span>{file.lang}</p>
+        <Fragment set:html={file.html} />
+      </div>
+    ))}
+    <p class="status" role="status" aria-live="polite"></p>
+  </ArticleFigure>
+</prompt-card>
+
+<script>
+  class PromptCard extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready) return;
+      this.dataset.ready = 'true';
+
+      const button = this.querySelector<HTMLButtonElement>('[data-copy]');
+      const source = this.querySelector<HTMLTextAreaElement>('textarea.prompt-source');
+      const status = this.querySelector<HTMLElement>('[role="status"]');
+      if (!button || !source) return;
+
+      button.hidden = false;
+      const label = button.textContent ?? 'Copy the whole prompt';
+      let timer: number | undefined;
+
+      const report = (message: string, copied: boolean) => {
+        button.textContent = copied ? 'Copied' : label;
+        if (status) status.textContent = message;
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          button.textContent = label;
+          if (status) status.textContent = '';
+        }, 2500);
+      };
+
+      button.addEventListener('click', async () => {
+        const prompt = source.value;
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(prompt);
+            report('Prompt copied to the clipboard.', true);
+            return;
+          }
+        } catch {
+          // Fall through to the selection-based copy.
+        }
+        source.focus();
+        source.select();
+        const copied = document.execCommand ? document.execCommand('copy') : false;
+        window.getSelection()?.removeAllRanges();
+        button.focus();
+        report(copied ? 'Prompt copied to the clipboard.' : 'Copying failed. Select the text above and copy it by hand.', copied);
+      });
+    }
+  }
+
+  if (!customElements.get('prompt-card')) customElements.define('prompt-card', PromptCard);
+</script>
+
+<style>
+  prompt-card { display: block; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; margin-bottom: 1rem; }
+  .hint { margin: 0; color: #c4b8d3; font-size: .8rem; }
+  .copy { padding: .5rem .95rem; border: 1px solid #8ae0c6; border-radius: 999px; background: rgba(138, 224, 198, .12); color: #f0eafa; font: 600 .8rem/1.2 system-ui, sans-serif; cursor: pointer; }
+  .copy:hover { background: rgba(138, 224, 198, .22); }
+  .copy:focus-visible { outline: 3px solid #8ae0c6; outline-offset: 2px; }
+  .prompt-source { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .instruction { margin: 0 0 1rem; padding: .9rem .85rem; border: 1px solid #47394f; border-radius: 12px; background: #120f1a; color: #e8e2f2; font: .78rem/1.6 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .instruction:focus-visible { outline: 3px solid #8ae0c6; outline-offset: -3px; }
+  .pane { min-width: 0; border: 1px solid #47394f; border-radius: 12px; background: #120f1a; overflow: hidden; }
+  .pane + .pane { margin-top: 1rem; }
+  .pane-title { display: flex; justify-content: space-between; gap: .75rem; margin: 0; padding: .55rem .85rem; border-bottom: 1px solid #47394f; color: #c4b8d3; font: .7rem/1.5 ui-monospace, monospace; }
+  .pane-title span { color: #f0eafa; font-weight: 650; }
+  .pane :global(pre) { margin: 0; padding: .9rem .85rem; overflow-x: auto; background: transparent; font: .78rem/1.6 ui-monospace, monospace; color: #e8e2f2; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pane :global(pre:focus-visible) { outline: 3px solid #8ae0c6; outline-offset: -3px; }
+  .pane :global(code) { font: inherit; }
+  .status { min-height: 1.2rem; margin: .6rem 0 0; color: #8ae0c6; font-size: .78rem; }
+</style>

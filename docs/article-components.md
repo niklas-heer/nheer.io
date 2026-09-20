@@ -204,6 +204,35 @@ are horizontal on desktop; longer sequences and mobile layouts stack vertically.
 For custom figures, keep styles in the owning component, provide an accessible
 text equivalent, and use a real image/recording when showing working software.
 
+## Prompt cards
+
+`PromptCard.astro` shows an instruction for an agent together with the files it
+refers to, and offers one button that copies everything as a single text. The
+files are highlighted with Shiki (`src/utils/highlight.ts`, dark theme only,
+because the figure surface is dark in both site themes). Fenced code blocks keep
+their own Expressive Code copy buttons; use a prompt card when the reader should
+paste several pieces at once.
+
+```mdx
+<PromptCard
+  id="agent-prompt"
+  label="Copy and paste / for your next Rust project"
+  title="The prompt, with both files."
+  caption="Where the configuration comes from and what it does."
+  instruction={`Use stable Rust. Enable the Clippy configuration below ...`}
+  files={[
+    { name: 'Cargo.toml', lang: 'toml', code: `[lints.clippy]\npedantic = { level = "deny", priority = -1 }` },
+    { name: 'clippy.toml', lang: 'toml', code: `allow-unwrap-in-tests = true` }
+  ]}
+/>
+```
+
+The copied text is the instruction, then each file introduced by a `# name`
+line. The button appears only once JavaScript runs; without it the text is
+still visible for manual selection. The same helper highlights the marked
+Rust and Python sources in `RustFirstContact.astro`, where `marks` wraps exact
+substrings in `<mark data-mark="n">`.
+
 ## Checks and authoring decisions
 
 Added 2026-09-19 at Niklas's request for reusable diagrams, Mermaid, and dashboard

@@ -1,5 +1,5 @@
 ---
-title: "The compiler can yell at somebody else now"
+title: "Rust's compiler can yell at the agent now"
 description: "In 2018 the Rust compiler talked me out of Rust with a 24-line program. In 2026, with agents doing the typing, the same objections became the best review I have."
 date: "2026-09-20T10:00:00+02:00"
 icon: ":crab:"
@@ -11,13 +11,13 @@ inky:
     comment: "New achievement! Survived 24 Lines of Rust. The compiler requested paperwork for reading a number and printing π, and you filed it as a personality conflict. Reward: one ceremonial f64."
   - section: "the-evening-in-question"
     comment: "Patch 0.0.1: Benchmark Rust without optimization and let it lose to PHP 7 for three years. Congratulations, the comparison now measures historical neglect as a feature."
-  - section: "what-the-log-can-and-cannot-say"
+  - section: "what-the-commit-log-shows"
     comment: "Incident #2018: A debug build entered the speed chart and remained there until a contributor noticed. Severity: embarrassingly archival. The compiler checked the code, not whether you had configured the experiment."
-  - section: "two-years-of-nobody-then-one-evening"
+  - section: "ten-pull-requests-in-eleven-minutes"
     comment: "Surface, ten pull requests merged in eleven minutes after years of unattended guilt. The coding agent has successfully converted bespoke container recipes into a maintenance strategy."
   - section: "a-todo-list-with-a-runtime-inside"
     comment: "New achievement! Interpreter Included. You reached for Python, picked Bun instead, and shipped a todo list with an entire JavaScript runtime folded into it. Reward: 59 megabytes of ambition."
-  - section: "three-host-languages-in-eight-months"
+  - section: "a-python-runtime-with-a-zig-host"
     comment: "Patch 0.5.0: Replace Go with Zig, MicroPython with PocketPy, then abandon the project for seven and a half months. Portability now includes surviving your attention span."
   - section: "the-ground-moved-while-i-was-away"
     comment: "Incident #2026: A pre-1.0 language moved its filesystem APIs while a famous runtime fled to Rust amid a review dispute. Severity: foundational. The safest dependency remains the one you stopped updating."
@@ -25,7 +25,7 @@ inky:
     comment: "Surface, 28,000 lines crossed from Zig to Rust in one day, grew before shrinking, and deleted 85,310 lines on cleanup. Startup lost by milliseconds, but the migration won the traditional contest against maintenance."
   - section: "what-the-lints-found"
     comment: "New achievement! Outsourced Code Review to a Hostile Compiler. It caught checksum panic paths, C-callback disasters, and quiet floating-point lies while you supplied explanations at eleven at night. Reward: fewer mysterious crashes."
-  - section: "wherever-i-can-and-where-i-cannot"
+  - section: "where-rust-went-and-where-it-did-not"
     comment: "Patch 1.0.0: Keep tdx in Go despite Rust being ten times faster and its probe one-sixth the size. Compile time and three-millisecond edits have been promoted to product requirements."
   - section: "let-the-compiler-do-the-first-review"
     comment: "Incident #11: Clippy found that a clean lint run still could not prove the logic was right. Severity: refreshingly limited. The compiler now yells at the agent, while you retain responsibility for listening."
@@ -38,6 +38,7 @@ import RustFirstContact from '../../../components/RustFirstContact.astro';
 import LanguageArrivals from '../../../components/LanguageArrivals.astro';
 import LintCatches from '../../../components/LintCatches.astro';
 import RustLandings from '../../../components/RustLandings.astro';
+import PromptCard from '../../../components/PromptCard.astro';
 
 On a Saturday evening in February 2018 I wrote the same tiny program three times. Read a number from a file, loop that many times, print an approximation of π. The Python version was sixteen lines. PHP about the same. Rust needed twenty-four, and I remember the compiler asking for every one of the extra ones.
 
@@ -71,7 +72,7 @@ Rust lost to PHP. The comparison script explains why: it ran `rustc leibniz.rs` 
 
 So the first Rust result I ever published was a debug build that lost to PHP 7, from February 2018 until May 2021. The compiler had checked everything about my program except the flag that mattered.
 
-## What the log can and cannot say
+## What the commit log shows
 
 Before writing this I went back to the commit history to check my memory of that evening. It was less helpful than I hoped.
 
@@ -85,7 +86,7 @@ Rust was the third language in, ahead of JavaScript and Go. Twelve entries in tw
 
 So, honestly: Rust did not cost me a week. It cost me an evening. But that evening left a bad taste, and the bad taste lasted a lot longer.
 
-## Two years of nobody, then one evening
+## Ten pull requests in eleven minutes
 
 The comparison grew for a while, went quiet, and grew again when other people pushed it. The commit counts show this better than I can describe it.
 
@@ -135,17 +136,17 @@ The executable was 59 MB. Or about 90, depending on which of my own two numbers 
 
 The next day's commit is "refactor: migrate from TypeScript/Bun to Go". I had liked Go since I first tried it around 2014, and the rewrite got the binary down to 4 MB. [Building tdx](/posts/2025/11/2025-11-29_building-tdx/) has the details. What matters for this story is smaller: a language that compiles to one file is worth a lot to me, and I had not realised how much until I watched an entire interpreter get bundled into a todo list.
 
-## Three host languages in eight months
+## A Python runtime with a Zig host
 
 The second tool started with calculators. Some programmable calculators run Python, on hardware with almost no memory. That works because of MicroPython, a small implementation of the language built for microcontrollers. If a calculator can carry a Python runtime, so can a CLI: bundle the interpreter and the script into one executable, and you get Python-style code with a Go-sized binary.
 
-That became [Kipferl](https://github.com/niklas-heer/kipferl), called μcharm at the time. Its host language changed twice in eight months.
+That became [Kipferl](https://github.com/niklas-heer/kipferl), called μcharm at the time. In eight months it swapped its Python runtime once and its host language once.
 
 <ArticleFlow
-  id="kipferl-hops" title="Three runtimes in eight months."
-  caption="Dates are the first commits of each change in niklas-heer/kipferl. The Python-facing API and the single-file packaging stayed the same across all three."
+  id="kipferl-hops" title="Two Python runtimes, two hosts, eight months."
+  caption="Dates are the first commits of each change in niklas-heer/kipferl. The Python-facing API and the single-file packaging stayed the same throughout."
   steps={[
-    { label: '16 Dec 2025', title: 'MicroPython, hosted by Zig', detail: 'The proof of concept. A Zig command-line tool replaced the initial Python wrapper within half an hour.' },
+    { label: '16 Dec 2025', title: 'MicroPython, hosted by Zig', detail: 'The proof of concept: MicroPython embedded in a Zig command-line tool. It replaced a Python wrapper script within half an hour.' },
     { label: '20 Dec 2025', title: 'PocketPy, hosted by Zig', detail: 'A cleaner C API and fuller Python 3 syntax. Version 0.5.0 followed the next day, the last Zig release.' },
     { label: '4 Aug 2026', title: 'PocketPy, hosted by Rust', detail: 'About thirty pull requests in one day, each gated on the same 1,669 compatibility checks.' }
   ]}
@@ -206,7 +207,7 @@ This is what I could not see in 2018. The compiler is saying exactly the same th
 
 So the work splits like this now. I decide what to build, pick the libraries, read the architecture, and write the tests I care about. The agent types. The compiler does the first review, and it is a stricter reviewer than I am at eleven at night.
 
-## Wherever I can, and where I cannot
+## Where Rust went, and where it did not
 
 After Kipferl, new projects just started in Rust.
 
@@ -220,20 +221,16 @@ tdx did not move, and I think that is worth showing. In September I ran a proper
 
 ## Let the compiler do the first review
 
-If you want to try the same setup, the whole configuration fits in two files. This is what I give agents on every Rust project now, with one instruction attached.
+If you want to try the same setup, here is the prompt I give agents on every Rust project now. It is one piece of text: the instruction, then the two configuration files it refers to. The button copies all of it.
 
-```text
-Use stable Rust. Enable the Clippy configuration below in Cargo.toml and clippy.toml.
-Treat every diagnostic as a finding to understand, not a warning to silence: fix the
-cause, or add a narrowly scoped #[expect(lint, reason = "...")] with a real reason.
-Do not weaken production lints to make the build pass. Tests may use unwrap, expect,
-panic and indexing through clippy.toml. Run cargo fmt, cargo clippy --all-targets
---all-features -- -D warnings, and cargo test before reporting work as done.
-```
-
-```toml
-# Cargo.toml
-[lints.clippy]
+<PromptCard
+  id="agent-prompt"
+  label="Copy and paste / for your next Rust project"
+  title="The prompt, with both files."
+  caption="The configuration from Kipferl's September review pass. Cargo.toml sets the lint groups and restriction lints to deny; clippy.toml relaxes them for tests."
+  instruction={`Use stable Rust. Enable the Clippy configuration below in Cargo.toml and clippy.toml. Treat every diagnostic as a finding to understand, not a warning to silence: fix the cause, or add a narrowly scoped #[expect(lint, reason = "...")] with a real reason. Do not weaken production lints to make the build pass. Tests may use unwrap, expect, panic and indexing through clippy.toml. Run cargo fmt, cargo clippy --all-targets --all-features -- -D warnings, and cargo test before reporting work as done.`}
+  files={[
+    { name: 'Cargo.toml', lang: 'toml', code: `[lints.clippy]
 pedantic = { level = "deny", priority = -1 }
 nursery = { level = "deny", priority = -1 }
 
@@ -249,16 +246,13 @@ string_slice = "deny"
 panic_in_result_fn = "deny"
 panic = "deny"
 exit = "deny"
-as_conversions = "deny"
-```
-
-```toml
-# clippy.toml
-allow-unwrap-in-tests = true
+as_conversions = "deny"` },
+    { name: 'clippy.toml', lang: 'toml', code: `allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-panic-in-tests = true
-allow-indexing-slicing-in-tests = true
-```
+allow-indexing-slicing-in-tests = true` }
+  ]}
+/>
 
 Turn on only what fits your project. On an existing codebase, add the groups one at a time instead of in one huge rewrite, and keep the exceptions narrow and explained. And none of this proves anything about your logic. Kipferl's review notes say so in plain words, and a clean Clippy run has never once told me my program does the right thing.
 

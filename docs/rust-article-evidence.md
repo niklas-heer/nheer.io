@@ -72,3 +72,11 @@ Samples: `2026-02-10_what-a-benchmark-measures.mdx`, `2026-08-06_small-python-cl
   Inky line were removed; the new heading is "A todo list with a runtime inside"
   and its line was written by hand. Three internal post links were missing the
   month segment and were fixed.
+- 2026-09-21, second pass: title changed to "Rust's compiler can yell at the
+  agent now"; headings "What the log can and cannot say", "Two years of nobody,
+  then one evening", "Three host languages in eight months" and "Wherever I can,
+  and where I cannot" replaced with plainer ones. The Kipferl section no longer
+  claims three host languages: one Python runtime swap (MicroPython to PocketPy)
+  and one host swap (Zig to Rust). The first-contact figure is now highlighted
+  with Shiki, and the closing configuration is a single copyable prompt
+  (`PromptCard.astro`) that still shows Cargo.toml and clippy.toml separately.
