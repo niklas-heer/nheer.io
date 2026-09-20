@@ -87,7 +87,7 @@ const terminalData = {
     sections: [
         { name: "blog", path: "/posts" },
         { name: "reading", path: "/reading" },
-        { name: "listening", path: "/podcasts" },
+        { name: "listening", path: "/listening" },
         { name: "projects", path: "/projects" },
         { name: "reviews", path: "/reviews" },
         { name: "about", path: "/about" },
@@ -182,10 +182,10 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                                     <>
                                         {yesterdayMinutes} min of podcasts yesterday
                                         <span class="terminal-dim"> · </span>
-                                        <a href="/podcasts">stats</a>
+                                        <a href="/listening">stats</a>
                                     </>
                                 ) : (
-                                    <a href="/podcasts">podcast stats</a>
+                                    <a href="/listening">podcast stats</a>
                                 )
                             }
                         </dd>
@@ -1078,6 +1078,12 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         setupShell(terminal);
 
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        try {
+            if (sessionStorage.getItem("terminal-intro")) return;
+            sessionStorage.setItem("terminal-intro", "seen");
+        } catch {
+            // Without storage the intro simply replays on every visit.
+        }
 
         let skip = false;
         terminal.addEventListener("click", () => { skip = true; }, { once: true });

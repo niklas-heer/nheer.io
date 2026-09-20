@@ -189,7 +189,9 @@ test('draft reviews are absent from the production build', async ({ request }) =
 
 test('podcast snapshots are labeled and populated data has working categories', async ({ page, request }) => {
   const report = await (await request.get('/build-health.json')).json();
+  // The page moved from /podcasts; the old address still lands on it.
   await page.goto('/podcasts');
+  await expect(page).toHaveURL(/\/listening\/?$/);
   await expect(page.getByRole('heading', { name: 'Listening', exact: true })).toBeVisible();
   expect(['fixture', 'live']).toContain(report.source);
   await expect(page.locator('[data-podcast-freshness]')).toContainText('Last data update:');

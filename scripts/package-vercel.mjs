@@ -12,6 +12,7 @@ export async function packageVercel({ root = process.cwd() } = {}) {
   const routes = [
     { src: '^/(.*)$', headers: { 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' }, continue: true },
     { src: '^/gh/(sc|speed-comparison)/?$', status: 301, headers: { Location: 'https://github.com/niklas-heer/speed-comparison' } },
+    { src: '^/podcasts/?$', status: 301, headers: { Location: '/listening/' } },
     ...pages.filter(file => pathFor(file) !== '/404').map(file => ({
       src: '^' + (pathFor(file) === '/' ? '/' : pathFor(file).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '/?') + '$',
       dest: '/' + file,
