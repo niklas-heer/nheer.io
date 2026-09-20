@@ -222,22 +222,27 @@ test('published interactive articles appear in the blog, feed, and homepage', as
   const feed = await (await request.get('/rss.xml')).text();
   const index = await (await request.get('/posts/')).text();
   const home = await (await request.get('/')).text();
-  for (const file of articles) {
+  const dated = articles.map(file => {
     const content = readFileSync(join(root, file), 'utf8');
     const date = content.match(/^date: "(\d{4})-(\d{2})/m)!;
     const slug = file.replace(/\.mdx$/, '');
-    const url = `/posts/${date[1]}/${date[2]}/${slug}/`;
+    return {
+      slug,
+      url: `/posts/${date[1]}/${date[2]}/${slug}/`,
+      date: new Date(content.match(/^date: "([^"]+)"/m)![1]).getTime(),
+    };
+  }).sort((a, b) => b.date - a.date);
+  for (const { url } of dated) {
     const response = await request.get(url);
     expect(response.status()).toBe(200);
     expect(await response.text()).toContain('<article');
     expect(index).toContain(url);
+  }
+  // rss.xml.ts keeps the 10 newest English posts; older 2026 articles drop off.
+  for (const { slug } of dated.slice(0, 10)) {
     expect(feed).toContain(slug);
   }
-  const latestArticles = articles.map(file => ({
-    slug: file.replace(/\.mdx$/, ''),
-    date: new Date(readFileSync(join(root, file), 'utf8').match(/^date: "([^"]+)"/m)![1]).getTime(),
-  })).sort((a, b) => b.date - a.date).slice(0, 3);
-  for (const { slug } of latestArticles) {
+  for (const { slug } of dated.slice(0, 3)) {
     expect(home).toContain(slug);
   }
 });

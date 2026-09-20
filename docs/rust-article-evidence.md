@@ -1,9 +1,11 @@
 # Evidence notes: "The compiler can yell at somebody else now"
 
-Draft prepared 2026-09-20 from Niklas's spoken brief, repository histories, and
-the linked public sources. Personal motivations, memories, and reactions are the
-author's account and are marked as such in this file. Everything else was
-checked against a primary source on the date above.
+Prepared 2026-09-20 from Niklas's spoken brief, repository histories, and the
+linked public sources. Status: published 2026-09-20 on Niklas's instruction.
+Article: `src/content/posts/2026/2026-09-20_the-compiler-can-yell-at-somebody-else.mdx`.
+Personal motivations, memories, and reactions are the author's account and are
+marked as such in this file. Everything else was checked against a primary source
+on the date above.
 
 ## Author's account versus repository evidence
 
