@@ -13,7 +13,7 @@ on the date above.
 | --- | --- | --- |
 | The first Rust implementation in speed-comparison (2018) took significantly longer than the other languages. | Python, PHP and Rust were committed within 17 seconds of each other at 20:05 on 2018-02-17, after an initial commit at 16:32. The log cannot measure per-language effort. The Rust file is 24 lines to Python's 16 and is the only one of the first five with `.expect`, `.unwrap`, `parse::<i32>` and an `as f64` cast; a clarifying f64 comment followed seven minutes later. | Told as memory; the article says explicitly that the log cannot confirm it and shows what it can show. |
 | "Maybe 2018 or so", "10 or 12 languages" in the first batch. | 2018-02-17 is correct. 12 entries by the end of 2018-02-18; 17 by 2018-03-02. | Exact dates and counts used. |
-| tdx's first prototype was Python with a binary "over 100 MB". | First commit 2025-11-21: "implement tdx CLI todo manager with Bun and TypeScript" (Ink). The 2025 post reports ~90 MB; its comparison image reports 59 MB versus 4 MB for Go. Go migration on 2025-11-22. | Corrected in the article; the "too big" part stands. |
+| tdx: the first thought was Python; Bun with Ink is what got built, and it shipped the same way Python would have (a script around a bundled runtime). | First commit 2025-11-21: "implement tdx CLI todo manager with Bun and TypeScript" (Ink). The 2025 post reports ~90 MB; its comparison image reports 59 MB versus 4 MB for Go. Go migration on 2025-11-22. | Author's account (2026-09-21): Python first, then Bun; the article no longer frames this as a misremembering. Both size numbers are named. |
 | Go was the initial plan for Kipferl but C interoperability forced Zig. | No Go code in the history. The first README (2025-12-16) compares "Go + Charm ~10MB" and "Rust + Ratatui ~5MB, Hard" against MicroPython. | Presented as the author's account, consistent with the README table. |
 | The Rust rewrite of Kipferl made it smaller and faster and caught bugs. | Retrospective: startup median 4.332 ms (Zig) to 7.044 ms (Rust); ARM64 size 2.31 MB to 3.98–4.77 MB. Tree shaking in the same release: minimal app 1,450,837 bytes. Bugs found in the 2026-09-05 review pass, not in the port itself. | Article gives the slower/larger numbers first, then tree shaking, then the review findings. |
 | Agentic work on speed-comparison began "around 2025". | Return on 2025-12-04; CLAUDE.md on 2025-12-05; 270 commits in December 2025. | Exact dates used. |
@@ -62,4 +62,13 @@ Samples: `2026-02-10_what-a-benchmark-measures.mdx`, `2026-08-06_small-python-cl
 
 - Was Go really considered first for Kipferl before Zig? The README table suggests so, the history does not record it.
 - The Linux kernel angle is the author's reading at the time; no specific thread is cited.
-- Whether to name the tdx binary size as 59 MB or 90 MB: both numbers are the author's own from November 2025.
+- The tdx binary size: the article now names both 59 MB and 90 MB, the author's own numbers from November 2025.
+
+## Revisions
+
+- 2026-09-21: the tdx section was rewritten on the author's instruction. Python
+  was the first idea, Bun with Ink was what got built, and the point is that
+  Python would have shipped the same way. The "remembered wrong" framing and its
+  Inky line were removed; the new heading is "A todo list with a runtime inside"
+  and its line was written by hand. Three internal post links were missing the
+  month segment and were fixed.

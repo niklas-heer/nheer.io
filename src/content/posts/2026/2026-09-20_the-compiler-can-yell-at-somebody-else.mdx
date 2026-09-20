@@ -15,8 +15,8 @@ inky:
     comment: "Incident #2018: A debug build entered the speed chart and remained there until a contributor noticed. Severity: embarrassingly archival. The compiler checked the code, not whether you had configured the experiment."
   - section: "two-years-of-nobody-then-one-evening"
     comment: "Surface, ten pull requests merged in eleven minutes after years of unattended guilt. The coding agent has successfully converted bespoke container recipes into a maintenance strategy."
-  - section: "the-binary-i-remembered-wrong"
-    comment: "New achievement! Misremembered the Entire Toolchain. You recalled Python and a 100 MB binary; the repository supplied Bun, TypeScript, and two contradictory sizes. Reward: a 59 MB correction."
+  - section: "a-todo-list-with-a-runtime-inside"
+    comment: "New achievement! Interpreter Included. You reached for Python, picked Bun instead, and shipped a todo list with an entire JavaScript runtime folded into it. Reward: 59 megabytes of ambition."
   - section: "three-host-languages-in-eight-months"
     comment: "Patch 0.5.0: Replace Go with Zig, MicroPython with PocketPy, then abandon the project for seven and a half months. Portability now includes surviving your attention span."
   - section: "the-ground-moved-while-i-was-away"
@@ -108,7 +108,7 @@ The comparison grew for a while, went quiet, and grew again when other people pu
 
 My last real commit before the gap was in November 2023. In all of 2024 I merged two pull requests. People kept sending things anyway: a SIMD version for Swift, OCaml, a GraalVM build, a Zig implementation that could keep up with C. They opened pull requests and waited. Some waited three years.
 
-It was not that I had lost interest. Every language in the project had its own container recipe, its own base image, its own flags and quirks, and I had to relearn all of that before I could touch anything. Updating one language was an afternoon. Updating all of them was something I kept putting off, and the pull requests sat there while I did. I wrote about that plumbing in [The slowest part of my speed comparison](/posts/2026/2026-02-10_what-a-benchmark-measures/), so I will not repeat it here.
+It was not that I had lost interest. Every language in the project had its own container recipe, its own base image, its own flags and quirks, and I had to relearn all of that before I could touch anything. Updating one language was an afternoon. Updating all of them was something I kept putting off, and the pull requests sat there while I did. I wrote about that plumbing in [The slowest part of my speed comparison](/posts/2026/02/2026-02-10_what-a-benchmark-measures/), so I will not repeat it here.
 
 On 4 December 2025 I came back, this time with a coding agent.
 
@@ -127,15 +127,13 @@ Ten pull requests merged in eleven minutes. The first agent-written commits half
 
 That December also sent me down a rabbit hole of small command-line tools. That is where Rust comes back into the story.
 
-## The binary I remembered wrong
+## A todo list with a runtime inside
 
-The first of those tools was [tdx](https://github.com/niklas-heer/tdx), a terminal todo manager that keeps its tasks in a normal Markdown file. Python is the language I am most productive in, and before checking I would have told you that the first tdx was written in Python and that its binary was over 100 MB.
+The first of those tools was [tdx](https://github.com/niklas-heer/tdx), a terminal todo manager that keeps its tasks in a normal Markdown file. My first thought was to write it in Python, the language I get things done in fastest. Then I discovered Bun, the JavaScript runtime that comes back into this story later, and Ink, which is React for terminals. Bun promised a single executable from TypeScript, so the first tdx, committed on 21 November 2025, was Bun and Ink. It worked, and writing a terminal UI in JSX felt surprisingly natural.
 
-The repository says otherwise. The first commit, from 21 November 2025, is "implement tdx CLI todo manager with Bun and TypeScript". The interface used Ink, which is React for terminals. The executable was about 90 MB according to the post I wrote back then, or 59 MB according to the comparison image inside that same post. So "too big" was right, give or take forty megabytes. "Python" was just wrong.
+The executable was 59 MB. Or about 90, depending on which of my own two numbers from that week you believe. Either way, that is what a bundled interpreter costs, and Python would have shipped exactly the same way: a small script wrapped around a whole runtime. The language was comfortable. The file it turned into was not. A tool I run fifty times a day should not carry a runtime the size of a small operating system.
 
-What I do remember correctly is that this was the first time a comfortable, high-level language felt limiting because of how it ships. A tool I run fifty times a day should not carry a runtime the size of a small operating system.
-
-The next day's commit is "refactor: migrate from TypeScript/Bun to Go". I had liked Go since I first tried it around 2014, and the rewrite got the binary down to a few megabytes. [Building tdx](/posts/2025/2025-11-29_building-tdx/) has the details. What matters for this story is smaller: a language that compiles to one file is worth a lot to me, and I had not realised how much until I watched an entire interpreter get bundled into a todo list.
+The next day's commit is "refactor: migrate from TypeScript/Bun to Go". I had liked Go since I first tried it around 2014, and the rewrite got the binary down to 4 MB. [Building tdx](/posts/2025/11/2025-11-29_building-tdx/) has the details. What matters for this story is smaller: a language that compiles to one file is worth a lot to me, and I had not realised how much until I watched an entire interpreter get bundled into a todo list.
 
 ## Three host languages in eight months
 
@@ -214,7 +212,7 @@ After Kipferl, new projects just started in Rust.
 
 <RustLandings id="landings" />
 
-Quirl, the shell from [I wanted a shell that could keep my old habits](/posts/2026/2026-08-23_shell-two-pipelines/), was Rust from its first commit and got the strict lint set ten days later. vrdx, a small tool for decision records in Markdown, had been Python with a terminal UI since October 2025; I ported it in September. The audit script in my private hub repository followed a week later. Two new tools started in Rust on the same day.
+Quirl, the shell from [I wanted a shell that could keep my old habits](/posts/2026/08/2026-08-23_shell-two-pipelines/), was Rust from its first commit and got the strict lint set ten days later. vrdx, a small tool for decision records in Markdown, had been Python with a terminal UI since October 2025; I ported it in September. The audit script in my private hub repository followed a week later. Two new tools started in Rust on the same day.
 
 tdx did not move, and I think that is worth showing. In September I ran a proper comparison of Go and Rust on its Markdown parsing, same fixtures and same edits on both sides. Rust was about ten times faster on the matched operations and its test binary was a sixth of the size. It also compiled twice as slowly, and the existing Go editor already handles a thousand tasks in about three milliseconds. A rewrite would have to reproduce the terminal UI, undo, the version history, and the careful save behaviour, all for a speedup nobody would notice. The recommendation in the repository is to keep tdx in Go, and it is still Go. So is Sceno, my diagram tool.
 
