@@ -94,9 +94,7 @@ Vercel domains verify returned these recommended records on September 19:
 | A | @ | 64.29.17.1 |
 | CNAME | www | d6d10a4ee034c711.vercel-dns-017.com |
 
-Those records now live in the hosting-infra catalog for `nheer.com`. INWX will serve them after apply; Namecheap still delegates to Netlify's NS1 nameservers (`dns1.p06.nsone.net` through `dns4.p06.nsone.net`). Do not edit the Netlify zone as a stepping stone, and do not freeze Netlify load-balancer IPs into DNS.
-
-After INWX verify passes, change Namecheap nameservers with hosting-infra's cutover CLI (`docs/cutover.md` in that repo) or set Custom DNS in the UI to `ns.inwx.de`, `ns2.inwx.de`, and `ns3.inwx.eu`. Keep the Netlify zone for rollback through the cache window.
+Those records now live in the hosting-infra catalog for `nheer.com` and at INWX. Namecheap Custom DNS was pointed at `ns.inwx.de`, `ns2.inwx.de`, and `ns3.inwx.eu` on 2026-09-20. Public resolvers may still answer from NS1 until that propagates. Keep the Netlify zone for rollback through the cache window. Do not freeze Netlify load-balancer IPs into DNS.
 
 After propagation:
 
