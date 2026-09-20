@@ -54,3 +54,14 @@ test("applyHeckles adds the block once and replaces it on rerun", () => {
   expect(twice).toContain('  - section: "first-step"\n    comment: "Again."\n---\n\nimport Thing');
   expect(applyHeckles(twice, [])).not.toContain("inky:");
 });
+
+test("staleness reports missing, stale, or absent heckles", async () => {
+  const { staleness } = await import("../scripts/inky-heckle");
+  expect(staleness(post)).toBe("no heckles yet");
+  const current = applyHeckles(post, [
+    { section: "intro", comment: "a" }, { section: "first-step", comment: "b" }, { section: "why-it-stays", comment: "c" },
+  ]);
+  expect(staleness(current)).toBeNull();
+  const renamed = current.replace("## Why it stays", "## Why he stays");
+  expect(staleness(renamed)).toBe("missing: why-he-stays; stale: why-it-stays");
+});

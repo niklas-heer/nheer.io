@@ -6,6 +6,7 @@ Read [README.md](README.md) for setup and development, and [docs/vercel-migratio
 
 - Install [mise](https://mise.jdx.dev/getting-started.html) first; it owns the toolchain versions for this checkout.
 - Content and site code are the normal working area. Treat `docs/` runbooks as the source of truth for deployment procedure.
+- Posts from 2025 onward carry Inky's per-section lines in their frontmatter. When writing or restructuring a post, follow `.agents/skills/inky-heckles/SKILL.md` (also linked from `.claude/skills/`) before opening the preview; a published post with missing or stale lines fails the unit tests.
 - Keep credentials in 1Password. Never commit a resolved token, a `.env` file, or database output.
 
 ## Credentialed local jobs

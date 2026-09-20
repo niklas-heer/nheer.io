@@ -2,6 +2,10 @@
  * Generate Inky's heckles for blog posts and store them in the frontmatter.
  *
  *   bun run scripts/inky-heckle.ts src/content/posts/2026/*.mdx
+ *   bun run scripts/inky-heckle.ts --check src/content/posts/2026/*.mdx
+ *
+ * `--check` calls no model: it reports posts whose stored section ids no
+ * longer match the post's sections, and exits 1 if any are stale.
  *
  * One line per section: the intro plus every `## heading` or `<ArticleStep>`.
  * The site reads `inky:` from the frontmatter at build time; nothing calls a
@@ -93,6 +97,24 @@ ${list}
 Respond with ONLY a JSON array of ${sections.length} strings, in section order.`;
 }
 
+/** Stored section ids in the frontmatter, in order. */
+export function storedSections(mdx: string): string[] {
+  const { frontmatter } = splitSections(mdx);
+  return [...frontmatter.matchAll(/^  - section: "([^"]+)"/gm)].map((m) => m[1]);
+}
+
+/** Empty when the stored heckles match the post's sections; otherwise what differs. */
+export function staleness(mdx: string): string | null {
+  const fresh = splitSections(mdx).sections.map((s) => s.id);
+  const stored = storedSections(mdx);
+  if (fresh.length === 0) return null;
+  if (stored.length === 0) return "no heckles yet";
+  const missing = fresh.filter((id) => !stored.includes(id));
+  const extra = stored.filter((id) => !fresh.includes(id));
+  if (missing.length === 0 && extra.length === 0) return null;
+  return [missing.length ? `missing: ${missing.join(", ")}` : "", extra.length ? `stale: ${extra.join(", ")}` : ""].filter(Boolean).join("; ");
+}
+
 export async function heckleFile(path: string, apiKey: string, model = INKY_MODEL): Promise<Heckle[]> {
   const mdx = await readFile(path, "utf8");
   const { frontmatter, sections } = splitSections(mdx);
@@ -108,8 +130,22 @@ export async function heckleFile(path: string, apiKey: string, model = INKY_MODE
 }
 
 if (import.meta.main) {
+  const args = process.argv.slice(2);
+  const check = args.includes("--check");
+  const paths = args.filter((a) => a !== "--check");
+  if (check) {
+    let stale = false;
+    for (const path of paths) {
+      const problem = staleness(await readFile(path, "utf8"));
+      if (problem) {
+        stale = true;
+        console.log(`${path}: ${problem}`);
+      }
+    }
+    console.log(stale ? "Rerun without --check for the posts above." : `${paths.length} post(s) current.`);
+    process.exit(stale ? 1 : 0);
+  }
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const paths = process.argv.slice(2);
   if (!apiKey || paths.length === 0) {
     console.error("Usage: OPENROUTER_API_KEY=... bun run scripts/inky-heckle.ts <post.mdx> ...");
     process.exit(1);
