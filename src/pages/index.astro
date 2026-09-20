@@ -81,6 +81,29 @@ const socials = [
     { name: "X", href: siteConfig.social.twitter },
     { name: "Email", href: `mailto:${siteConfig.author.email}` },
 ];
+
+// Everything the interactive prompt can answer without a network request.
+const terminalData = {
+    sections: [
+        { name: "blog", path: "/posts" },
+        { name: "reading", path: "/reading" },
+        { name: "listening", path: "/podcasts" },
+        { name: "projects", path: "/projects" },
+        { name: "reviews", path: "/reviews" },
+        { name: "about", path: "/about" },
+    ],
+    posts: allPosts
+        .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+        .slice(0, 5)
+        .map((post) => ({
+            title: cleanTitle(post.data.title),
+            url: getPostPath(post),
+            date: formatMonth(new Date(post.data.date)),
+        })),
+    projects: featuredProjects.map(({ name, url, description }) => ({ name, url, description })),
+    socials,
+};
+const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
 ---
 
 <BaseLayout
@@ -106,79 +129,99 @@ const socials = [
             All lines are in the HTML; the script only replays them on load.
         -->
         <div class="terminal" data-terminal>
-            <p class="terminal-line terminal-command" data-command="whoami">
-                <span class="terminal-prompt" aria-hidden="true">❯</span>
-                <span class="terminal-command-text">whoami</span>
-            </p>
-            <p class="terminal-line terminal-output">
-                Engineering manager at Tradebyte, building an internal developer
-                platform. On the side I make small terminal tools, read a lot,
-                and write about what I learn from both.
-            </p>
-            <p class="terminal-line terminal-command" data-command="now">
-                <span class="terminal-prompt" aria-hidden="true">❯</span>
-                <span class="terminal-command-text">now</span>
-            </p>
-            <dl class="terminal-line terminal-output terminal-now">
-                <div class="terminal-now-row">
-                    <dt>reading</dt>
-                    <dd>
-                        {
-                            currentlyReading.length > 0 ? (
-                                currentlyReading.map((item, index) => (
+            <div class="terminal-bar" aria-hidden="true">
+                <span class="terminal-dots"><i></i><i></i><i></i></span>
+                <span class="terminal-title">niklas@nheer: ~</span>
+            </div>
+            <div class="terminal-screen">
+                <p class="terminal-line terminal-command" data-command="whoami" data-intro>
+                    <span class="terminal-prompt" aria-hidden="true">❯</span>
+                    <span class="terminal-command-text">whoami</span>
+                </p>
+                <p class="terminal-line terminal-output" data-intro data-answer="whoami">
+                    Engineering manager at Tradebyte, building an internal developer
+                    platform. On the side I make small terminal tools, read a lot,
+                    and write about what I learn from both.
+                </p>
+                <p class="terminal-line terminal-command" data-command="now" data-intro>
+                    <span class="terminal-prompt" aria-hidden="true">❯</span>
+                    <span class="terminal-command-text">now</span>
+                </p>
+                <dl class="terminal-line terminal-output terminal-now" data-intro data-answer="now">
+                    <div class="terminal-now-row">
+                        <dt>reading</dt>
+                        <dd>
+                            {
+                                currentlyReading.length > 0 ? (
+                                    currentlyReading.map((item, index) => (
+                                        <>
+                                            {index > 0 && <span class="terminal-sep">, </span>}
+                                            <a
+                                                href={`https://hardcover.app/books/${item.book.slug}`}
+                                                target="_blank"
+                                                rel="noopener"
+                                            >
+                                                {item.book.title}
+                                            </a>
+                                            {bookAuthor(item.book) && (
+                                                <span class="terminal-dim"> by {bookAuthor(item.book)}</span>
+                                            )}
+                                        </>
+                                    ))
+                                ) : (
+                                    <a href="/reading">the reading list</a>
+                                )
+                            }
+                        </dd>
+                    </div>
+                    <div class="terminal-now-row">
+                        <dt>listening</dt>
+                        <dd>
+                            {
+                                yesterdayMinutes !== null ? (
                                     <>
-                                        {index > 0 && <span class="terminal-sep">, </span>}
-                                        <a
-                                            href={`https://hardcover.app/books/${item.book.slug}`}
-                                            target="_blank"
-                                            rel="noopener"
-                                        >
-                                            {item.book.title}
-                                        </a>
-                                        {bookAuthor(item.book) && (
-                                            <span class="terminal-dim"> by {bookAuthor(item.book)}</span>
-                                        )}
+                                        {yesterdayMinutes} min of podcasts yesterday
+                                        <span class="terminal-dim"> · </span>
+                                        <a href="/podcasts">stats</a>
                                     </>
-                                ))
-                            ) : (
-                                <a href="/reading">the reading list</a>
-                            )
-                        }
-                    </dd>
-                </div>
-                <div class="terminal-now-row">
-                    <dt>listening</dt>
-                    <dd>
-                        {
-                            yesterdayMinutes !== null ? (
-                                <>
-                                    {yesterdayMinutes} min of podcasts yesterday
-                                    <span class="terminal-dim"> · </span>
-                                    <a href="/podcasts">stats</a>
-                                </>
-                            ) : (
-                                <a href="/podcasts">podcast stats</a>
-                            )
-                        }
-                    </dd>
-                </div>
-                {
-                    newestPost && (
-                        <div class="terminal-now-row">
-                            <dt>writing</dt>
-                            <dd>
-                                <a href={getPostPath(newestPost)}>
-                                    {cleanTitle(newestPost.data.title)}
-                                </a>
-                            </dd>
-                        </div>
-                    )
-                }
-            </dl>
-            <p class="terminal-line terminal-command terminal-idle" aria-hidden="true">
-                <span class="terminal-prompt">❯</span>
-                <span class="terminal-cursor"></span>
-            </p>
+                                ) : (
+                                    <a href="/podcasts">podcast stats</a>
+                                )
+                            }
+                        </dd>
+                    </div>
+                    {
+                        newestPost && (
+                            <div class="terminal-now-row">
+                                <dt>writing</dt>
+                                <dd>
+                                    <a href={getPostPath(newestPost)}>
+                                        {cleanTitle(newestPost.data.title)}
+                                    </a>
+                                </dd>
+                            </div>
+                        )
+                    }
+                </dl>
+                <div class="terminal-history" data-terminal-history aria-live="polite"></div>
+                <form class="terminal-line terminal-command terminal-input-line" data-terminal-form action="/" method="get">
+                    <label class="terminal-prompt" for="terminal-input" aria-hidden="true">❯</label>
+                    <input
+                        id="terminal-input"
+                        class="terminal-input"
+                        type="text"
+                        name="cmd"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        enterkeyhint="send"
+                        aria-label="Type a command, for example help"
+                        placeholder="type help"
+                        data-terminal-input
+                    />
+                </form>
+            </div>
+            <script type="application/json" is:inline data-terminal-data set:html={terminalJson} />
         </div>
 
         <ul class="hero-socials" aria-label="Elsewhere">
@@ -368,135 +411,6 @@ const socials = [
         letter-spacing: -0.04em;
         line-height: 1;
         margin: 0;
-    }
-
-    /* Terminal */
-    .terminal {
-        font-family: var(--font-mono);
-        font-size: 0.9375rem;
-        line-height: 1.6;
-        padding: 1.25rem 1.5rem;
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-card);
-        box-shadow: 0 1px 0 color-mix(in srgb, var(--color-foreground) 4%, transparent) inset;
-        margin-bottom: 1.5rem;
-    }
-
-    .terminal-line {
-        margin: 0;
-        overflow-wrap: anywhere;
-    }
-
-    .terminal-line + .terminal-command {
-        margin-top: 0.75rem;
-    }
-
-    .terminal-command {
-        display: flex;
-        gap: 0.6ch;
-        color: var(--color-foreground);
-        font-weight: 600;
-    }
-
-    .terminal-prompt {
-        color: var(--color-accent);
-        font-weight: 500;
-    }
-
-    .terminal-output {
-        color: var(--color-muted);
-        padding-left: 2ch;
-    }
-
-    .terminal-now-row {
-        display: grid;
-        grid-template-columns: 10ch minmax(0, 1fr);
-        gap: 0 1ch;
-    }
-
-    .terminal-now dt {
-        color: var(--color-muted);
-    }
-
-    .terminal-now dd {
-        margin: 0;
-        color: var(--color-foreground);
-    }
-
-    .terminal-now a,
-    .terminal-output a {
-        color: var(--color-accent);
-        text-decoration: underline;
-        text-underline-offset: 0.2em;
-        text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
-    }
-
-    .terminal-now a:hover,
-    .terminal-output a:hover {
-        text-decoration-color: currentColor;
-    }
-
-    .terminal-dim {
-        color: var(--color-muted);
-    }
-
-    .terminal-cursor {
-        display: inline-block;
-        width: 0.6ch;
-        height: 1.1em;
-        margin-top: 0.2em;
-        background: var(--color-accent);
-        animation: cursor-blink 1s step-end infinite;
-    }
-
-    @keyframes cursor-blink {
-        0%,
-        50% {
-            opacity: 1;
-        }
-        51%,
-        100% {
-            opacity: 0;
-        }
-    }
-
-    /* Replay: hide lines until the script reveals them */
-    .terminal[data-playing] .terminal-line {
-        display: none;
-    }
-
-    .terminal[data-playing] .terminal-line.is-shown {
-        display: block;
-    }
-
-    .terminal[data-playing] .terminal-command.is-shown {
-        display: flex;
-    }
-
-    .terminal[data-playing] .terminal-command.is-typing .terminal-command-text::after {
-        content: "";
-        display: inline-block;
-        width: 0.6ch;
-        height: 1.1em;
-        vertical-align: text-bottom;
-        background: var(--color-accent);
-        margin-left: 0.1ch;
-    }
-
-    @media (max-width: 30rem) {
-        .terminal {
-            padding: 1rem 1.125rem;
-            font-size: 0.875rem;
-        }
-
-        .terminal-now-row {
-            grid-template-columns: 1fr;
-        }
-
-        .terminal-output {
-            padding-left: 0;
-        }
     }
 
     .hero-socials {
@@ -710,42 +624,508 @@ const socials = [
     }
 </style>
 
+<style is:global>
+    /* Terminal: always a dark screen, in both themes */
+    .terminal {
+        --term-bg: #14111c;
+        --term-bar: #1e1a28;
+        --term-border: #2f2940;
+        --term-fg: #ece8f4;
+        --term-muted: #9a92ad;
+        --term-accent: #b49dff;
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        color: var(--term-fg);
+        background: var(--term-bg);
+        border: 1px solid var(--term-border);
+        border-radius: var(--radius-card);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.04) inset,
+            0 24px 48px -24px rgba(0, 0, 0, 0.6);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .terminal .terminal-bar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0.625rem 0.875rem;
+        background: var(--term-bar);
+        border-bottom: 1px solid var(--term-border);
+    }
+
+    .terminal .terminal-dots {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .terminal .terminal-dots i {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: #ff5f57;
+        opacity: 0.85;
+    }
+
+    .terminal .terminal-dots i:nth-child(2) {
+        background: #febc2e;
+    }
+
+    .terminal .terminal-dots i:nth-child(3) {
+        background: #28c840;
+    }
+
+    .terminal .terminal-title {
+        font-size: 0.75rem;
+        color: var(--term-muted);
+        letter-spacing: 0.01em;
+    }
+
+    .terminal:focus-within {
+        border-color: color-mix(in srgb, var(--term-accent) 55%, var(--term-border));
+    }
+
+    .terminal .terminal-screen {
+        padding: 1.125rem 1.5rem 1.25rem;
+        min-height: 12.5rem;
+        max-height: 30rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .terminal.is-cleared [data-intro] {
+        display: none;
+    }
+
+    .terminal .terminal-input-line {
+        align-items: center;
+    }
+
+    .terminal .terminal-input {
+        flex: 1;
+        min-width: 0;
+        padding: 0;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--term-fg);
+        font: inherit;
+        font-weight: 600;
+        caret-color: var(--term-accent);
+    }
+
+    .terminal .terminal-input::placeholder {
+        color: var(--term-muted);
+        font-weight: 400;
+        opacity: 1;
+    }
+
+    .terminal .terminal-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        padding-left: 2ch;
+        color: var(--term-muted);
+    }
+
+    .terminal .terminal-list.is-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0 2ch;
+    }
+
+    .terminal .terminal-list a {
+        color: var(--term-accent);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--term-accent) 45%, transparent);
+    }
+
+    .terminal .terminal-list a:hover {
+        color: #d3c6ff;
+        text-decoration-color: currentColor;
+    }
+
+    .terminal .terminal-list kbd {
+        color: var(--term-fg);
+        font-weight: 600;
+        display: inline-block;
+        min-width: 12ch;
+    }
+
+    .terminal .terminal-error {
+        color: #ff8a80;
+    }
+
+    .terminal .terminal-line {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .terminal .terminal-line + .terminal-command {
+        margin-top: 0.75rem;
+    }
+
+    .terminal .terminal-command {
+        display: flex;
+        gap: 0.6ch;
+        color: var(--term-fg);
+        font-weight: 600;
+    }
+
+    .terminal .terminal-prompt {
+        color: var(--term-accent);
+        font-weight: 500;
+    }
+
+    .terminal .terminal-output {
+        color: var(--term-muted);
+        padding-left: 2ch;
+    }
+
+    .terminal .terminal-now-row {
+        display: grid;
+        grid-template-columns: 10ch minmax(0, 1fr);
+        gap: 0 1ch;
+    }
+
+    .terminal .terminal-now dt {
+        color: var(--term-muted);
+    }
+
+    .terminal .terminal-now dd {
+        margin: 0;
+        color: var(--term-fg);
+    }
+
+    .terminal .terminal-now a,
+    .terminal .terminal-output a {
+        color: var(--term-accent);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--term-accent) 45%, transparent);
+    }
+
+    .terminal .terminal-now a:hover,
+    .terminal .terminal-output a:hover {
+        color: #d3c6ff;
+        text-decoration-color: currentColor;
+    }
+
+    .terminal .terminal-dim {
+        color: var(--term-muted);
+    }
+
+    .terminal .is-typing::after,
+    .terminal .terminal-now-row.is-typing dd::after {
+        display: inline-block;
+        width: 0.6ch;
+        height: 1.1em;
+        vertical-align: text-bottom;
+        background: var(--term-accent);
+    }
+
+    .terminal .is-typing::after,
+    .terminal .terminal-now-row.is-typing dd::after {
+        content: "";
+        margin-left: 0.1ch;
+    }
+
+    .terminal .terminal-now-row.is-typing::after {
+        content: none;
+    }
+
+    /* Replay: hide lines until the script reveals them */
+    .terminal[data-playing] .terminal-line,
+    .terminal[data-playing] .terminal-now-row {
+        display: none;
+    }
+
+    .terminal[data-playing] .terminal-line.is-shown {
+        display: block;
+    }
+
+    .terminal[data-playing] .terminal-command.is-shown {
+        display: flex;
+    }
+
+    .terminal[data-playing] .terminal-now-row.is-shown {
+        display: grid;
+    }
+
+    @media (max-width: 30rem) {
+        .terminal .terminal-screen {
+            padding: 1rem 1.125rem;
+            font-size: 0.875rem;
+        }
+
+        .terminal .terminal-now-row {
+            grid-template-columns: 1fr;
+        }
+
+        .terminal .terminal-output {
+            padding-left: 0;
+        }
+    }
+</style>
+
 <script>
-    // Replays the hero terminal once per page load: commands are typed,
-    // their output appears in one step. The markup is complete without this.
+    // The hero terminal replays a short intro on load, then becomes a small
+    // interactive shell. The markup is complete without JavaScript, reduced
+    // motion skips the replay, and a click on the screen finishes it early.
+    import { navigate } from "astro:transitions/client";
+
+    type Section = { name: string; path: string };
+    type TerminalData = {
+        sections: Section[];
+        posts: { title: string; url: string; date: string }[];
+        projects: { name: string; url: string; description: string }[];
+        socials: { name: string; href: string }[];
+    };
+    type Command = { help: string; run: (args: string[]) => void | Promise<void> };
+
     const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    function setupShell(terminal: HTMLElement) {
+        const dataNode = terminal.querySelector("[data-terminal-data]");
+        const history = terminal.querySelector<HTMLElement>("[data-terminal-history]");
+        const form = terminal.querySelector<HTMLFormElement>("[data-terminal-form]");
+        const input = terminal.querySelector<HTMLInputElement>("[data-terminal-input]");
+        const screen = terminal.querySelector<HTMLElement>(".terminal-screen");
+        if (!dataNode || !history || !form || !input || !screen) return;
+        const data: TerminalData = JSON.parse(dataNode.textContent || "{}");
+
+        const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = "") => {
+            const node = document.createElement(tag);
+            node.className = className;
+            if (text) node.textContent = text;
+            return node;
+        };
+        const link = (text: string, href: string) => {
+            const a = el("a", "", text);
+            a.href = href;
+            if (/^https?:/.test(href)) {
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+            }
+            return a;
+        };
+        const print = (...nodes: Node[]) => {
+            history.append(...nodes);
+            screen.scrollTop = screen.scrollHeight;
+        };
+        const say = (text: string, className = "terminal-output") =>
+            print(el("p", `terminal-line ${className}`, text));
+        const fail = (text: string) => say(text, "terminal-output terminal-error");
+        const list = (rows: (string | Node)[][], row = false) => {
+            const ul = el("ul", `terminal-list${row ? " is-row" : ""}`);
+            for (const cells of rows) {
+                const li = el("li", "");
+                cells.forEach((cell, index) => {
+                    if (index > 0) li.append(" ");
+                    li.append(cell);
+                });
+                ul.append(li);
+            }
+            print(ul);
+        };
+        const dim = (text: string) => el("span", "terminal-dim", text);
+        const echo = (command: string) => {
+            const p = el("p", "terminal-line terminal-command");
+            p.append(el("span", "terminal-prompt", "❯"), " ", el("span", "", command));
+            print(p);
+        };
+        const replay = (name: string) => {
+            const answer = terminal.querySelector<HTMLElement>(`[data-answer="${name}"]`);
+            if (!answer) return;
+            const clone = answer.cloneNode(true) as HTMLElement;
+            clone.removeAttribute("data-intro");
+            clone.removeAttribute("data-answer");
+            clone.classList.add("is-shown");
+            clone.querySelectorAll(".terminal-now-row").forEach((row) => row.classList.add("is-shown"));
+            print(clone);
+        };
+        const findSection = (name: string) => {
+            const aliases: Record<string, string> = { posts: "blog", podcasts: "listening", "~": "home", "..": "home", "/": "home" };
+            const wanted = (aliases[name] ?? name).replace(/\/$/, "");
+            if (wanted === "home") return { name: "home", path: "/" };
+            return data.sections.find((section) => section.name === wanted);
+        };
+
+        const commands: Record<string, Command> = {
+            help: {
+                help: "list the commands",
+                run: () => list(Object.entries(commands).map(([name, { help }]) => [el("kbd", "", name), dim(help)])),
+            },
+            whoami: { help: "who runs this site", run: () => replay("whoami") },
+            now: { help: "reading, hearing, writing", run: () => replay("now") },
+            ls: {
+                help: "list the sections",
+                run: () => list(data.sections.map((section) => [link(`${section.name}/`, section.path)]), true),
+            },
+            cd: {
+                help: "open a section",
+                run: async ([target = ""]) => {
+                    const section = findSection(target);
+                    if (!section) return fail(`cd: no such directory: ${target || "(none)"}. Try ls.`);
+                    say(`opening ${section.path}`);
+                    await wait(150);
+                    await navigate(section.path);
+                },
+            },
+            posts: {
+                help: "the newest posts",
+                run: () => list(data.posts.map((post) => [link(post.title, post.url), dim(post.date)])),
+            },
+            projects: {
+                help: "featured open source",
+                run: () => list(data.projects.map((project) => [link(project.name, project.url), dim(project.description)])),
+            },
+            contact: {
+                help: "where to find me",
+                run: () => list(data.socials.map((social) => [link(social.name, social.href)]), true),
+            },
+            theme: {
+                help: "switch light and dark",
+                run: () => {
+                    document.querySelector<HTMLElement>("[data-theme-toggle]")?.click();
+                    say(`switched to ${document.documentElement.dataset.theme} theme`);
+                },
+            },
+            inky: {
+                help: "ask the octopus",
+                run: () => {
+                    const comments = (window as any).inkyComments as { comment: string }[] | undefined;
+                    const pick = comments?.[Math.floor(Math.random() * comments.length)];
+                    say(pick ? `🐙 ${pick.comment}` : "🐙 Inky is asleep. Try again later.");
+                },
+            },
+            clear: {
+                help: "clear the screen",
+                run: () => {
+                    history.replaceChildren();
+                    terminal.classList.add("is-cleared");
+                },
+            },
+            echo: { help: "repeat after you", run: (args) => say(args.join(" ")) },
+            pwd: { help: "where you are", run: () => say("/home/niklas") },
+            date: { help: "today", run: () => say(new Date().toString()) },
+        };
+        const hidden: Record<string, Command> = {
+            sudo: { help: "", run: () => fail("niklas is not in the sudoers file. This incident will be reported to Inky. 🐙") },
+            rm: { help: "", run: (args) => fail(args.some((a) => a.startsWith("-r")) ? "Nice try. Inky keeps backups." : "rm: permission denied") },
+            exit: { help: "", run: () => say("There is no exit. Try cd blog instead.") },
+            logout: { help: "", run: () => say("There is no exit. Try cd blog instead.") },
+            vim: { help: "", run: () => say("Even here you cannot leave vim. Try help.") },
+            open: { help: "", run: (args) => commands.cd.run(args) },
+            cat: { help: "", run: (args) => commands.cd.run(args) },
+        };
+
+        const entered: string[] = [];
+        let cursor = 0;
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const raw = input.value.trim();
+            input.value = "";
+            echo(raw);
+            if (!raw) return;
+            entered.push(raw);
+            cursor = entered.length;
+            const [name, ...args] = raw.split(/\s+/);
+            const command = commands[name] ?? hidden[name];
+            if (!command) return fail(`command not found: ${name}. Try help.`);
+            await command.run(args);
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (entered.length === 0) return;
+                event.preventDefault();
+                cursor = Math.max(0, Math.min(entered.length, cursor + (event.key === "ArrowUp" ? -1 : 1)));
+                input.value = entered[cursor] ?? "";
+            } else if (event.key === "Tab" && input.value) {
+                const [name, partial] = input.value.split(/\s+/);
+                const pool = partial === undefined
+                    ? Object.keys(commands)
+                    : name === "cd" ? data.sections.map((section) => section.name) : [];
+                const prefix = partial ?? name;
+                const match = pool.find((candidate) => candidate.startsWith(prefix));
+                if (match) {
+                    event.preventDefault();
+                    input.value = partial === undefined ? `${match} ` : `${name} ${match}`;
+                }
+            } else if (event.key === "l" && event.ctrlKey) {
+                event.preventDefault();
+                commands.clear.run([]);
+            }
+        });
+
+        terminal.addEventListener("click", (event) => {
+            if (terminal.dataset.playing) return;
+            if ((event.target as Element).closest("a, input")) return;
+            input.focus({ preventScroll: true });
+        });
+    }
 
     async function playTerminal() {
         const terminal = document.querySelector<HTMLElement>("[data-terminal]");
         if (!terminal || terminal.dataset.played) return;
         terminal.dataset.played = "true";
+        setupShell(terminal);
 
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reduceMotion) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        let skip = false;
+        terminal.addEventListener("click", () => { skip = true; }, { once: true });
+        const pause = (ms: number) => (skip ? Promise.resolve() : wait(ms));
+
+        // Types every text node inside an element, in document order.
+        async function typeInto(element: HTMLElement, perChar: number) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            const nodes: { node: Text; text: string }[] = [];
+            let current = walker.nextNode();
+            while (current) {
+                nodes.push({ node: current as Text, text: current.textContent ?? "" });
+                current = walker.nextNode();
+            }
+            nodes.forEach(({ node }) => { node.textContent = ""; });
+            element.classList.add("is-typing");
+            for (const { node, text } of nodes) {
+                if (skip) { node.textContent = text; continue; }
+                for (const char of text) {
+                    node.textContent += char;
+                    if (skip) { node.textContent = text; break; }
+                    if (char.trim()) await wait(perChar + Math.random() * perChar);
+                }
+            }
+            element.classList.remove("is-typing");
+        }
 
         const lines = Array.from(terminal.querySelectorAll<HTMLElement>(".terminal-line"));
         terminal.dataset.playing = "true";
+        await pause(400);
 
         for (const line of lines) {
             // Navigating away mid-replay must not leave hidden lines behind.
             if (!terminal.isConnected) return;
-            const command = line.dataset.command;
             line.classList.add("is-shown");
-            if (command) {
+            if (line.dataset.command) {
                 const text = line.querySelector<HTMLElement>(".terminal-command-text");
-                if (text) {
-                    line.classList.add("is-typing");
-                    text.textContent = "";
-                    await wait(250);
-                    for (const char of command) {
-                        text.textContent += char;
-                        await wait(70 + Math.random() * 60);
-                    }
-                    await wait(180);
-                    line.classList.remove("is-typing");
+                if (text) await typeInto(text, 55);
+                await pause(200);
+            } else if (line.classList.contains("terminal-now")) {
+                for (const row of line.querySelectorAll<HTMLElement>(".terminal-now-row")) {
+                    row.classList.add("is-shown");
+                    await typeInto(row, 7);
+                    await pause(140);
                 }
-            } else {
-                await wait(120);
+            } else if (line.classList.contains("terminal-output")) {
+                await typeInto(line, 6);
+                await pause(320);
             }
         }
         delete terminal.dataset.playing;

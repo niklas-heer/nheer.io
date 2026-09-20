@@ -151,23 +151,21 @@ const categoryStyles: Record<string, { color: string; icon: string }> = {
 ---
 
 <BaseLayout
-    title="Podcasts"
+    title="Listening"
     description="My podcast listening stats and subscriptions"
 >
-    <h1
-        class="text-3xl font-bold mb-2"
-        style="view-transition-name: page-title;"
-    >
-        Podcasts
-    </h1>
-    <p class="text-muted mb-8">
-        My podcast journey, tracked with <a
-            href="https://pocketcasts.com"
-            target="_blank"
-            rel="noopener"
-            class="text-accent hover:underline">Pocket Casts</a
-        >.
-    </p>
+    <div class="page-header">
+        <h1 class="page-title" style="view-transition-name: page-title;">
+            Listening
+        </h1>
+        <p class="page-subtitle">
+            What I listen to and how much, tracked with <a
+                href="https://pocketcasts.com"
+                target="_blank"
+                rel="noopener">Pocket Casts</a
+            >.
+        </p>
+    </div>
 
     {
         !data && (
