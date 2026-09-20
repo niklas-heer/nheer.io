@@ -39,23 +39,23 @@ import LanguageArrivals from '../../../components/LanguageArrivals.astro';
 import LintCatches from '../../../components/LintCatches.astro';
 import RustLandings from '../../../components/RustLandings.astro';
 
-On a Saturday evening in February 2018 I wrote the same tiny program three times. Read a number from a file, loop that many times, print an approximation of π. Python took sixteen lines. PHP took about the same. Rust took twenty-four, and every extra line was something the compiler had asked for.
+On a Saturday evening in February 2018 I wrote the same tiny program three times. Read a number from a file, loop that many times, print an approximation of π. The Python version was sixteen lines. PHP about the same. Rust needed twenty-four, and I remember the compiler asking for every one of the extra ones.
 
-That was my first contact with Rust. It was not a good evening for the language. I put it down for years, and when I picked it back up it was for a reason I would not have predicted: I was no longer the one typing.
+That was my first contact with Rust. I did not enjoy it, and I did not touch the language again for years. When I finally came back, it was for a reason that had nothing to do with Rust getting easier. Somebody else was typing.
 
 ## The evening in question
 
-The program belongs to my [speed comparison](https://github.com/niklas-heer/speed-comparison), a repository that runs one calculation, the Leibniz formula for π, in as many languages as I could install. It started as an attempt to recreate a comparison from someone else's blog post and add the languages he had skipped. The visible output is a chart. The evening's output was three files and a Dockerfile.
+The program is from my [speed comparison](https://github.com/niklas-heer/speed-comparison), a repository that runs one calculation, the Leibniz formula for π, in as many languages as I can install. I started it to recreate a comparison from someone else's blog post and add the languages he had left out. The result people look at is a chart. What I actually produced that evening was three programs, a Dockerfile, and a shell script.
 
-I remember Rust taking far longer than the others. I remember looking things up: how to open a file, why reading it needs a mutable string, what `parse::<i32>()` means, why my integer would not multiply with my float. Every message from the compiler was correct, and every one of them was a detour.
+Rust felt like it took much longer than the other two. I had to look up how to open a file, why reading it needs a mutable string, what `parse::<i32>()` is, and why my integer would not multiply with my float. Each compiler message was correct. Each one also sent me to the documentation.
 
-Here are the Python and Rust files exactly as I committed them.
+Here are the Python and Rust files, exactly as committed.
 
 <RustFirstContact id="first-contact" />
 
-Nothing in the Rust version is unreasonable. A file can be missing. Text is not a number until you say which number. Floating-point precision is a choice. Rust just insists that these things be written down, and on a Saturday evening with a chart to fill, being insisted at is not what I wanted.
+Nothing in the Rust version is unreasonable. A file can be missing. A string is not a number until you say which kind of number. Precision is a decision. Rust insists that all of this is written down, and on a Saturday evening with a chart to fill, I did not want to write it down.
 
-The results I published that night made it worse.
+Then the results came in.
 
 <ArticleMetrics
   id="first-results" title="The first three results, as published that evening."
@@ -67,27 +67,27 @@ The results I published that night made it worse.
   ]}
 />
 
-Rust lost to PHP. The reason is in the comparison script: `rustc leibniz.rs`, no optimization flag, a debug build. I did not notice. Three years later a contributor did, with a commit message that reads like a gentle sigh: "rust speed compare should use release profile."
+Rust lost to PHP. The comparison script explains why: it ran `rustc leibniz.rs` with no optimization flag, so the benchmark measured a debug build. I did not notice. Three years later a contributor did, and fixed it with the commit message "rust speed compare should use release profile."
 
-So the first Rust result I ever published was a debug build that lost to PHP 7, and it stayed that way from February 2018 to May 2021. The compiler had checked everything except the one thing that mattered for a benchmark.
+So the first Rust result I ever published was a debug build that lost to PHP 7, from February 2018 until May 2021. The compiler had checked everything about my program except the flag that mattered.
 
 ## What the log can and cannot say
 
-Before writing this I went back to the commit history to check my memory, and the history is less cooperative than I hoped.
+Before writing this I went back to the commit history to check my memory of that evening. It was less helpful than I hoped.
 
-The initial commit is from 16:32. The Docker environment, the comparison script, and the Python, PHP and Rust programs all landed between 20:03 and 20:05, seventeen seconds apart. Whatever happened in those three and a half hours, the log does not say how much of it was Rust. What it does record is a commit seven minutes later, adding a comment to the Rust file about why the numbers had to be `f64`, which is roughly the sound of somebody having been wrong about precision once already.
+The first commit is from 16:32. The Docker setup, the script, and the Python, PHP and Rust programs all landed between 20:03 and 20:05, seventeen seconds apart. Three and a half hours passed in between, and the log does not say how much of that was Rust. The only hint is a commit seven minutes later that adds a comment to the Rust file explaining why the numbers have to be `f64`. You do not write that comment unless you got it wrong first.
 
 The log is better at the bigger picture.
 
 <LanguageArrivals id="arrivals" />
 
-Rust was the third language in, before JavaScript and Go, and the pace never slowed for it. Twelve entries in two days, seventeen in two weeks, Crystal among them because it looked like Ruby and compiled to a binary. Rust got the same treatment as the others: write the loop, commit the file, look at the chart. Then I moved on, and the debug build sat in the script for three years.
+Rust was the third language in, ahead of JavaScript and Go. Twelve entries in two days, seventeen in two weeks. Crystal is in there because it looks like Ruby and compiles to a binary, which I found interesting at the time. Rust got the same treatment as everything else: write the loop, commit, look at the chart, move on. And the debug build sat in the script for three years.
 
-That is the honest version. Rust did not take me a week. It took me an evening and left a bad taste, and the bad taste lasted much longer than the evening.
+So, honestly: Rust did not cost me a week. It cost me an evening. But that evening left a bad taste, and the bad taste lasted a lot longer.
 
 ## Two years of nobody, then one evening
 
-The comparison grew for a while, went quiet, and grew again when other people pushed it. The commit counts tell that story better than I can.
+The comparison grew for a while, went quiet, and grew again when other people pushed it. The commit counts show this better than I can describe it.
 
 <ArticleComparison
   id="commits-per-year" title="Commits per year in speed-comparison."
@@ -106,11 +106,11 @@ The comparison grew for a while, went quiet, and grew again when other people pu
   ]}
 />
 
-My own last real commit before the long gap was in November 2023. Through 2024 I merged two pull requests. Meanwhile people kept arriving with contributions: a SIMD version for Swift, OCaml, a GraalVM build, a Zig implementation that could keep up with C. They opened pull requests and waited. Some of them waited for three years.
+My last real commit before the gap was in November 2023. In all of 2024 I merged two pull requests. People kept sending things anyway: a SIMD version for Swift, OCaml, a GraalVM build, a Zig implementation that could keep up with C. They opened pull requests and waited. Some waited three years.
 
-I did not lack interest. I lacked a way to work on the project that did not mean re-learning a bespoke container recipe for every language I touched. Each runtime had its own installation quirks, its own base image, its own flags. Updating one language was an expedition. Updating all of them was the reason the pull requests sat there. I have written about that plumbing in [The slowest part of my speed comparison](/posts/2026/2026-02-10_what-a-benchmark-measures/), so here is only the outcome.
+It was not that I had lost interest. Every language in the project had its own container recipe, its own base image, its own flags and quirks, and I had to relearn all of that before I could touch anything. Updating one language was an afternoon. Updating all of them was something I kept putting off, and the pull requests sat there while I did. I wrote about that plumbing in [The slowest part of my speed comparison](/posts/2026/2026-02-10_what-a-benchmark-measures/), so I will not repeat it here.
 
-On the evening of 4 December 2025 I came back, this time with a coding agent beside me.
+On 4 December 2025 I came back, this time with a coding agent.
 
 <ArticleMetrics
   id="the-return" title="What was waiting, and what one evening did with it."
@@ -123,25 +123,25 @@ On the evening of 4 December 2025 I came back, this time with a coding agent bes
   ]}
 />
 
-Ten pull requests merged in eleven minutes, then the first agent-written commits half an hour later, and an instruction file for agents the next day. The month that followed had 270 commits; from January 2023 to November 2025 there had been 31. The agent did not make the project simpler by itself. It made it possible to attack the bespoke parts one at a time without me holding every recipe in my head, and that turned out to be the whole difference between a project I maintained and a project I felt guilty about.
+Ten pull requests merged in eleven minutes. The first agent-written commits half an hour later. An instruction file for the agent the next day. December ended with 270 commits; the period from January 2023 to November 2025 had 31. The agent did not make the project simple. What it did was let me work through the bespoke parts one at a time without having to hold every recipe in my head, and that was enough to turn a project I felt guilty about back into a project I worked on.
 
-That December sent me down a rabbit hole of small tools, and the rabbit hole is where Rust comes back.
+That December also sent me down a rabbit hole of small command-line tools. That is where Rust comes back into the story.
 
 ## The binary I remembered wrong
 
-The first tool was [tdx](https://github.com/niklas-heer/tdx), a terminal todo manager that keeps its tasks in an ordinary Markdown file. Python is the language I am most productive in, and I would have told you, before checking, that the first tdx was Python, and that it produced a binary over 100 MB.
+The first of those tools was [tdx](https://github.com/niklas-heer/tdx), a terminal todo manager that keeps its tasks in a normal Markdown file. Python is the language I am most productive in, and before checking I would have told you that the first tdx was written in Python and that its binary was over 100 MB.
 
-The repository disagrees on both counts. The first commit, from 21 November 2025, says "implement tdx CLI todo manager with Bun and TypeScript". The terminal interface was Ink, which is React for terminals. And the executable was about 90 MB in the post I wrote at the time, or 59 MB in the comparison image inside that same post. The memory of "too big" was right, give or take forty megabytes. The memory of "Python" was simply wrong.
+The repository says otherwise. The first commit, from 21 November 2025, is "implement tdx CLI todo manager with Bun and TypeScript". The interface used Ink, which is React for terminals. The executable was about 90 MB according to the post I wrote back then, or 59 MB according to the comparison image inside that same post. So "too big" was right, give or take forty megabytes. "Python" was just wrong.
 
-What I do remember correctly is the feeling. For the first time the packaging story of a comfortable, high-level language was the actual problem, not a footnote. A tool I would run fifty times a day should not ship a runtime the size of a small operating system.
+What I do remember correctly is that this was the first time a comfortable, high-level language felt limiting because of how it ships. A tool I run fifty times a day should not carry a runtime the size of a small operating system.
 
-The next day the commit reads "refactor: migrate from TypeScript/Bun to Go". I had liked Go since around 2014, when I first dabbled in it, and the rewrite got the binary down to a few megabytes. [Building tdx](/posts/2025/2025-11-29_building-tdx/) tells that part. The relevant lesson for this story is smaller: a language that compiles to one file is worth a lot to me, and I had not noticed how much until I watched an interpreter get bundled into a todo list.
+The next day's commit is "refactor: migrate from TypeScript/Bun to Go". I had liked Go since I first tried it around 2014, and the rewrite got the binary down to a few megabytes. [Building tdx](/posts/2025/2025-11-29_building-tdx/) has the details. What matters for this story is smaller: a language that compiles to one file is worth a lot to me, and I had not realised how much until I watched an entire interpreter get bundled into a todo list.
 
 ## Three host languages in eight months
 
-The second tool started from a stray thought about calculators. Some programmable calculators run Python with almost no memory. The trick is MicroPython, a small implementation meant for microcontrollers. If a calculator can carry a Python runtime, so can a CLI: bundle the interpreter and the script into one executable and you get Python-style code with a Go-sized binary.
+The second tool started with calculators. Some programmable calculators run Python, on hardware with almost no memory. That works because of MicroPython, a small implementation of the language built for microcontrollers. If a calculator can carry a Python runtime, so can a CLI: bundle the interpreter and the script into one executable, and you get Python-style code with a Go-sized binary.
 
-That idea became [Kipferl](https://github.com/niklas-heer/kipferl), which was called μcharm at the time. Its host language changed twice in eight months.
+That became [Kipferl](https://github.com/niklas-heer/kipferl), called μcharm at the time. Its host language changed twice in eight months.
 
 <ArticleFlow
   id="kipferl-hops" title="Three runtimes in eight months."
@@ -153,31 +153,31 @@ That idea became [Kipferl](https://github.com/niklas-heer/kipferl), which was ca
   ]}
 />
 
-Go was the plan for the host, after tdx. It did not survive the first morning. Embedding a C runtime and calling into it from the host is the entire job, and Go's C interoperability is workable but not something I wanted at the center of the project. Zig calls C directly, so Zig took the job. The first README still has the comparison table I wrote to justify it: Go with Charm at about 10 MB, Rust with Ratatui at about 5 MB and marked "Hard", MicroPython at 690 KB.
+After tdx, the plan was to write the host in Go. That plan lasted about a morning. The whole job is embedding a C runtime and calling into it, and Go can do that, but I did not want cgo at the center of the project. Zig calls C directly, so Zig got the job. The first README still has the table I wrote to justify it: Go with Charm at about 10 MB, Rust with Ratatui at about 5 MB and marked "Hard", MicroPython at 690 KB.
 
-Four days later MicroPython gave way to PocketPy, another small Python implementation. It was easier to wire up, had a C API designed for embedding rather than for hardware, and understood more of Python 3 than MicroPython's subset. Version 0.5.0 shipped on 21 December 2025 on Zig 0.15.2, and then I did not touch the project for seven and a half months.
+Four days later I swapped MicroPython for PocketPy, another small Python implementation. It was easier to wire up, its C API was built for embedding rather than for hardware, and it understood more of Python 3. Version 0.5.0 shipped on 21 December 2025, pinned to Zig 0.15.2. Then I did not touch the project for seven and a half months.
 
 ## The ground moved while I was away
 
-Two things happened in that gap, one to the language and one around it.
+Two things happened in that gap.
 
-Zig 0.16.0 came out in April 2026. It is a pre-1.0 language and its release notes are candid about that: a new `std.Io` interface, filesystem APIs moved, `@cImport` deprecated, `@Type` replaced. Reasonable changes for a language still finding its shape. Also exactly the kind of change that means a project you left in December does not compile in August. Kipferl had 28,000 lines of Zig by then.
+Zig 0.16.0 came out in April 2026. Zig is a pre-1.0 language and does not pretend otherwise. The release notes list a new `std.Io` interface, moved filesystem APIs, a deprecated `@cImport`, and a replaced `@Type`. Sensible changes for a language that is still settling. They are also the kind of changes that mean the project you left in December does not compile in August, and Kipferl had 28,000 lines of Zig by then.
 
-Then, in July, Jarred Sumner published [Rewriting Bun in Rust](https://bun.com/blog/bun-in-rust). Bun is a JavaScript runtime and the best-known large Zig codebase. He had it ported to Rust in eleven days, using dozens of Claude agents in parallel with separate agents reviewing their work. The numbers are large: half a million lines, 6,502 commits, 128 bugs fixed in the release that followed, 19 regressions introduced and later repaired. His stated reason was mundane and familiar. Use-after-free, double-free, a forgotten free in an error path. "In safe Rust, these are compiler errors."
+Then, in July, Jarred Sumner published [Rewriting Bun in Rust](https://bun.com/blog/bun-in-rust). Bun is a JavaScript runtime and was the best-known large Zig codebase. He had it ported to Rust in eleven days by dozens of Claude agents running in parallel, with separate agents reviewing their work: half a million lines, 6,502 commits, 128 bugs fixed in the release that followed, 19 regressions introduced and later fixed. The reason he gave was ordinary. Use-after-free, double-free, a forgotten free in an error path. "In safe Rust, these are compiler errors."
 
-The next day Andrew Kelley, who created Zig, [replied](https://andrewkelley.me/post/my-thoughts-bun-rust-rewrite.html). His argument was that Bun's problems came from how Bun was built, not from the language, and that the rewrite shipped, in his words, a million lines of unreviewed code on the strength of a test suite. He did not put it gently. The post calls Bun a net liability for Zig and the ported code "unreviewed slop", and it has personal things to say about its author. He also ends by acknowledging the resentment in it and apologizing to the Zig users caught in the middle.
+The next day Andrew Kelley, who created Zig, [replied](https://andrewkelley.me/post/my-thoughts-bun-rust-rewrite.html). His argument was that Bun's problems came from how Bun was built rather than from the language, and that the rewrite had shipped, in his words, a million lines of unreviewed code on the strength of a test suite. He did not put it gently. The post calls Bun a net liability for Zig, calls the ported code "unreviewed slop", and has personal things to say about its author. He ends by admitting the resentment in it and apologising to Zig users caught in the middle.
 
-I read both in the same sitting and came away with an opinion I did not expect to have. The technical argument was interesting. What settled the question for me was watching a language's creator write like that about its most visible project. I did not want to be a small project on a foundation that was still changing, maintained by people that angry at their biggest user. That is a feeling, not an analysis, and I am reporting it as one.
+I read both posts in one sitting. The technical argument was interesting, but it is not what settled things for me. Watching the creator of a language write like that about its most visible project did. I did not want my small project sitting on a foundation that was still moving, maintained by people that angry at their biggest user. I know that is a feeling rather than an analysis. It was still the deciding one.
 
-The Linux kernel was quieter background noise. Rust had spent years there as an experiment with loud opponents. In November 2025 Linus Torvalds said it had "reached a stage where Rust is truly becoming part of the kernel, and it's no longer just an experimental thing", and a month later the experimental label came off. If the kernel could live with the compiler's objections, a Python packager probably could too.
+The Linux kernel was in the background too. Rust had been an experiment there for years, with loud opponents. In November 2025 Linus Torvalds said it had "reached a stage where Rust is truly becoming part of the kernel, and it's no longer just an experimental thing", and in December the experimental label came off. If the kernel could put up with the compiler, I figured a Python packager could.
 
 ## One day, thirty pull requests
 
-On 4 August 2026 the first pull request of the migration went in. Its description gives the reason in one sentence: over 28,000 lines coupled to pre-1.0 Zig APIs, and the pinned 0.15.2 code already failing against stable 0.16.0. Rust offered a stable host-language contract and could keep PocketPy, the Python API, and the binary format untouched.
+The first pull request of the migration went in on 4 August 2026. Its description gives the reason in one sentence: over 28,000 lines coupled to pre-1.0 Zig APIs, and the pinned 0.15.2 code already failing against stable 0.16.0. Rust offered a stable language and could keep PocketPy, the Python API, and the binary format exactly as they were.
 
-The port happened in waves over one day, with the agent doing the typing and a fixed gate in front of every wave: all 1,669 compatibility checks pass, and the four release targets build. Runtime spine, loader, the CLI commands, then the modules one by one: terminal handling, argument parsing, `textwrap`, `heapq`, `itertools`, filesystem, archives. Version 0.6.0 shipped the next day with the new name. The cleanup commit removed 85,310 lines of Zig.
+The port happened in waves over one day. The agent typed. Every wave had the same gate in front of it: all 1,669 compatibility checks pass, all four release targets build. First the runtime core and the loader, then the CLI commands, then the modules one at a time: terminal handling, argument parsing, `textwrap`, `heapq`, `itertools`, filesystem, archives. Version 0.6.0 shipped the next day with the new name. The cleanup commit deleted 85,310 lines of Zig.
 
-I would like to tell you the Rust version was immediately smaller and faster. My own [migration retrospective](https://kipferl.dev/blog/rust-migration) says otherwise, and I would rather the numbers stay honest.
+I would prefer to say the Rust version came out smaller and faster. My own [migration retrospective](https://kipferl.dev/blog/rust-migration) says it did not, at least not at first.
 
 <ArticleMetrics
   id="migration-numbers" title="The honest numbers from the port."
@@ -192,37 +192,37 @@ I would like to tell you the Rust version was immediately smaller and faster. My
   ]}
 />
 
-The port started slower and larger. What made the binary small again was tree shaking, added in the same release: analyze the imports, pick the smaller prebuilt runtime profile when it is safe, and the minimal app lands at 1.45 MB, under the Zig build. Startup never caught up with Zig. It is a few milliseconds either way, and I took the trade, but it is a trade.
+The port started slower and larger. What got the binary small again was tree shaking, added in the same release: look at the imports, pick the smaller prebuilt runtime when that is safe, and a minimal app comes out at 1.45 MB, under the old Zig build. Startup never caught up. We are talking about three milliseconds, and I took that trade without much thought, but I want it on the record.
 
-The part that changed my mind about Rust came a month later, and it had nothing to do with speed.
+What actually changed my mind about Rust came a month later, and it was not about speed.
 
 ## What the lints found
 
-In September I asked for a review pass with the compiler turned all the way up. Clippy's `pedantic` and `nursery` groups on, plus a list of restriction lints: no `unwrap`, no `expect`, no indexing into slices, no unchecked arithmetic, no `as` casts, no `panic`, no `unreachable`. In a hobby project written by hand, that configuration is a form of self-harm. With an agent working through the diagnostics one by one, it was a bug hunt with a very thorough guide.
+In September I asked for a review pass with the compiler turned up as far as it goes. Clippy's `pedantic` and `nursery` groups, plus a list of restriction lints: no `unwrap`, no `expect`, no indexing into slices, no unchecked arithmetic, no `as` casts, no `panic`, no `unreachable`. If I had to work through that configuration by hand on a hobby project, I would give up in an hour. With an agent going through the diagnostics one by one, it turned into a bug hunt.
 
 <LintCatches id="lint-catches" />
 
-None of these were theoretical. A download checksum with the wrong bytes in it would have panicked the builder. A Python script setting an absurd HTTP timeout would have killed the whole process instead of raising an error, because the panic happened inside a C callback with nowhere to go. The floating-point helpers were quietly wrong for small numbers. Each one was found because a lint objected to a line, somebody had to explain why the line was fine, and it was not.
+These are real bugs. A download checksum with unexpected bytes in it would have crashed the builder. A Python script setting a silly HTTP timeout would have killed the whole process instead of raising an error, because the panic happened inside a C callback with nowhere to go. The floating-point helpers were wrong for small numbers. Each one turned up the same way: a lint complained about a line, the agent had to explain why the line was fine, and it was not.
 
-This is the thing I could not see in 2018. The compiler's objections have not changed. What changed is who receives them. For a person, a diagnostic is an interruption: stop, look it up, learn a rule, come back. For an agent, a diagnostic is the best possible instruction. It is precise, it is local, it names the line, and it arrives before a test fails or a user complains. The friction that drove me off the language is the exact property that makes it good to hand to a machine.
+This is what I could not see in 2018. The compiler is saying exactly the same things it said back then. The difference is who has to listen. For me, every message was an interruption: stop, look it up, learn the rule, come back to what I was doing. For an agent, a compiler message is about the best instruction it can get. It points at one line, it says what is wrong, and it shows up before a test fails or a user complains. The thing that drove me away from Rust is the thing that makes it good to hand to a machine.
 
-So the division of labor became: I decide what to build, choose the libraries, read the architecture, and write the tests I care about. The agent does the typing. The compiler does the first review, and it is a stricter reviewer than I have ever been at eleven at night.
+So the work splits like this now. I decide what to build, pick the libraries, read the architecture, and write the tests I care about. The agent types. The compiler does the first review, and it is a stricter reviewer than I am at eleven at night.
 
 ## Wherever I can, and where I cannot
 
-After Kipferl, Rust started turning up in my new work without a debate.
+After Kipferl, new projects just started in Rust.
 
 <RustLandings id="landings" />
 
-Quirl, a shell I wrote about in [I wanted a shell that could keep my old habits](/posts/2026/2026-08-23_shell-two-pipelines/), was Rust from the first commit and got the strict lint set ten days later. vrdx, a small tool for keeping decision records in Markdown, had been Python with a terminal UI since October 2025 and was ported in September. The audit script in my private hub repository went the same way the following week. Two new tools started in Rust on the same day.
+Quirl, the shell from [I wanted a shell that could keep my old habits](/posts/2026/2026-08-23_shell-two-pipelines/), was Rust from its first commit and got the strict lint set ten days later. vrdx, a small tool for decision records in Markdown, had been Python with a terminal UI since October 2025; I ported it in September. The audit script in my private hub repository followed a week later. Two new tools started in Rust on the same day.
 
-tdx is the counterexample, and I want it in the picture. In September I ran a measured comparison of Go and Rust on its Markdown parsing, with the same fixtures and the same edits on both sides. Rust was roughly ten times faster on the matched operations and its probe binary was a sixth of the size. It also compiled twice as slowly, and the production Go editor already handled a thousand tasks in about three milliseconds. A rewrite would have to reproduce the terminal UI, undo, version history and the careful save behavior for a speedup nobody would feel. The recommendation in the repository is to keep tdx in Go, and it is still Go. So is Sceno, my diagram tool.
+tdx did not move, and I think that is worth showing. In September I ran a proper comparison of Go and Rust on its Markdown parsing, same fixtures and same edits on both sides. Rust was about ten times faster on the matched operations and its test binary was a sixth of the size. It also compiled twice as slowly, and the existing Go editor already handles a thousand tasks in about three milliseconds. A rewrite would have to reproduce the terminal UI, undo, the version history, and the careful save behaviour, all for a speedup nobody would notice. The recommendation in the repository is to keep tdx in Go, and it is still Go. So is Sceno, my diagram tool.
 
-"Wherever I can" turns out to mean: wherever the compiler's help is worth more than the compile time, which is most new things and not every old one.
+"Wherever I can" means: wherever the compiler's help is worth more than the compile time. That covers most new things and not every old one.
 
 ## Let the compiler do the first review
 
-If you want to try the same setup, the whole configuration fits in two files. This is what I hand to agents on every Rust project now, with one instruction attached.
+If you want to try the same setup, the whole configuration fits in two files. This is what I give agents on every Rust project now, with one instruction attached.
 
 ```text
 Use stable Rust. Enable the Clippy configuration below in Cargo.toml and clippy.toml.
@@ -262,10 +262,10 @@ allow-panic-in-tests = true
 allow-indexing-slicing-in-tests = true
 ```
 
-Turn on only what fits the project. On an established codebase, enable the groups incrementally rather than in one enormous rewrite, and keep the exceptions narrow and explained. The lints are not a proof of anything; Kipferl's review notes say so in plain words, and a clean Clippy run has never once told me my logic was right.
+Turn on only what fits your project. On an existing codebase, add the groups one at a time instead of in one huge rewrite, and keep the exceptions narrow and explained. And none of this proves anything about your logic. Kipferl's review notes say so in plain words, and a clean Clippy run has never once told me my program does the right thing.
 
-They are also not an answer to the objection in Kelley's post. Agents produce code faster than anyone reads it, and that is a real problem, not a talking point. A strict compiler is my partial answer: the first reader is tireless, unforgiving, and knows every rule I would have had to look up. It is partial because it only reads for the things it understands.
+It is also not an answer to Kelley's objection. Agents produce code faster than anyone reads it, and that is a real problem. A strict compiler is my partial answer: the first reader never gets tired, never lets anything slide, and knows every rule I would have had to look up. It is only partial because it only reads for the things it understands.
 
-I still have the file from that Saturday evening. Twenty-four lines, a comment about `f64`, a debug build that lost to PHP for three years. The compiler had been right about every one of those twenty-four lines. I just had to be the one in the room when it said so.
+I still have the file from that Saturday evening. Twenty-four lines, a comment about `f64`, a debug build that lost to PHP for three years. The compiler was right about every one of those lines. I just had to be the one in the room when it said so.
 
 It can yell at somebody else now.
