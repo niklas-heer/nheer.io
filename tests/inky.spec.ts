@@ -63,19 +63,32 @@ for (const width of [1280, 390]) {
     const first = (await speech.textContent())?.trim();
     expect(first).toBeTruthy();
 
+    const next = demo.getByRole('button', { name: 'Next →' });
+    const prev = demo.getByRole('button', { name: '← Previous' });
+    await expect(next).toBeEnabled();
+    await expect(prev).toBeDisabled();
+
     await mascot.focus();
     await page.keyboard.press('Enter');
     await expect(demo).toHaveClass(/is-active/);
-    const seen = new Set([first, (await speech.textContent())?.trim()]);
+    const second = (await speech.textContent())?.trim();
+    const seen = new Set([first, second]);
+    await next.focus();
     for (let i = 0; i < 3; i++) {
-      await page.keyboard.press('Space');
+      await page.keyboard.press('Enter');
       seen.add((await speech.textContent())?.trim());
     }
     // Five fallback jokes, each once, then an exhausted line.
     expect(seen.size).toBe(5);
     await expect(demo.locator('[data-inky-status]')).toContainText('Comment 5 of 5');
-    await page.keyboard.press('Enter');
+    await next.click();
     await expect(demo.locator('[data-inky-status]')).toContainText('All 5 comments used');
+    // Previous walks back through what he already said.
+    await prev.click();
+    await expect(demo.locator('[data-inky-status]')).toContainText('Comment 5 of 5');
+    for (let i = 0; i < 4; i++) await prev.click();
+    await expect(speech).toHaveText(first!);
+    await expect(prev).toBeDisabled();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
   });

@@ -1,6 +1,6 @@
 ---
 title: "There's an octopus in the corner"
-description: "Inky is this site's snarky octopus. GPT-5.1 Chat writes his lines from tech headlines, the build bakes them into the page, and a phone never sees him. Here's how he works, and how I found out he had gone missing."
+description: "Inky is this site's snarky octopus. A small model writes his lines from tech headlines, the build bakes them into the page, and a phone never sees him. Here's how he works, and how I found out he had gone quiet twice."
 date: "2026-09-20T18:00:00+02:00"
 icon: ":octopus:"
 tags: ["astro", "ai", "web", "mascot"]
@@ -29,7 +29,7 @@ Inky does not chat. He does not remember you. He shuffles a list of comments, re
 
 The first click wakes him up. Later clicks walk through the list. Comments about the news carry a small link to the story. General jokes have none. When the list is empty, he switches to a handful of “that's all I've got” lines. Twelve seconds without another click and he deactivates.
 
-That is the whole interaction. Try it:
+That is the whole interaction. Try it, with the buttons or by clicking him:
 
 <InkyDemo />
 
@@ -41,9 +41,9 @@ The interesting part is where the other lines come from.
 
 A refresh job in my homelab fetches the top five stories from [Hacker News](https://news.ycombinator.com/) and the five newest from [The New Stack](https://thenewstack.io/) and [DevOps.com](https://devops.com/). It skips any URL Inky has already commented on. The rest go to a model with one request: answer in Inky's voice.
 
-The model is [GPT-5.1 Chat](https://openrouter.ai/openai/gpt-5.1-chat) from OpenAI, called through OpenRouter. The prompt is quite specific. Inky is a snarky kawaii octopus who lives in the deep web and means that as an ocean. He is tech-savvy but slightly jaded. Ocean puns are encouraged. Comments stay at one or two sentences. Unicode emoji are allowed sparingly; text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
+The model is currently [GPT-5.6 Luna](https://openrouter.ai/openai/gpt-5.6-luna), OpenAI's small model, called through OpenRouter. The prompt is quite specific. Inky is a snarky kawaii octopus who lives in the deep web and means that as an ocean. He is tech-savvy but slightly jaded. Ocean puns are encouraged. Comments stay at one or two sentences. Unicode emoji are allowed sparingly; text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
 
-That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, and it has stayed there since. There is a small script in the repository that runs the same prompt through six models so I can compare the voices. It records nothing; the choice was taste, not a benchmark.
+That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, which lasted until this week, for a reason that gets its own section below. A small script in the repository runs the real prompts, on the day's headlines, through any list of models and prints the results. It stores nothing. Picking a model is a matter of taste, and of whether the reply parses.
 
 The generated lines go into PostgreSQL, with the source title and URL attached. News comments older than seven days are deleted. A smaller pool of general jokes is topped up by two whenever it drops below ten, and trimmed if it grows past fifteen.
 
@@ -56,7 +56,7 @@ None of that reaches your browser as a live query. The site reads the current co
   caption="The production path as of the sync script and build-time reader in this repository. Builds without the database, such as local previews and test runs, use the five fallback comments instead."
   steps={[
     { label: 'News', title: 'Collect a few headlines', detail: 'Five each from Hacker News, The New Stack, and DevOps.com. Already-commented URLs are skipped.' },
-    { label: 'Voice', title: 'Write in Inky’s voice', detail: 'GPT-5.1 Chat, via OpenRouter, returns one snarky line per headline. Each is stored with its source link.' },
+    { label: 'Voice', title: 'Write in Inky’s voice', detail: 'A small model via OpenRouter, GPT-5.6 Luna today, returns one snarky line per headline. Each is stored with its source link.' },
     { label: 'Build', title: 'Bake comments into the page', detail: 'The site reads the current mix at build time. The browser only shuffles what it already has.' },
     { label: 'Click', title: 'Surface, then hide again', detail: 'Wide screens get the animated octopus. Narrow ones never load him.' }
   ]}
@@ -82,6 +82,10 @@ I don't know for how long. Nobody said anything, which is the risk with a mascot
 
 The fix is a flag on the button. The first pass to reach it wins, and a freshly swapped page arrives without the flag, so navigation still works. The animation loads exactly once. A browser test now opens the blog at desktop width, waits for the octopus, clicks him twice, and expects two different lines.
 
+That was not the only silence. Checking the database for this article, I found that the newest news comment was from 8 June. I cannot say exactly when the job started coming back empty, but by September the model it asked for had been retired from OpenRouter. The script read the error reply as an empty list, inserted nothing, and exited successfully. Inky had spent the summer with ten general jokes and no news, and the pipeline had no reason to complain.
+
+Two changes. The sync now throws on a rejected model, a rejected key, or a reply without a JSON array, so a bad configuration stops the pipeline instead of passing quietly. And the model is a setting, with GPT-5.6 Luna as the default. I tried seven candidates with the real prompts on the day's headlines. Two returned broken JSON, one took almost a minute, and Luna was fast, parsed every time, and sounded like him. A run over fifteen headlines costs a fraction of a cent. The funniest line of the afternoon came from DeepSeek, which I may yet regret not picking.
+
 <ArticleStep id="also-in-the-prompt" number="05" icon="⌨️" title="The homepage prompt knows him too" />
 
 The homepage has a small terminal. `inky` prints one of the same comments. `sudo` reports the incident to Inky. `rm -r` is declined on the grounds that he keeps backups.
@@ -92,4 +96,4 @@ Those are jokes in the same costume. They use the comment list already on the pa
 
 The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. A phone reader loses a purple octopus and a few sentences of snark.
 
-That is also why the corner could be empty for a while without anyone noticing. He is optional by design. The model writes the jokes. The site decides when you hear them. And I now have a test that checks whether he showed up.
+That is also why the corner could be empty for a while without anyone noticing, and why a summer without news went unremarked. He is optional by design. The model writes the jokes. The site decides when you hear them. And there is now a test that checks whether he showed up, and a sync that complains when he has nothing to say.

@@ -30,13 +30,6 @@ const caption = usingFallback
     caption={caption}
   >
     <div class="stage" data-inky-stage>
-      <button type="button" class="mascot" data-inky-mascot aria-label="Ask Inky for the next comment" title="Click me!" disabled>
-        <span class="frame">
-          <img class="poster" src="/assets/articles/2026/inky-poster.svg" alt="" width="500" height="500" loading="lazy" decoding="async" />
-          <span class="lottie" data-inky-lottie aria-hidden="true"></span>
-        </span>
-        <span class="hint" aria-hidden="true">Click me!</span>
-      </button>
       <div class="bubble" data-inky-bubble>
         <p class="speech" data-inky-speech aria-live="polite">{first?.comment}</p>
         <p class="footer">
@@ -44,15 +37,30 @@ const caption = usingFallback
           <a class="source" data-inky-source href={firstSource?.url ?? '#'} title={firstSource?.title} hidden={!firstSource} target="_blank" rel="noopener noreferrer">via {firstSource?.label}</a>
         </p>
       </div>
+      <div class="floor">
+        <button type="button" class="mascot" data-inky-mascot aria-label="Ask Inky for the next comment" title="Click me!" disabled>
+          <span class="frame">
+            <img class="poster" src="/assets/articles/2026/inky-poster.svg" alt="" width="500" height="500" loading="lazy" decoding="async" />
+            <span class="lottie" data-inky-lottie aria-hidden="true"></span>
+          </span>
+          <span class="hint" aria-hidden="true">Click me!</span>
+        </button>
+        <div class="controls">
+          <p class="status" data-inky-status>Comment 1 of {lines.length}.</p>
+          <div class="buttons">
+            <button type="button" class="nav" data-inky-prev disabled>← Previous</button>
+            <button type="button" class="nav" data-inky-next disabled>Next →</button>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="status" data-inky-status>Comment 1 of {lines.length}. Click Inky for the next one.</p>
     <script type="application/json" data-inky-lines set:html={payload}></script>
     <noscript><p class="status">Without JavaScript you get his first line only. Everything else, including the animation, needs the click.</p></noscript>
   </ArticleFigure>
 </inky-demo>
 
 <script>
-  import { createInkyDeck, type InkyLine } from '../utils/inky-client';
+  import { createInkyDeck, type InkyLine, type InkyTurn } from '../utils/inky-client';
 
   const ANIMATION = 'inky-demo-animation';
   const IDLE_DELAY = 12000; // the corner mascot's own timeout
@@ -64,41 +72,38 @@ const caption = usingFallback
 
       const mascot = this.querySelector<HTMLButtonElement>('[data-inky-mascot]');
       const stage = this.querySelector<HTMLElement>('[data-inky-stage]');
-      const bubble = this.querySelector<HTMLElement>('[data-inky-bubble]');
       const speech = this.querySelector<HTMLElement>('[data-inky-speech]');
       const source = this.querySelector<HTMLAnchorElement>('[data-inky-source]');
       const status = this.querySelector<HTMLElement>('[data-inky-status]');
+      const prev = this.querySelector<HTMLButtonElement>('[data-inky-prev]');
+      const next = this.querySelector<HTMLButtonElement>('[data-inky-next]');
       const lottieBox = this.querySelector<HTMLElement>('[data-inky-lottie]');
       const raw = this.querySelector('[data-inky-lines]')?.textContent ?? '[]';
-      if (!mascot || !stage || !bubble || !speech || !source || !status || !lottieBox) return;
+      if (!mascot || !stage || !speech || !source || !status || !prev || !next || !lottieBox) return;
 
       let lines: InkyLine[] = [];
       try { lines = JSON.parse(raw); } catch { lines = []; }
       const total = lines.length;
       // The pre-rendered first line already counts as spoken; shuffle the rest.
       const deck = createInkyDeck(lines.slice(1));
+      const history: InkyTurn[] = [];
+      if (lines[0]) {
+        const first = lines[0];
+        const url = first.sourceUrl ?? '';
+        history.push({
+          text: first.comment,
+          source: first.sourceType && first.sourceType !== 'general' && /^https?:/.test(url)
+            ? { type: first.sourceType, label: source.textContent?.replace(/^via /, '') ?? 'Source', url, title: first.sourceTitle || 'Read article' }
+            : null,
+          shown: 1, total, exhausted: false,
+        });
+      }
+      let position = history.length - 1;
       let activated = false;
       let idle: ReturnType<typeof setTimeout> | null = null;
 
-      const retreat = () => {
-        activated = false;
-        this.classList.remove('is-active');
-        bubble.hidden = true;
-        status.textContent = 'Twelve seconds without a click. Inky slid back into the wall; click him to bring him back.';
-      };
-      const resetIdle = () => {
-        if (idle) clearTimeout(idle);
-        idle = setTimeout(retreat, IDLE_DELAY);
-      };
-
-      mascot.addEventListener('click', () => {
-        if (!activated) {
-          activated = true;
-          this.classList.add('is-active');
-        }
-        const turn = deck.next();
+      const show = (turn: InkyTurn) => {
         speech.textContent = turn.text;
-        bubble.hidden = false;
         if (turn.source) {
           source.hidden = false;
           source.href = turn.source.url;
@@ -109,11 +114,46 @@ const caption = usingFallback
         }
         status.textContent = turn.exhausted
           ? `All ${total} comments used. From here on, every click gets one of his five "out of ink" lines.`
-          : `Comment ${turn.shown + 1} of ${total}.`;
-        resetIdle();
-      });
-      stage.addEventListener('mouseenter', () => { if (activated) resetIdle(); });
+          : `Comment ${turn.shown} of ${total}.`;
+        prev.disabled = position <= 0;
+      };
+      const surface = () => {
+        if (!activated) {
+          activated = true;
+          this.classList.add('is-active');
+        }
+        if (idle) clearTimeout(idle);
+        idle = setTimeout(() => {
+          activated = false;
+          this.classList.remove('is-active');
+        }, IDLE_DELAY);
+      };
+      const forward = () => {
+        if (position < history.length - 1) {
+          position += 1;
+        } else {
+          const turn = deck.next();
+          turn.shown = Math.min(total, turn.shown + 1);
+          history.push(turn);
+          position = history.length - 1;
+        }
+        show(history[position]);
+        surface();
+      };
+      const back = () => {
+        if (position <= 0) return;
+        position -= 1;
+        show(history[position]);
+        surface();
+      };
+
+      mascot.addEventListener('click', forward);
+      next.addEventListener('click', forward);
+      prev.addEventListener('click', back);
+      stage.addEventListener('mouseenter', () => { if (activated) surface(); });
       mascot.disabled = false;
+      next.disabled = false;
+      prev.disabled = true;
 
       // The poster is the whole picture for reduced motion. Otherwise the real
       // animation is fetched once the figure comes close to the viewport.
@@ -141,8 +181,20 @@ const caption = usingFallback
 </script>
 
 <style>
-  inky-demo { display: block; }
-  .stage { display: grid; grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr); gap: 1.1rem; align-items: center; }
+  inky-demo { display: block; --inky-purple: #c6adff; --inky-surface: #241c31; }
+  .stage { display: grid; gap: 0; }
+  /* The bubble sits above the octopus and points down at him, like the corner. */
+  .bubble { position: relative; margin: 0 0 1.35rem 0.5rem; padding: 1rem 1.15rem 0.85rem; border: 2px solid var(--inky-purple); border-radius: 1.1rem; background: var(--inky-surface); box-shadow: 0 0 20px rgba(198, 173, 255, 0.18); }
+  .bubble::before, .bubble::after { content: ''; position: absolute; border-style: solid; }
+  .bubble::before { left: 2.35rem; bottom: -0.95rem; border-width: 0.95rem 0.8rem 0; border-color: var(--inky-purple) transparent transparent; }
+  .bubble::after { left: 2.5rem; bottom: -0.7rem; border-width: 0.75rem 0.65rem 0; border-color: var(--inky-surface) transparent transparent; }
+  .speech { margin: 0; color: #f0eafa; font-size: 1rem; line-height: 1.55; }
+  .footer { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0.6rem 0 0; }
+  .byline { color: var(--inky-purple); font: italic 0.78rem/1 system-ui, sans-serif; }
+  .source { color: #8ae0c6; font-size: 0.75rem; text-decoration: underline; text-underline-offset: 0.15em; }
+  .source[hidden] { display: none; }
+  .source:focus-visible { outline: 3px solid #f0cd8e; outline-offset: 3px; }
+  .floor { display: grid; grid-template-columns: minmax(6.5rem, 8.5rem) minmax(0, 1fr); gap: 1.1rem; align-items: center; }
   .mascot { position: relative; width: 100%; aspect-ratio: 1; margin: 0; padding: 0; border: 0; border-radius: 14px; background: none; cursor: pointer; overflow: hidden; }
   .mascot:disabled { cursor: default; }
   .mascot:focus-visible { outline: 3px solid #f0cd8e; outline-offset: 3px; }
@@ -158,19 +210,15 @@ const caption = usingFallback
   inky-demo.is-animated .lottie { display: block; }
   .hint { position: absolute; right: 0.35rem; bottom: 0.35rem; padding: 0.3rem 0.5rem; border-radius: 999px; background: #f0cd8e; color: #191623; font: 650 0.65rem/1 ui-monospace, monospace; }
   inky-demo.is-active .hint, .mascot:disabled .hint { display: none; }
-  .bubble { position: relative; padding: 1rem 1.1rem 0.85rem; border: 1px solid #78618e; border-radius: 14px; background: #241c31; }
-  .bubble[hidden] { display: none; }
-  .bubble::after { content: ''; position: absolute; left: -10px; top: 1.4rem; border: 10px solid transparent; border-right-color: #241c31; filter: drop-shadow(-1px 0 0 #78618e); }
-  .speech { margin: 0; color: #f0eafa; font-size: 1rem; line-height: 1.55; min-height: 3.2em; }
-  .footer { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 0.7rem 0 0; }
-  .byline { color: #c6adff; font: 650 0.75rem/1 ui-monospace, monospace; }
-  .source { color: #8ae0c6; font-size: 0.75rem; text-decoration: underline; text-underline-offset: 0.15em; }
-  .source[hidden] { display: none; }
-  .source:focus-visible { outline: 3px solid #f0cd8e; outline-offset: 3px; }
-  .status { margin: 1rem 0 0; color: #c4b8d3; font-size: 0.8rem; }
+  .controls { display: grid; gap: 0.6rem; }
+  .status { margin: 0; color: #c4b8d3; font-size: 0.8rem; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .nav { font: inherit; font-size: 0.85rem; padding: 0.5rem 0.85rem; border: 1px solid #8ae0c6; border-radius: 8px; background: #203332; color: #f0eafa; cursor: pointer; }
+  .nav:disabled { cursor: default; opacity: 0.5; }
+  .nav:focus-visible { outline: 3px solid #f0cd8e; outline-offset: 3px; }
   @media (max-width: 520px) {
-    .stage { grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr); gap: 0.8rem; align-items: start; }
-    .bubble::after { top: 1.2rem; }
+    .floor { grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr); gap: 0.8rem; }
+    .bubble { margin-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     .frame { transition: none; }
