@@ -20,6 +20,10 @@ export interface InkyComment {
 let commentsPromise: Promise<InkyComment[]> | undefined;
 
 export function getInkyComments(): Promise<InkyComment[]> {
+  // Sample-data builds and tests stay deterministic: no database, fallback lines.
+  if ((process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === "true") {
+    return Promise.resolve(getFallbackComments());
+  }
   if (import.meta.env.DEV) return loadInkyComments();
   return (commentsPromise ??= loadInkyComments());
 }
@@ -129,47 +133,49 @@ async function loadInkyComments(): Promise<InkyComment[]> {
 /**
  * Fallback comments when database is unavailable
  */
+export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
+  {
+    id: 0,
+    comment:
+      "I surfaced from the deep web just to judge your code. No regrets.",
+    sourceType: "general",
+    sourceTitle: null,
+    sourceUrl: null,
+  },
+  {
+    id: 0,
+    comment:
+      "Your Docker containers are more tangled than my tentacles. Impressive, actually.",
+    sourceType: "general",
+    sourceTitle: null,
+    sourceUrl: null,
+  },
+  {
+    id: 0,
+    comment:
+      "I've seen cleaner git histories in the Mariana Trench. And I live there.",
+    sourceType: "general",
+    sourceTitle: null,
+    sourceUrl: null,
+  },
+  {
+    id: 0,
+    comment:
+      "Kubernetes? More like Kuber-not-today. Even my eight arms can't manage that YAML.",
+    sourceType: "general",
+    sourceTitle: null,
+    sourceUrl: null,
+  },
+  {
+    id: 0,
+    comment:
+      "They say the ocean is deep, but have you seen your node_modules folder?",
+    sourceType: "general",
+    sourceTitle: null,
+    sourceUrl: null,
+  },
+];
+
 function getFallbackComments(): InkyComment[] {
-  return [
-    {
-      id: 0,
-      comment:
-        "I surfaced from the deep web just to judge your code. No regrets.",
-      sourceType: "general",
-      sourceTitle: null,
-      sourceUrl: null,
-    },
-    {
-      id: 0,
-      comment:
-        "Your Docker containers are more tangled than my tentacles. Impressive, actually.",
-      sourceType: "general",
-      sourceTitle: null,
-      sourceUrl: null,
-    },
-    {
-      id: 0,
-      comment:
-        "I've seen cleaner git histories in the Mariana Trench. And I live there.",
-      sourceType: "general",
-      sourceTitle: null,
-      sourceUrl: null,
-    },
-    {
-      id: 0,
-      comment:
-        "Kubernetes? More like Kuber-not-today. Even my eight arms can't manage that YAML.",
-      sourceType: "general",
-      sourceTitle: null,
-      sourceUrl: null,
-    },
-    {
-      id: 0,
-      comment:
-        "They say the ocean is deep, but have you seen your node_modules folder?",
-      sourceType: "general",
-      sourceTitle: null,
-      sourceUrl: null,
-    },
-  ];
+  return FALLBACK_INKY_COMMENTS;
 }

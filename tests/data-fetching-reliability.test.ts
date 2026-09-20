@@ -78,6 +78,14 @@ describe("database reads", () => {
     expect(clients).toHaveLength(0);
   });
 
+  test("sample-data builds read the fallback Inky lines without opening a client", async () => {
+    process.env.SITE_TEST_DATA = "true";
+    const comments = await getInkyComments();
+    expect(comments).toHaveLength(5);
+    expect(comments.every((comment) => comment.sourceType === "general")).toBe(true);
+    expect(clients).toHaveLength(0);
+  });
+
   for (const phase of ["constructor", "connect", "query"] as const) {
     test(`${phase} failures return fallbacks and close any created clients`, async () => {
       failure = phase;

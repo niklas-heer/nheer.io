@@ -16,6 +16,7 @@ export default defineConfig({
     { name: 'articles', testMatch: 'articles.spec.ts' },
     { name: 'hub-article', testMatch: 'hub-article.spec.ts' },
     { name: 'article-components', testMatch: 'article-components.spec.ts' },
+    { name: 'inky', testMatch: 'inky.spec.ts' },
   ],
   webServer: [{
     // Keep the server in the foreground so Playwright owns its cleanup.
