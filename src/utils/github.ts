@@ -197,21 +197,40 @@ export interface GitHubRepoData {
 export async function fetchGitHubRepo(
   repo: string,
 ): Promise<GitHubRepoData | null> {
+  if ((process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === "true") {
+    return {
+      full_name: repo,
+      html_url: `https://github.com/${repo}`,
+      description: "Sample repository used by local builds and tests.",
+      stargazers_count: 42,
+      forks_count: 3,
+      language: "TypeScript",
+      license: { spdx_id: "MIT" },
+      updated_at: "2026-09-01T00:00:00.000Z",
+    };
+  }
+
+  const token = process.env.GITHUB_TOKEN ?? import.meta.env.GITHUB_TOKEN;
+  const live = (process.env.REQUIRE_LIVE_DATA ?? import.meta.env.REQUIRE_LIVE_DATA) === "true";
+
   try {
-    const response = await fetch(`https://api.github.com/repos/${repo}`, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-      },
-    });
+    const headers: Record<string, string> = {
+      Accept: "application/vnd.github.v3+json",
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(`https://api.github.com/repos/${repo}`, { headers });
 
     if (!response.ok) {
       console.error(`GitHub API error for ${repo}:`, response.status);
+      if (live) throw new Error("Required GitHub data unavailable");
       return null;
     }
 
     return await response.json();
   } catch (error) {
     console.error(`Error fetching repo ${repo}:`, error);
+    if (live) throw new Error("Required GitHub data unavailable");
     return null;
   }
 }
