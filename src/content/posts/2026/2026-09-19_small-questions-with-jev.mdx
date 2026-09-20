@@ -1,6 +1,6 @@
 ---
 title: "Giving AI smaller questions"
-description: "How I’m using TypeSafe’s Jev for reusable notes, project names, shell-command experiments, and blog ideas—and where its judgment fits."
+description: "How I use TypeSafe's Jev for notes, project names, shell commands and blog ideas, and what I still have to check myself."
 date: "2026-09-19T20:00:00+02:00"
 icon: ":bulb:"
 tags: ["ai", "developer-tools", "experiments", "software-design"]
@@ -31,15 +31,15 @@ import ArticleFlow from '../../../components/ArticleFlow.astro';
 import ArticleSplit from '../../../components/ArticleSplit.astro';
 import ArticleStep from '../../../components/ArticleStep.astro';
 
-A project produces plenty of information that probably should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
+A project produces a lot of information that should not become permanent documentation. A passing suggestion. A build that is still running. A decision nobody has actually accepted yet.
 
-It also produces things worth keeping: why a tool behaves a certain way, which approach was chosen, or a preference that would save another round of explanation.
+It also produces things worth keeping: why a tool behaves the way it does, which approach won, a preference that would save another round of explaining.
 
-I keep reusable notes in a hub repository that coordinates work across my projects. Deciding what belongs there involves a small judgment: does this observation deserve a record, and does the evidence support what the record would say?
+I keep reusable notes in a hub repository that coordinates work across my projects. Deciding what goes in there is a small judgment every time. Does this observation deserve a record, and does the evidence support what the record would say?
 
-That is one place I have started using Jev, TypeSafe’s model for focused judgments. Other experiments cover project names, finding shell commands, and choosing blog stories.
+That is one of the places where I have started using Jev, TypeSafe's model for focused judgments. The other experiments in this post are project names, finding shell commands and choosing blog stories.
 
-These are early tools and experiments. They share a division of work: code gathers evidence, Jev answers a bounded question, and the caller decides what happens next. A larger model handles work such as generating names or writing prose.
+All of them are early, and they all split the work the same way. Code gathers the evidence. Jev answers one bounded question. The caller decides what happens next. Generating names or writing prose is a job for a larger model.
 
 <MermaidDiagram
   id="jev-workflow"
@@ -57,27 +57,27 @@ These are early tools and experiments. They share a division of work: code gathe
 
 <ArticleStep id="give-the-model-something-it-can-answer" number="01" icon="🎯" title="Give the model something it can answer" />
 
-[TypeSafe describes Jev](https://docs.typesafe.ai/introduction) as a “System One” model: a model for focused judgments on supplied context. It returns typed answers and probabilities rather than explanations or prose.
+[TypeSafe describes Jev](https://docs.typesafe.ai/introduction) as a "System One" model: it makes focused judgments on the context you give it and returns typed answers and probabilities rather than explanations or prose.
 
-“Typed” means the answer has a defined shape. If I supply four categories, the result can identify one of those categories. Program code can consume that directly without extracting a decision from a paragraph.
+"Typed" means the answer has a defined shape. If I supply four categories, the result is one of those four. Code can use that directly without fishing a decision out of a paragraph.
 
-The supplied context is called *state*. In my integrations, Jev cannot follow a repository link or fetch missing information. The calling tool has to bring the relevant evidence.
+The supplied context is called *state*. In my integrations, Jev cannot follow a repository link or fetch anything it is missing. The calling tool has to bring the evidence with it.
 
-There are [three question types](https://docs.typesafe.ai/primitives) I use. Choice selects from known options. Score rates something along explicitly ordered levels. Noul, despite its unfamiliar name, serves a straightforward purpose: it gives a probability for a yes/no question.
+I use [three question types](https://docs.typesafe.ai/primitives). Choice picks from known options. Score rates something on explicitly ordered levels. Noul, despite the odd name, does something simple: it gives a probability for a yes/no question.
 
 <JevWorkbench kind="questions" />
 
-Those distinctions matter. “Which candidate is best?” and “Is this candidate good enough?” are different questions. So are “How serious is this?” and “How likely is this to be serious?” A yes probability of 0.5 expresses uncertainty, not medium severity. The [Noul documentation](https://docs.typesafe.ai/primitives/noul) explains how to read that probability.
+The distinctions matter. "Which candidate is best?" and "Is this candidate good enough?" are different questions. So are "How serious is this?" and "How likely is this to be serious?" A yes probability of 0.5 means uncertainty, not medium severity. The [Noul documentation](https://docs.typesafe.ai/primitives/noul) explains how to read it.
 
-Independent questions can share the same state in a batch. They cannot see each other’s answers; application code combines the results.
+Independent questions can share the same state in one batch. They cannot see each other's answers; my code combines them afterwards.
 
-A tidy output shape still cannot make the supplied facts true.
+A tidy answer shape does not make the facts I supplied true. That part stays with me.
 
-<ArticleStep id="keeping-a-note" number="02" icon="🗒️" title="Keeping a note requires more than a category" />
+<ArticleStep id="keeping-a-note" number="02" icon="🗒️" title="Is this note worth keeping?" />
 
-My knowledge-capture tool is a Rust command-line program. It accepts a candidate note, supporting evidence, and existing records, then asks Jev three questions: what kind of record is this, is it worth keeping, and does the evidence support it?
+My knowledge-capture tool is a Rust command-line program. It takes a candidate note, its supporting evidence and the existing records, then asks Jev three questions: what kind of record is this, is it worth keeping, and does the evidence support it?
 
-The categories include fact, decision, preference, and skip. Code combines the answers into capture, review, or skip.
+The categories are fact, decision, preference and skip. Code combines the three answers into capture, review or skip.
 
 <ArticleFlow
   id="capture-handoff"
@@ -92,45 +92,45 @@ The categories include fact, decision, preference, and skip. Code combines the a
   ]}
 />
 
-Even “capture” does not write anything. The command returns a recommendation. The coding assistant still checks the actual evidence and, where relevant, whether I accepted the decision before writing a record. The [public capture workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/capture-knowledge/SKILL.md) describes that handoff.
+Even "capture" writes nothing. The command returns a recommendation. The coding assistant then re-reads the actual evidence and, where it matters, checks whether I accepted the decision before a record exists. The [public capture workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/capture-knowledge/SKILL.md) describes that handoff.
 
-The live integration has been exercised, but its thresholds remain provisional. In the initial sanitized examples, even the positive cases went to review. That illustrates cautious settings, not measured accuracy.
+The integration is live, but I have not tuned the thresholds yet. In the first sanitized examples even the good candidates came back as "review". That says the settings are cautious, not how accurate the model is.
 
-This is a useful boundary for the experiment: the model can help identify a note worth examining, while the evidence check remains a separate step.
+I like that boundary. The model can flag a note worth looking at. Checking the evidence stays a separate step.
 
-<ArticleStep id="a-favorite-name" number="03" icon="🏷️" title="A favorite name can still be mediocre" />
+<ArticleStep id="a-favorite-name" number="03" icon="🏷️" title="Picking a project name" />
 
-Naming a project has a similar split.
+Naming a project splits the same way.
 
-My [naming workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/find-project-name/SKILL.md) uses Codex to generate candidates. A Rust tool checks relevant registries and APIs. Jev can then assess naming fit, whether the supplied evidence suggests a confusing product in the same category, and which candidate to recommend. The recommendation includes a “none” option.
+My [naming workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/find-project-name/SKILL.md) uses Codex to generate candidates. A Rust tool checks the relevant registries and APIs. Jev then rates naming fit, whether the supplied evidence points at a confusing product in the same category, and which candidate to recommend. "None" is always one of the options.
 
-Jev does not generate the names in this workflow. It also cannot turn a failed registry request into an availability result. Unknown stays unknown.
+Jev does not generate the names here. It also cannot turn a failed registry request into an availability result. Unknown stays unknown.
 
-In a live comparison of three candidates, it preferred Taplume. Asking about absolute fit made that recommendation less flattering:
+In a live comparison of three candidates it preferred Taplume. Asking about absolute fit made that a lot less flattering:
 
 <JevCases kind="naming" />
 
-That is a useful result to keep intact. Winning a comparison does not mean clearing the bar. A shortlist can have a first place without having a name I should use.
+I kept that result as it is. Winning a comparison is not the same as clearing the bar. A shortlist can have a first place and still not contain a name I should use.
 
-Later web searches found historical listings for a similarly named Android app in third-party catalogs. Those were leads to investigate, without independently verified first-party evidence establishing a conflict. No name was accepted.
+Later web searches turned up historical listings for a similarly named Android app in third-party catalogs. Those were leads, not verified first-party evidence of a conflict. No name was accepted.
 
-The naming tool helps me build a shortlist. It does not provide legal clearance.
+The tool gives me a shortlist. It does not give me legal clearance.
 
-<ArticleStep id="finding-a-command" number="04" icon="🐚" title="Finding a command starts with a catalog" />
+<ArticleStep id="finding-a-command" number="04" icon="🐚" title="Finding a shell command" />
 
-Quirl is my shell project. A shell interprets the commands you type into a terminal, including the flags that somehow become memorable only after you have looked them up again.
+Quirl is my shell project. A shell interprets what you type into a terminal, including the flags that only become memorable after you have looked them up for the third time.
 
-For a command-discovery experiment, I gave Jev descriptions of 62 known commands. It could choose a command or return `NONE`, `CLARIFY`, or `COMPOSE` when nothing fit, more information was needed, or the request called for multiple commands.
+For a command-discovery experiment, I gave Jev descriptions of 62 known commands. It could choose one, or return `NONE`, `CLARIFY` or `COMPOSE` when nothing fit, when it needed more information, or when the request called for several commands.
 
-The experiment selected options. It did not assemble complete command lines or execute anything, and it is not a production integration.
+It only selected options. It did not assemble command lines or run anything, and it is not wired into the shell.
 
 One case asked for recursive directory sizes. The expected answer and Jev disagreed. Open the catalog evidence before deciding which one was wrong:
 
 <JevCases kind="command" />
 
-The catalog contained options that supported directory totals. The expected answer was corrected, with the original evidence retained alongside the correction. A mismatch had caught a problem in the test itself.
+The catalog did contain options that supported directory totals. The expected answer was wrong, so I corrected it and kept the original next to the correction. The disagreement had found a bug in the test.
 
-The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) keeps the unresolved case visible alongside the validated results:
+The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4ba56d7de1d3f81ebc109274aa9/docs/benchmarks/jev-command-search.md) keeps the one unresolved case visible next to the validated results:
 
 <ArticleMetrics
   id="jev-command-results"
@@ -144,26 +144,26 @@ The [benchmark report](https://github.com/niklas-heer/quirl/blob/593af98bb7e6e4b
   ]}
 />
 
-That is a reason to keep the evidence close to the recommendation. “The model disagreed” is the start of an investigation; the command descriptions are what let me resolve it.
+That is why I keep the evidence next to the recommendation. "The model disagreed" is the start of an investigation, and the command descriptions are what let me finish it.
 
-<ArticleStep id="choosing-a-story" number="05" icon="✍️" title="Choosing a story does not finish the editorial work" />
+<ArticleStep id="choosing-a-story" number="05" icon="✍️" title="Choosing a blog story" />
 
-The draft behind this article went through another experiment.
+The draft behind this article went through one more experiment.
 
-A new [storytelling workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/storytelling/SKILL.md) gathers repository evidence and checks existing posts and drafts. It supplies Jev with summarized story angles and coverage, then asks for a recommendation and readiness assessments.
+A new [storytelling workflow](https://github.com/niklas-heer/dotfiles/blob/94e407f/dot_agents/skills/storytelling/SKILL.md) gathers repository evidence and checks the existing posts and drafts. It hands Jev summarized story angles and coverage, then asks for a recommendation and a readiness rating per angle.
 
 <ArticleSplit id="editorial-sequence" mediaSide="right" balance="media" align="top" wide>
-  <p>A pilot compared four possible stories. Jev recommended the Quirl benchmark story, and Codex wrote the draft. Then the question changed from “which event is interesting?” to “what does a reader need to understand it?”</p>
-  <p>These four steps are the actual sequence that produced the article you are reading, including the point where my own feedback changed its scope.</p>
+  <p>A pilot compared four possible stories. Jev recommended the Quirl benchmark story, and Codex wrote the draft. Then the question changed from "which event is interesting?" to "what does a reader need in order to care?"</p>
+  <p>These four steps are how the article you are reading came about, including the point where my own feedback changed its scope.</p>
   <JevCases slot="media" kind="editorial" />
 </ArticleSplit>
 
-The first recommendation was useful: the benchmark disagreement survived into this article. It just needed a wider frame. Before asking a reader to care about Jev choosing a shell command, I needed to explain what Jev was doing in my projects in the first place.
+The first recommendation was useful. The benchmark disagreement made it into this article. It just needed a wider frame, because before a reader can care about Jev choosing a shell command, I have to explain what Jev is doing in my projects at all.
 
-<ArticleStep id="keep-the-question-small" number="06" icon="🔍" title="Keep the question small enough to inspect" />
+<ArticleStep id="keep-the-question-small" number="06" icon="🔍" title="Keep the question small" />
 
-The use case I keep returning to is a small decision between gathering information and doing something with it. Is this note worth keeping? Does this name fit? Which command deserves a closer look? Which piece of work could become a story?
+The use I keep coming back to is a small decision between gathering information and acting on it. Is this note worth keeping? Does this name fit? Which command deserves a closer look? Which piece of work could become a story?
 
-Those questions have something in common: I can put the evidence beside the answer and inspect the disagreement. The cutoff for trusting an answer still needs testing. A [confidence value](https://docs.typesafe.ai/confidence) describes how concentrated the model’s answer is; it cannot tell me that the question was well chosen.
+What these have in common is that I can put the evidence next to the answer and look at the disagreement. Where to set the cutoff for trusting an answer still needs testing. A [confidence value](https://docs.typesafe.ai/confidence) says how concentrated the model's answer is. It cannot tell me the question was a good one.
 
-For the next integration, that is where I would start: one recurring judgment, the context it needs, and a way to leave it unresolved. A name can remain unchosen. A note can wait for review. And a perfectly reasonable story recommendation can turn into a different article.
+For the next integration I would start the same way: one recurring judgment, the context it needs, and a way to leave it unresolved. A name can stay unchosen. A note can wait for review. And a perfectly reasonable story recommendation can turn into a different article.

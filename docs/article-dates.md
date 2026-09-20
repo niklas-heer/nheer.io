@@ -9,8 +9,8 @@ when the articles were originally written or published.
 |---|---|---|
 | The slowest part of my speed comparison | 2026-02-10 | Repository snapshot `8917f3cdf761`: Arch migration (2018), Earthly (2022), Nix/Devbox and Dagger work (December 2025), and February 2026 target maintenance |
 | My todo list lives in the repository | 2026-07-17 | Day after tdx v0.13.1; versioned README confirms conflict handling and snapshot history |
-| Teaching architecture diagrams to explain themselves | 2026-07-19 | Sceno v0.4.0; excludes the September live-preview/verified-repair UI |
-| Python-shaped code. A 1.47 MB executable. | 2026-08-06 | Day after Kipferl v0.6.0; excludes September project-workflow additions |
+| Architecture diagrams you can diff | 2026-07-19 | Sceno v0.4.0; excludes the September live-preview/verified-repair UI |
+| Python-style code in a 1.47 MB executable | 2026-08-06 | Day after Kipferl v0.6.0; excludes September project-workflow additions |
 | I wanted a shell that could keep my old habits | 2026-08-23 | Day after Quirl v0.1.0; excludes later repository finder, explorers and conversational assistant |
 | The projector racing game I never got around to making | 2026-09-04 | First playable version and driving-polish commits on September 4, through `9edd2c224140` |
 
@@ -26,3 +26,11 @@ and RSS include all six. Browser tests exercise the production routes and verify
 these discovery paths. `/drafts/` remains a local-only preview for future drafts.
 Publishing through the homelab pipeline rejects builds made with draft previews
 or sample podcast data.
+
+## Revisions
+
+- 2026-09-21: prose pass over every 2026 post at the author's request, so they
+  read less like generated text. Plainer headings and two retitled posts
+  (Sceno, Kipferl); facts, links, figures and display dates unchanged. Section
+  ids in the `inky:` frontmatter were updated to the new headings; the lines
+  themselves were kept where they still fit the section.

@@ -165,3 +165,7 @@ Verification on 2026-09-19 after this revision:
 - The normal sample-data build now contains `/posts/2026/09/2026-09-19_small-questions-with-jev/`
   and the slug in `rss.xml`, `/posts/` and the homepage; `/drafts/` is absent.
   No deployment or publish task was run.
+
+## Revisions
+
+- 2026-09-21: prose pass at the author's request so the article reads less like generated text; plainer section titles, no factual or visual changes. Inky lines kept.

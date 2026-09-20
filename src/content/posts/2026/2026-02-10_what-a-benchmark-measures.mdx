@@ -1,6 +1,6 @@
 ---
 title: "The slowest part of my speed comparison"
-description: "From one big Arch Linux container to Earthly, then Nix and Dagger: the real story is making dozens of language environments manageable."
+description: "Installing the languages took longer than racing them. Three tries at keeping dozens of toolchains in order: one Arch container, an Earthly target per language, and now Nix with Dagger."
 date: "2026-02-10T10:00:00+01:00"
 icon: ":wrench:"
 tags: ["ci", "nix", "dagger", "open-source"]
@@ -9,15 +9,15 @@ lang: "en"
 inky:
   - section: "intro"
     comment: "New achievement! Installed Everything Except the Benchmark. You spent longer fetching compilers, runtimes, libraries, and flags than measuring them. Reward: a pristine chart with a pantry full of drift."
-  - section: "first-put-everything-in-the-arch-container"
+  - section: "2018-one-arch-container-with-everything-in-it"
     comment: "Patch 1.0.0: Arch container now bundles every runtime, plotting tool, and dependency into one lovingly maintained habitat. Distribution upgrades and language upgrades are promoted to the same incident."
-  - section: "then-give-each-language-an-earthly-target"
+  - section: "2022-an-earthly-target-per-language"
     comment: "Incident #2018: Earthly targets encountered Alpine, Debian, official images, and a brief NixOS evacuation. Severity: bureaucratically significant. The route to declarative infrastructure has been documented as a round trip."
-  - section: "the-new-direction-describe-the-language-once"
+  - section: "2025-describe-each-language-once"
     comment: "Surface announcement: Dagger now reads a Python dictionary containing package versions, source files, build commands, execution commands, and checks. You may edit one declaration instead of rediscovering a Docker image."
-  - section: "separate-the-kitchen-from-the-stopwatch"
-    comment: "New achievement! Separated the Kitchen from the Stopwatch. Base images and source caches now avoid rebuilding unrelated languages, while the runner still executes targets sequentially. Reward: fewer exciting invalidations."
-  - section: "declarative-does-not-mean-magical"
+  - section: "build-the-toolchains-before-the-race"
+    comment: "New achievement! Toolchains Prepared in Advance. Base images and source caches now avoid rebuilding unrelated languages, while the runner still executes targets one at a time. Reward: fewer exciting invalidations."
+  - section: "what-still-needed-fixing-by-hand"
     comment: "Patch 2.0.0: Declarative setup now includes Swift headers, devbox run, repair commits, an Earthfile, and a directory still named dagger-poc. This feature preserves the old system while promising the next update will be boring."
 ---
 
@@ -26,47 +26,41 @@ import PipelineHistory from '../../../components/PipelineHistory.astro';
 
 <GitHubRepo repo="niklas-heer/speed-comparison" />
 
-My [speed-comparison repository](https://github.com/niklas-heer/speed-comparison) runs the same numerical task in many programming languages. The visible result is a chart.
+My [speed-comparison repository](https://github.com/niklas-heer/speed-comparison) runs the same calculation in as many programming languages as I can get installed. What people come for is the chart.
 
-The less visible result is that I have spent a remarkable amount of time installing programming languages.
+What I have actually spent most of my time on is installing programming languages.
 
-Compilers, interpreters, libraries, base images, version checks, build flags: before anything can race, somebody has to get the contestants to the starting line. Eventually, that became the more interesting engineering problem.
-
-The project has gone through three approaches to it. Reading the commits is a useful reminder that a tidy chart can have a very untidy supply cupboard behind it.
+Compilers, interpreters, libraries, base images, version checks, build flags. Before anything can race, somebody has to get all the contestants to the starting line, and over the years that turned into the more interesting problem. The project has been through three approaches to it. Reading the commits is a good reminder that a tidy chart can have a very untidy cupboard behind it.
 
 <PipelineHistory />
 
-## First: put everything in the Arch container
+## 2018: one Arch container with everything in it
 
-In February 2018, I [switched the environment to Arch Linux](https://github.com/niklas-heer/speed-comparison/commit/eecf226). The Dockerfile installed the base tools, then a long list of language runtimes with `pacman`. More setup handled plotting, Python dependencies, and the package helper.
+In February 2018 I [moved the environment to Arch Linux](https://github.com/niklas-heer/speed-comparison/commit/eecf226). The Dockerfile installed the base tools, then a long list of language runtimes with `pacman`, then the plotting tools, the Python dependencies and the package helper.
 
-The mental model was straightforward: build one large environment with everything installed, then run the comparison inside it.
+The idea was simple. Build one big image with everything in it, run the comparison inside.
 
-That was convenient until the environment itself became a substantial thing to maintain. Adding another language meant adding another dependency to the shared home. Updating the distribution and updating the contestants were uncomfortably close to the same operation.
+That worked until the image itself became the thing I was maintaining. Every new language was another package in the shared home. Updating the distribution and updating the contestants were nearly the same operation, and not one I looked forward to. I wanted a benchmark suite and was slowly acquiring the responsibilities of a small Linux distribution.
 
-I wanted a benchmark suite. I was gradually acquiring the responsibilities of a small Linux distribution.
+## 2022: an Earthly target per language
 
-## Then: give each language an Earthly target
+The [first Earthfile arrived in October 2022](https://github.com/niklas-heer/speed-comparison/commit/eb6b44c). Splitting the work into targets helped. The shared preparation and the benchmark steps could be reused, and each language got its own instructions where it needed them.
 
-The [first Earthfile arrived in October 2022](https://github.com/niklas-heer/speed-comparison/commit/eb6b44c). Splitting the work into targets was a useful improvement. Shared preparation and benchmark steps could be reused, with language-specific instructions where needed.
+There was a short NixOS detour in there too. The [very next commit](https://github.com/niklas-heer/speed-comparison/commit/1d59bca) removed those images again because of the load they put on the machine. The road to declarative infrastructure had a round trip in it.
 
-There was even an early NixOS detour: the [very next commit](https://github.com/niklas-heer/speed-comparison/commit/1d59bca) removed those images because of the load they put on the system. Apparently the route to declarative infrastructure was going to include a round trip.
+The bigger problem stayed. The recipe for "install this language" still depended on where the language came from. One target used an Alpine package. Another needed a Debian-based image. A third started from the language's official container. Bumping a version could mean changing a package name, swapping an image tag, editing an install script, or finding out that the new image brought a different version of something else along.
 
-But the recipe for “install this language” still depended on where it came from.
+The [Python/Numba addition](https://github.com/niklas-heer/speed-comparison/commit/39aa9c504772) is a typical case: a `python:3.13-slim` base, Debian preparation, compiler and development packages, then `pip install numba`. Perfectly reasonable. Also one more special environment to understand the next time anything changes.
 
-One target used an Alpine package. Another needed a Debian-based image. Another started from a language's official container. Bumping a version could mean changing a package name, replacing an image tag, revisiting an installation script, or discovering that the image brought along a different version of something else.
+None of this is Earthly's fault. Earthly can reuse targets and run work in parallel. What had gone wrong was that **this project** had collected a different installation recipe per language, and the steps for preparing toolchains, building programs and collecting results had grown into each other.
 
-A concrete example is the [Python/Numba addition](https://github.com/niklas-heer/speed-comparison/commit/39aa9c504772): a `python:3.13-slim` base, Debian preparation, compiler and development packages, then `pip install numba`. It is a reasonable recipe. It is also another particular environment to understand when something changes.
+## 2025: describe each language once
 
-Earthly can reuse targets and run work in parallel. My frustration was with how **this project** had accumulated different installation recipes and tightly connected responsibilities. Preparing toolchains, building programs, and collecting results were harder to separate than I wanted.
+In December 2025 I [added a Dagger pipeline](https://github.com/niklas-heer/speed-comparison/commit/5e7efe5). Dagger does the container work, driven from Python. Nix packages, managed through Devbox, supply the language environments.
 
-## The new direction: describe the language once
+The part I like most is embarrassingly small. It is a Python dictionary.
 
-In December 2025, I [added the Dagger pipeline](https://github.com/niklas-heer/speed-comparison/commit/5e7efe5). Dagger handles the container work from Python. Nix packages, managed through Devbox, supply the language environments.
-
-The part I like most is almost disappointingly small: a Python dictionary.
-
-`dagger-poc/languages.py` holds the `LANGUAGES` definitions. Here is the useful core of the actual Go entry, with display metadata omitted:
+`dagger-poc/languages.py` holds the `LANGUAGES` definitions. This is the real Go entry with the display metadata left out:
 
 ```python
 "go": Language(
@@ -79,32 +73,28 @@ The part I like most is almost disappointingly small: a Python dictionary.
 ),
 ```
 
-The package version, source file, compilation command, execution command, and version check now live together. The same data can drive the build, the benchmark, validation, and update tooling.
+Package version, source file, compile command, run command and version check all sit together. The same data drives the build, the benchmark, the validation and the update tooling.
 
-For a straightforward version bump, I can change the declaration and let the pipeline do the repetitive work. I do not have to remember which Docker image happened to contain the version I wanted.
+For an ordinary version bump I change the declaration and let the pipeline do the rest. I no longer have to remember which Docker image happened to contain the version I wanted. The [version-check workflow](https://github.com/niklas-heer/speed-comparison/blob/8917f3cdf761/.github/workflows/dagger-version-check.yml) is built on the same definitions. There is something very satisfying about declarative configuration when the alternative is rediscovering your own installation instructions every few months.
 
-The [version-check workflow](https://github.com/niklas-heer/speed-comparison/blob/8917f3cdf761/.github/workflows/dagger-version-check.yml) builds on that common definition. Declarative configuration is particularly satisfying when the alternative is repeatedly rediscovering your own installation instructions.
+## Build the toolchains before the race
 
-## Separate the kitchen from the stopwatch
+The new pipeline builds the language environments ahead of time and stores them in the container registry. The benchmark source is added later, when it is needed. That gives me a clean line between **preparing a toolchain** and **running a measurement**.
 
-The newer pipeline builds language environments ahead of time and stores them in the container registry. Benchmark source is added when it is needed. That gives me a useful separation between **preparing a toolchain** and **running a measurement**.
+The commits show that line getting sharper:
 
-The commits show that separation becoming more precise:
-
-- [Deduplicate base images](https://github.com/niklas-heer/speed-comparison/commit/6e8f7b6) so language variants can share the same prepared environment.
+- [Deduplicate base images](https://github.com/niklas-heer/speed-comparison/commit/6e8f7b6) so language variants can share one prepared environment.
 - [Detect image-affecting changes](https://github.com/niklas-heer/speed-comparison/commit/cc959b4) instead of rebuilding images for unrelated metadata edits.
-- [Use language-specific source cache keys](https://github.com/niklas-heer/speed-comparison/commit/c19f3fb) so editing one implementation does not invalidate every other source cache. Shared configuration changes still affect the relevant shared inputs.
+- [Use language-specific source cache keys](https://github.com/niklas-heer/speed-comparison/commit/c19f3fb) so editing one implementation does not invalidate every other source cache. Shared configuration changes still touch everything that depends on them.
 
-Preparation can be split into independently managed jobs. That does not mean every timed benchmark should compete for the same CPU at once; the runner's loop still executes its selected targets sequentially.
+Preparation can now be split into independent jobs. The timed runs are a different matter. I do not want every benchmark competing for the same CPU at once, so the runner still works through its selected targets one at a time.
 
-## Declarative does not mean magical
+## What still needed fixing by hand
 
-The migration has plenty of repair commits too. Swift needed particular Nix packages and headers. Commands had to run through `devbox run` to get the intended environment. Some languages still need explicit setup steps beyond a package declaration.
+The migration has plenty of repair commits too. Swift wanted particular Nix packages and headers. Commands had to go through `devbox run` to see the right environment. A few languages still need explicit setup steps beyond a package declaration.
 
-The Earthfile also remains in the repository, alongside a directory still named `dagger-poc`. This is an evolving migration, not a claim that the old system vanished overnight.
+The Earthfile is also still in the repository, next to a directory that is still called `dagger-poc`. This is a migration in progress, not a claim that the old system disappeared overnight.
 
-What improved is where the knowledge lives. Versions and exceptions have a common, testable representation. Building environments and running benchmarks have clearer boundaries. Updating the collection becomes less of an expedition through unrelated containers.
+What did improve is where the knowledge lives. Versions and exceptions have one representation I can test. Building environments and running benchmarks have a clear boundary between them. Updating the collection is no longer an expedition through unrelated containers.
 
-The chart is still the thing most visitors come to see. But the work I am happiest about is making the next update less interesting.
-
-That is a surprisingly good outcome for infrastructure.
+The chart is still what most visitors come for. The work I am happiest about is the part that makes the next update boring.

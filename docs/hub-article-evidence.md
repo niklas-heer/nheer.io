@@ -128,3 +128,7 @@ Validation: the full `rtk mise run check` passed with the revised workflow tests
 Reviewed the new figure's desktop and mobile screenshots, verified the local
 preview's final text, and opened the article visibly in Arc. The ordinary build
 still excludes the draft from public routes and feeds.
+
+## Revisions
+
+- 2026-09-21: prose pass at the author's request so the article reads less like generated text; plainer section titles, no factual or visual changes. Inky lines kept.

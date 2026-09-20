@@ -1,6 +1,6 @@
 ---
 title: "The repository between my repositories"
-description: "Why I built a home base for scattered projects: somewhere to get my bearings, start a new repository, and carry useful context into the next piece of work."
+description: "I had plenty of repositories and nowhere to start. So I made a private one that sits between them: for getting an overview, starting something new, and keeping what I learn on the way."
 date: "2026-09-19T10:00:00+02:00"
 icon: ":compass:"
 tags: ["ai", "developer-tools", "git", "workflow"]
@@ -25,106 +25,102 @@ import ArticleStep from '../../../components/ArticleStep.astro';
 import HubLaunchpad from '../../../components/HubLaunchpad.astro';
 import HubFolders from '../../../components/HubFolders.astro';
 
-I had plenty of repositories. What I wanted was a place to start.
+I had plenty of repositories. What I was missing was a place to start.
 
-Each project had somewhere for its code, its README, and its unfinished business. But some questions came before choosing a repository. What needs my attention? How far did I get with that idea? Does this new thing belong in an existing project, or should it become its own?
+Every project had a home for its code, its README and its unfinished business. But some questions come before choosing a repository. What needs my attention? How far did I get with that idea? Does this new thing belong in an existing project, or should it become its own?
 
-Opening a coding agent inside one repository already makes a choice about the scope of the conversation. I wanted somewhere I could open before making that choice.
+Opening a coding agent inside one repository already decides what the conversation is about. I wanted somewhere I could open before making that decision.
 
-So I created `hub`: a private repository that serves as a home base for the others.
+So I created `hub`, a private repository that acts as a home base for the others.
 
-The projects still live in their own checkouts. From the hub, I can ask the agent to look across them, explore an idea, or help me start something new. There is also somewhere to leave the useful context that comes out of that work.
+The projects still live in their own checkouts. From the hub I can ask the agent to look across them, dig into an idea, or help me start something new. And there is a place to leave the useful context that comes out of that work.
 
-Pick a direction in the diagram. These are the kinds of requests the setup is organized around:
+Pick a direction in the diagram. These are the kinds of requests the setup is built around:
 
 <HubLaunchpad />
 
-This is still a young setup, built and expanded over the course of a day. The useful change is already concrete, though: I have a starting point for work that doesn't yet have a particular repository attached to it.
+The whole thing is young. I built and expanded it over the course of a day. But it already does the one thing I wanted: I have a starting point for work that doesn't have a repository yet.
 
-<ArticleStep id="get-your-bearings" number="01" icon="🧭" title="Get my bearings before diving in" />
+<ArticleStep id="get-your-bearings" number="01" icon="🧭" title="What needs my attention?" />
 
-A directory full of repositories can tell me what exists. It takes more work to turn that into a useful answer about what to do next.
+A directory full of repositories can tell me what exists. Turning that into an answer about what to do next takes more work.
 
-One project may have a pull request waiting for my review. Another may have an ambitious README and a much smaller implementation. A third might be waiting on a decision I explored somewhere else.
+One project has a pull request waiting for my review. Another has an ambitious README and a much smaller implementation. A third is waiting on a decision I explored somewhere else.
 
 From the hub, I can ask for an overview with a purpose:
 
 > Look across my projects and tell me what needs my attention. Separate things I can act on from things waiting on someone else. Give me a short list with evidence and one concrete next step for each.
 
-The agent can discover local checkouts, read project context, and use GitHub to inspect current issues and pull requests. My shared triage workflow helps turn that into a short queue. For a particular project, the project-compass workflow asks a different question: how far does the implementation get toward the project's own goal, and what would be a useful next milestone?
+The agent can discover the local checkouts, read each project's context, and use GitHub to look at open issues and pull requests. My shared triage workflow turns that into a short queue. For a single project, the project-compass workflow asks a different question: how far does the implementation get toward the project's own goal, and what would be a useful next milestone?
 
-Those workflows are available to my agents beyond the hub too. The hub gives me a natural place to bring them together.
+Those workflows are available to my agents outside the hub too. The hub is just the natural place to run them.
 
-**The overview is assembled when I ask.** It depends on inspecting current evidence; it isn't a continuously updated dashboard. That matters because yesterday's blocker may already be fixed.
+**The overview is built when I ask for it.** It comes from inspecting the current state, not from a dashboard that updates itself. That matters because yesterday's blocker may already be fixed.
 
-Once I choose something, the agent can work in the relevant checkout and follow that project's instructions. The hub helps me arrive at the work.
+Once I pick something, the agent works in that project's checkout and follows that project's instructions. The hub gets me to the work.
 
-<ArticleStep id="start-something-new" number="02" icon="🌱" title="Give a new idea somewhere to begin" />
+<ArticleStep id="start-something-new" number="02" icon="🌱" title="Starting something new" />
 
-A new idea usually comes with questions before it comes with code. Is there already something in my projects I can reuse? Which approach is worth trying? What would the first useful version do?
+A new idea usually arrives with questions before it arrives with code. Is there something in my projects I can reuse? Which approach is worth trying? What would the first useful version do?
 
-The hub gives those questions a home before I create another repository.
+The hub gives those questions a home before I create yet another repository.
 
-I can investigate an approach, compare it with existing work, save the reasoning, and then ask the agent to create a project with a sensible starting scope. The repository-creation workflow handles finding its place among my checkouts and establishing the project's own README, setup, and instructions.
+I can look into an approach, compare it with existing work, save the reasoning, and then ask the agent to create a project with a sensible starting scope. The repository-creation workflow finds it a place among my checkouts and sets up its README, setup and instructions.
 
-There is even a naming workflow now: generate candidates, screen possible collisions, and research the promising ones. Naming a small tool has an impressive capacity to become a separate afternoon.
+There is even a naming workflow now: generate candidates, screen for collisions, research the promising ones. Naming a small tool has an impressive ability to become a separate afternoon.
 
-The payoff is the handoff. A new project gets its own home and enough context to continue there. It should be understandable from its own checkout, including to someone who does not have my private hub or personal agent setup.
+What I get out of this is the handoff. The new project gets its own home and enough context to continue there. It should make sense from its own checkout, also to someone who has neither my private hub nor my agent setup.
 
 A request might look like this:
 
 > Help me turn this idea into a small project. Check what I already have, investigate the open questions, and propose the first useful milestone. Once we settle the scope, create its repository and carry the relevant context into it.
 
-The research does not all have to move with the code. Project-specific decisions belong with the project. A comparison that could help several future projects can stay in the hub.
+Not all of the research has to move with the code. Project-specific decisions belong with the project. A comparison that could help several future projects stays in the hub.
 
 That is useful even when an idea goes nowhere. I can keep why I stopped, or what I would need to learn before trying again.
 
-<ArticleStep id="carry-context-forward" number="03" icon="↩️" title="Carry useful context into the next task" />
+<ArticleStep id="carry-context-forward" number="03" icon="↩️" title="Keeping what I learn between projects" />
 
 The other thing scattered repositories were missing was a shared place for what I learned between them.
 
-An investigation might begin with one project and reveal something relevant to another. A decision about how I organize work might apply to all of them. A promising idea might have no implementation yet, but enough research that starting over would be annoying.
+An investigation starts in one project and turns up something relevant to another. A decision about how I organize work applies to all of them. A promising idea has no implementation yet, but enough research that starting over would be annoying.
 
-The hub keeps those different kinds of context in plain files:
+The hub keeps those kinds of context in plain files:
 
 <HubFolders />
 
-The distinction between research, facts, and decisions helps the next session understand what it is reading. An option I considered should not quietly turn into something I chose. A useful finding should include enough evidence to check again.
+Separating research, facts and decisions tells the next session what it is reading. An option I considered should not quietly become something I chose. A useful finding should carry enough evidence to check it again.
 
-I also have a capture workflow that can save qualifying findings during an active task. It checks existing notes first and preserves the parts worth reusing. That makes keeping useful context part of doing the work.
+There is also a capture workflow that can save qualifying findings during a task. It checks the existing notes first and keeps the parts worth reusing. Keeping useful context becomes part of doing the work instead of a chore afterwards.
 
-This article is a small example of the boundary in practice. The idea started in the hub, where we were talking about the hub itself. The draft and its visual components belong in my blog repository. The conversation had a starting point, and the actual work found its proper home.
+This article is a small example of the boundary. The idea started in the hub, in a conversation about the hub itself. The draft and its visual components belong in my blog repository, so that is where they went. The conversation had a starting point, and the work found its proper home.
 
-That is the arrangement I want: easy to begin in one place, easy to continue in the right one.
+<ArticleStep id="small-conventions" number="04" icon="⚙️" title="One convention worth copying" />
 
-<ArticleStep id="small-conventions" number="04" icon="⚙️" title="Let the small conventions do their job" />
+Underneath all this are tooling preferences: where checkouts go, how development commands are organized, what I expect from a finished change. Shared agent guidance makes those available across projects, with the detailed topics loaded only when relevant.
 
-There are tooling preferences underneath this: where checkouts go, how development commands are organized, and what I expect from a finished change. Shared agent guidance makes those choices available across projects, with detailed topics loaded when relevant.
+Dotfiles own that installed configuration. The hub owns cross-project context. Each project owns its implementation and its local guidance. Those details keep the workflow consistent, but they are supporting machinery. Choosing a task should not require a tour of my Rust lint configuration.
 
-Dotfiles owns that installed configuration. The hub owns cross-project context. Each project owns its implementation and local guidance.
+One small convention is worth stealing: look up current state when a command already knows it.
 
-Those details help the workflow feel consistent, but they are supporting machinery. I do not want choosing a task to require a tour of my Rust lint configuration.
-
-One small convention is worth copying: look up current state when a command already knows it.
-
-I originally kept a table of repository locations in the hub. Cloning another project meant updating the table, even though [GHQ](https://github.com/x-motemen/ghq) could already discover the checkout:
+I originally kept a table of repository locations in the hub. Cloning another project meant updating the table, even though [GHQ](https://github.com/x-motemen/ghq) could already find the checkout:
 
 ```sh
 ghq list --full-path
 ghq list --full-path quirl
 ```
 
-I deleted the table. Discovery now uses the configured GHQ roots, and the hub keeps the decision explaining why. Adding another project no longer creates a registration chore.
+I deleted the table. Discovery now uses the configured GHQ roots, and the hub keeps the decision that explains why. Adding a project no longer comes with a registration chore.
 
-The same principle applies to the overview: inspect today's issues and project state, and keep the reasoning worth returning to.
+The same idea applies to the overview: inspect today's issues and project state, and only keep the reasoning that is worth returning to.
 
-<ArticleStep id="copy-the-starting-point" number="05" icon="📂" title="Copy the starting point" />
+<ArticleStep id="copy-the-starting-point" number="05" icon="📂" title="Make your own" />
 
 The part to borrow is a workspace for the questions that span projects.
 
-Create a small repository alongside your existing ones. Open it in your coding agent. Give the agent a way to discover the projects and enough guidance to keep changes in the right checkout. Add a place for investigations and useful decisions.
+Create a small repository next to your existing ones. Open it in your coding agent. Give the agent a way to discover the projects and enough guidance to keep changes in the right checkout. Add a place for investigations and decisions.
 
-For a first version, these commands in Bash or zsh are enough to make the directories. Use a new directory name:
+For a first version, these commands in Bash or zsh are enough. Pick a fresh directory name:
 
 ```sh
 mkdir agent-hub
@@ -163,11 +159,11 @@ Keep credentials out of notes and Git. Use scratch/ for disposable output.
 
 </details>
 
-Replace the discovery command if your repositories use a different arrangement. Explicitly ask the agent to read the file, then give it one real cross-project task. For example, compare two projects you are considering returning to and explain which has the clearer next step.
+Replace the discovery command if your repositories are arranged differently. Ask the agent to read the file, then give it one real cross-project task. For example: compare two projects you are considering going back to, and explain which one has the clearer next step.
 
-That is a better first test than designing a comprehensive system for everything you might eventually do.
+That is a better first test than designing a comprehensive system for everything you might ever do.
 
-The hub will need tending. Notes can go stale, shared guidance can grow, and an overview is only useful if its evidence is current. I want those costs to stay smaller than the effort of reconstructing the context every time.
+The hub will need tending. Notes go stale, shared guidance grows, and an overview is only as good as its evidence. I want those costs to stay smaller than reconstructing the context every time.
 
 I still have all the scattered repositories. Now I also have somewhere to ask which one to open next.
 

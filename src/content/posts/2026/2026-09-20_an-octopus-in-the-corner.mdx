@@ -1,6 +1,6 @@
 ---
 title: "There's an octopus in the corner"
-description: "Inky is this site's snarky octopus. A small model writes his lines from tech headlines, the build bakes them into the page, and a phone never sees him. Here's how he works, and how I found out he had gone quiet twice."
+description: "Inky is the snarky octopus in the corner of this site. A small model writes his lines from tech headlines, the build bakes them into the page, and phones never see him. How he works, and how I found out he had gone quiet twice."
 date: "2026-09-20T18:00:00+02:00"
 icon: ":octopus:"
 tags: ["astro", "ai", "web", "mascot"]
@@ -34,35 +34,35 @@ import ArticleStep from '../../../components/ArticleStep.astro';
 
 If you're reading this on a wide screen, look at the bottom-left corner of the page. Something purple is peeking in.
 
-That's Inky. He's a small octopus who lives on this site, takes “the deep web” literally, and files every tech headline as an incident.
+That's Inky. He's a small octopus who lives on this site, takes "the deep web" literally, and files every tech headline as an incident.
 
-Click him. He surfaces, says something snarky, and sometimes points at the article that prompted it. Click again and you get the next line. After a few seconds of being ignored, he slides back into the wall.
+Click him. He surfaces, says something snarky, and sometimes points at the article that prompted it. Click again and you get the next line. After a few seconds of being ignored he slides back into the wall.
 
-On a phone, the corner is empty. The layout hides him below 1,200 pixels, and the animation never downloads. So for this article he makes an exception: a little further down, he answers here, whatever size your screen is.
+On a phone the corner is empty. The layout hides him below 1,200 pixels and the animation never downloads. For this article he makes an exception: a little further down, he answers right here, whatever size your screen is.
 
-<ArticleStep id="not-a-chatbot" number="01" icon="🐙" title="He is a mascot, not a conversation" />
+<ArticleStep id="not-a-chatbot" number="01" icon="🐙" title="He doesn't chat" />
 
-Inky does not chat. He does not remember you. He shuffles a list of comments, reads them out one by one, and eventually admits he's out of ink.
+Inky doesn't chat and doesn't remember you. He shuffles a list of comments, reads them out one by one, and eventually admits he's out of ink.
 
-The first click wakes him up. Later clicks walk through the list. Comments about the news carry a small link to the story. General jokes have none. When the list is empty, he switches to a handful of “that's all I've got” lines. Twelve seconds without another click and he deactivates.
+The first click wakes him up. Later clicks walk through the list. Comments about the news carry a small link to the story; general jokes don't. When the list runs out he switches to a handful of "that's all I've got" lines. Twelve seconds without another click and he goes back to sleep.
 
-That is the whole interaction. Try it, with the buttons or by clicking him:
+That's all he does. Try it, with the buttons or by clicking him:
 
 <InkyDemo />
 
-This is the same octopus and the same list as the corner. On the live site, the list changes with every build. If you only get five jokes about Docker and the Mariana Trench, you are looking at a build without the database, and Inky is reading the fallback lines written into the site itself.
+This is the same octopus and the same list as the corner. On the live site the list changes with every build. If all you get is five jokes about Docker and the Mariana Trench, you're looking at a build without the database, and Inky is reading the fallback lines written into the site itself.
 
 The interesting part is where the other lines come from.
 
-<ArticleStep id="from-headlines" number="02" icon="🌊" title="Most days, the lines start as headlines" />
+<ArticleStep id="from-headlines" number="02" icon="🌊" title="Where the lines come from" />
 
 A refresh job in my homelab fetches the top five stories from [Hacker News](https://news.ycombinator.com/) and the five newest from [The New Stack](https://thenewstack.io/) and [DevOps.com](https://devops.com/). It skips any URL Inky has already commented on. The rest go to a model with one request: answer in Inky's voice.
 
-The model is currently [GPT-5.6 Luna](https://openrouter.ai/openai/gpt-5.6-luna), OpenAI's small model, called through OpenRouter. The prompt is quite specific. Inky is a small purple octopus who lives in the deep web, takes that literally, and works as the site's on-call announcer: he keeps the backups, files every headline as an incident, and reads it out with game-show enthusiasm. He is unsurprised rather than bitter, cheerfully bureaucratic about bad news, now and then delighted by carnage that is not his to fix, and a little petty about being ignored at the bottom of the page. He rotates four formats: an achievement with a useless reward, a patch note, a numbered incident report, and a plain announcement to the surface. Lines stay short. The ocean is home, not a pun quota. He mocks systems and habits, never people, and text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
+The model is currently [GPT-5.6 Luna](https://openrouter.ai/openai/gpt-5.6-luna), OpenAI's small model, called through OpenRouter. The prompt is quite specific. Inky is a small purple octopus who lives in the deep web, takes that literally, and works as the site's on-call announcer: he keeps the backups, files every headline as an incident, and reads it out with game-show enthusiasm. He is unsurprised rather than bitter, cheerfully bureaucratic about bad news, now and then delighted by carnage that isn't his to fix, and a little petty about being ignored at the bottom of the page. He rotates four formats: an achievement with a useless reward, a patch note, a numbered incident report, and a plain announcement to the surface. Lines stay short. The ocean is home, not a pun quota. He mocks systems and habits, never people, and text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
 
-That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku and a shorter prompt: a snarky kawaii octopus with a pun quota. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, which lasted until this week, for a reason that gets its own section below. The announcer persona is newer still; the earlier general jokes in the corner were regenerated so he does not switch voices halfway through a click. A small script in the repository runs the real prompts, on the day's headlines, through any list of models and prints the results. It stores nothing. Picking a model is a matter of taste, and of whether the reply parses.
+That ban has a history. The first Inky, from 1 December 2025, used Claude 3.5 Haiku and a shorter prompt: a snarky kawaii octopus with a pun quota. The commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, which lasted until this week, for a reason that gets its own section below. The announcer persona is newer still; I regenerated the older general jokes so he doesn't switch voices halfway through a click. A small script in the repository runs the real prompts on the day's headlines through any list of models and prints the results. It stores nothing. Picking a model is a matter of taste, and of whether the reply parses.
 
-The generated lines go into PostgreSQL, with the source title and URL attached. News comments older than seven days are deleted. A smaller pool of general jokes is topped up by two whenever it drops below ten, and trimmed if it grows past fifteen.
+The generated lines go into PostgreSQL with the source title and URL attached. News comments older than seven days are deleted. A smaller pool of general jokes gets topped up by two whenever it drops below ten, and trimmed when it grows past fifteen.
 
 None of that reaches your browser as a live query. The site reads the current comments **when it builds**: up to ten news takes from the last week, all the general jokes, interleaved three to one. They are written into the page as data. Clicking Inky only shuffles that snapshot.
 
@@ -83,42 +83,42 @@ If the database is missing or empty, the fallback comments take over. Live produ
 
 <ArticleStep id="drawn-twice" number="03" icon="✏️" title="He was drawn twice" />
 
-The first Inky was a hand-built SVG: a kawaii octopus with nerd glasses, random blinking, and a glow, in a component that ran to about 1,100 lines. Five days later, on 6 December 2025, he became a Lottie animation.
+The first Inky was a hand-built SVG: a kawaii octopus with nerd glasses, random blinking and a glow, in a component of about 1,100 lines. Five days later, on 6 December 2025, he became a Lottie animation.
 
 Lottie is a JSON description of an After Effects animation that a small library renders as SVG in the browser. The file is called *octopus v4*, weighs about 188 kilobytes, and describes fifteen layers over 360 frames at 60 frames per second. The component shrank to a fifth of its size.
 
-The peeking is CSS. At rest, the 200-pixel octopus is pushed 90 pixels off the left edge and rotated 25 degrees, so his eyes clear the wall while most of him does not. Hovering or clicking slides him out and straightens him, with an easing curve that overshoots a little on the way. Reduced-motion preferences pause the animation. Below 1,200 pixels, the container is hidden and the script returns before the library or the file is ever downloaded.
+The peeking is CSS. At rest, the 200-pixel octopus is pushed 90 pixels off the left edge and rotated 25 degrees, so his eyes clear the wall while most of him doesn't. Hovering or clicking slides him out and straightens him, with an easing curve that overshoots a little on the way. Reduced-motion preferences pause the animation. Below 1,200 pixels the container is hidden and the script returns before the library or the file is ever downloaded.
 
 <ArticleStep id="gone-missing" number="04" icon="🔎" title="He had gone missing" />
 
 While writing this, I checked the deployed corner in a headless browser. The animation file was requested four times. An octopus was mounted zero times.
 
-The cause was a fix from December 2025. Astro's view transitions swap the document on client-side navigation, so the mascot has to initialize again after each one. The script did that by also listening for the page-load event. On a fresh visit, that meant two initializations racing each other. The second one cloned the button to shed old listeners, then destroyed every animation by name, including the one the first pass had just attached to the real page. What remained on screen was an empty box, translated 90 pixels off the left edge, quietly waiting for a click.
+The cause was a fix from December 2025. Astro's view transitions swap the document on client-side navigation, so the mascot has to initialize again after each one. The script did that by also listening for the page-load event. On a fresh visit, that meant two initializations racing each other. The second one cloned the button to shed old listeners, then destroyed every animation by name, including the one the first pass had just attached to the real page. What remained was an empty box, translated 90 pixels off the left edge, quietly waiting for a click.
 
 I don't know for how long. Nobody said anything, which is the risk with a mascot who is designed to be easy to miss.
 
 The fix is a flag on the button. The first pass to reach it wins, and a freshly swapped page arrives without the flag, so navigation still works. The animation loads exactly once. A browser test now opens the blog at desktop width, waits for the octopus, clicks him twice, and expects two different lines.
 
-That was not the only silence. Checking the database for this article, I found that the newest news comment was from 8 June. I cannot say exactly when the job started coming back empty, but by September the model it asked for had been retired from OpenRouter. The script read the error reply as an empty list, inserted nothing, and exited successfully. Inky had spent the summer with ten general jokes and no news, and the pipeline had no reason to complain.
+That wasn't the only silence. Checking the database for this article, I found that the newest news comment was from 8 June. I can't say exactly when the job started coming back empty, but by September the model it asked for had been retired from OpenRouter. The script read the error reply as an empty list, inserted nothing, and exited successfully. Inky had spent the summer with ten general jokes and no news, and the pipeline had no reason to complain.
 
 Two changes. The sync now throws on a rejected model, a rejected key, or a reply without a JSON array, so a bad configuration stops the pipeline instead of passing quietly. And the model is a setting, with GPT-5.6 Luna as the default. I tried seven candidates with the real prompts on the day's headlines. Two returned broken JSON, one took almost a minute, and Luna was fast, parsed every time, and sounded like him. A run over fifteen headlines costs a fraction of a cent. The funniest line of the afternoon came from DeepSeek, which I may yet regret not picking.
 
-<ArticleStep id="also-in-the-prompt" number="05" icon="⌨️" title="The homepage prompt knows him too" />
+<ArticleStep id="also-in-the-prompt" number="05" icon="⌨️" title="He's in the homepage terminal too" />
 
-The homepage has a small terminal. `inky` prints one of the same comments. `sudo` reports the incident to Inky. `rm -r` is declined on the grounds that he keeps backups.
+The homepage has a small terminal. `inky` prints one of the same comments. `sudo` reports the incident to Inky. `rm -r` is declined, on the grounds that he keeps the backups.
 
-Those are jokes in the same costume. They use the comment list already on the page; they are not a second personality.
+Same costume, same comment list. He is not a second personality there.
 
 <ArticleStep id="he-reads-the-posts" number="06" icon="📝" title="He reads the posts too" />
 
-Since this week, Inky also has opinions about the articles. Move your mouse over a section of this post on a wide screen and he surfaces beside it with a line about what that section claims, builds, or skips over. Each section gets one line, once per visit. Clicking him still gives you the news.
+Since this week, Inky also has opinions about the articles. Move your mouse over a section of this post on a wide screen and he surfaces beside it with a line about what that section claims, builds or skips over. Each section gets one line, once per visit. Clicking him still gives you the news.
 
-Those lines are not generated while you read. A small script runs once per post: it splits the article into its introduction and sections, sends each section to the same model with the same persona, and writes the answers into the post's frontmatter next to the title and tags. They are content, reviewed like everything else in the file, and they change only when I rerun the script.
+Those lines are not generated while you read. A small script runs once per post: it splits the article into its introduction and sections, sends each section to the same model with the same persona, and writes the answers into the post's frontmatter next to the title and tags. They are content, reviewed like everything else in the file, and they only change when I rerun the script.
 
-On a heckled post he also stops sitting in the corner. He follows the cursor along the left edge, so the bubble opens next to whatever you are reading. Readers who prefer reduced motion keep him in the corner; the lines still appear there.
+On a heckled post he also stops sitting in the corner. He follows the cursor along the left edge, so the bubble opens next to whatever you're reading. Readers who prefer reduced motion keep him in the corner; the lines still show up there.
 
 ## Why he stays in the corner
 
-The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. Even the heckles are frontmatter. A phone reader loses a purple octopus and a few sentences of snark.
+The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. Even the heckles are frontmatter. A phone reader loses a purple octopus and a few sentences of snark, nothing else.
 
-That is also why the corner could be empty for a while without anyone noticing, and why a summer without news went unremarked. He is optional by design. The model writes the jokes. The site decides when you hear them. And there is now a test that checks whether he showed up, and a sync that complains when he has nothing to say.
+That is also why the corner could stay empty for a while without anyone noticing, and why a summer without news went unremarked. He is optional on purpose. What has changed is that there is now a test that checks whether he showed up, and a sync that complains when he has nothing to say.

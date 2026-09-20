@@ -123,3 +123,7 @@ publishing cutover during article preparation. The article was updated to reflec
 `docs/nheer-workflows.md`'s verified September 8 cutover and the current
 `cluster/apps/nheer/schedule.yaml` (`publish`, every three hours). Earlier entries
 above describing check mode document the evidence available during drafting.
+
+## Revisions
+
+- 2026-09-21: prose pass at the author's request so the article reads less like generated text; plainer section titles, no factual or visual changes. Inky lines kept.

@@ -146,3 +146,7 @@ easter eggs and the mascot component are the only prior appearances.
 
 Recorded after local preview and checks in this session; see the final
 summary in the session for the exact commands and results.
+
+## Revisions
+
+- 2026-09-21: prose pass at the author's request so the article reads less like generated text; plainer section titles, no factual or visual changes. Inky lines kept.

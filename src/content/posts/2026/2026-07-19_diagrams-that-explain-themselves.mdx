@@ -1,6 +1,6 @@
 ---
-title: "Teaching architecture diagrams to explain themselves"
-description: "Sceno turns a diagram into something you can inspect, discuss, and improve without playing pixel detective."
+title: "Architecture diagrams you can diff"
+description: "Sceno keeps the diagram in a text file. A change to the architecture becomes a diff, and validation can complain before you open the picture."
 date: "2026-07-19T22:30:00+02:00"
 icon: ":triangular_ruler:"
 tags: ["diagrams", "developer-tools", "ai", "open-source"]
@@ -11,9 +11,9 @@ inky:
     comment: "New achievement! Rectangle Relocation Specialist. You moved a box three pixels left, then two back, and called the document-based diagram architecture. Reward: one perfectly aligned shrug."
   - section: "a-diagram-you-can-review"
     comment: "Patch 0.4.0: Replace toolbar hunting with KDL, diffs, and exports to SVG, PNG, PDF, HTML, and slides—a bad habit now available in every format."
-  - section: "give-the-next-edit-something-to-work-with"
+  - section: "validate-describe-advise-render"
     comment: "Incident #040: The “make it nicer” request entered the feedback loop, where validation, scene inspection, layout advice, and an agent await clarification. Severity: structurally encouraging."
-  - section: "a-valid-diagram-can-still-tell-the-wrong-story"
+  - section: "what-the-checks-cannot-tell-you"
     comment: "Surface, congratulations: Sceno cannot tell your five-box story from a perfectly aligned diagram of everything. Deleting half the architecture remains supported by the ancient tool called judgment."
 ---
 
@@ -22,17 +22,15 @@ import StoryLab from '../../../components/StoryLab.astro';
 
 <GitHubRepo repo="niklas-heer/sceno" />
 
-There is a particular kind of engineering work that consists of moving a rectangle three pixels to the left, deciding it was better before, and moving it two pixels back.
+There is a kind of engineering work that consists of moving a rectangle three pixels to the left, deciding it was better before, and moving it two pixels back.
 
-Architecture diagrams are remarkably good at creating this work.
+Architecture diagrams generate a lot of this work. The boxes are rarely the hard part. The hard part is keeping the picture honest while the system changes. Add a service, reroute a connection, export a slide, and notice that a label now sits inside the database.
 
-The boxes are rarely the difficult part. The difficult part is keeping the picture understandable as the system changes. Add a service, reroute a connection, export a slide, discover that a label now lives inside a database. Apparently the database stores embarrassment too.
-
-I built [Sceno](https://github.com/niklas-heer/sceno) around a different starting point: **the diagram is a document, and the picture is one way to read it.**
+I built [Sceno](https://github.com/niklas-heer/sceno) on a different premise: **the diagram is a document, and the picture is one way to read it.**
 
 ## A diagram you can review
 
-Sceno uses KDL, a text format with a natural shape for nested things. A small diagram can look like this:
+Sceno uses KDL, a text format that is comfortable with nested things. A small diagram looks like this:
 
 ```kdl
 diagram title="A small service" layout=auto gap=32 padding=24 {
@@ -42,19 +40,19 @@ diagram title="A small service" layout=auto gap=32 padding=24 {
 }
 ```
 
-You do not need to find the right toolbar icon to understand the relationship. There is an API, there is a database, and there is a connection. A change to that relationship produces a text diff.
+You don't need to find the right toolbar icon to understand what is going on. There is an API, there is a database, and there is a connection between them. Change that relationship and you get a text diff.
 
-That matters even if you never ask an AI agent to touch the file. A diagram in a repository can change alongside the code it describes. Reviewing “we added a queue between these services” becomes easier when the diagram change is part of the same conversation.
+That matters even if no AI agent ever touches the file. A diagram in the repository can change in the same commit as the code it describes. "We added a queue between these two services" is easier to review when the diagram change is right there in the same pull request.
 
-The export still matters, of course. Nobody wants an architecture presentation delivered entirely as curly braces. Sceno renders the source into SVG, PNG, PDF, HTML, and slide output.
+The picture still matters, of course. Nobody wants an architecture presentation delivered as curly braces. Sceno renders the source to SVG, PNG, PDF, HTML and slides.
 
-## Give the next edit something to work with
+## Validate, describe, advise, render
 
-The more interesting part is the feedback around the drawing.
+The part I find more interesting is the feedback around the drawing.
 
-A rendered picture tells you what happened. A scene description can also tell you where things are and how connections travel. Validation can point out a problem before you open an image. Layout advice can give you a reason to inspect a particular area.
+A rendered picture tells you what happened. The scene behind it can also tell you where things ended up and how the connections travel. Validation can point at a problem before you open an image. Layout advice can tell you which area is worth a look.
 
-Here is a real Sceno export from the 0.4 release, showing its own workflow. The diagram is generated from a KDL source file; it is not a screenshot of a hand-drawn mockup.
+Here is a real Sceno export from the 0.4 release, showing its own workflow. It is generated from a KDL file, not a mockup.
 
 ![A real Sceno-generated diagram showing the KDL, validation, advice, description, and export workflow](/assets/articles/2026/sceno-output.png)
 
@@ -62,9 +60,9 @@ Here is a real Sceno export from the 0.4 release, showing its own workflow. The 
 
 <StoryLab kind="diagram" />
 
-The illustration is deliberately simple. The point is the loop, not an imaginary promise that one command knows what every good diagram looks like.
+The example is deliberately simple. The point is the loop, not a claim that one command knows what every good diagram looks like.
 
-With Sceno, you can ask for several views of the same source:
+You can ask for several views of the same source:
 
 ```bash
 sceno validate -i architecture.kdl --json
@@ -73,20 +71,18 @@ sceno advise -i architecture.kdl --json
 sceno render -i architecture.kdl -o output/architecture
 ```
 
-These commands answer different questions. Is the source valid? What scene did it describe? What might deserve attention? What does the result look like?
+Each command answers a different question. Is the source valid? What scene does it describe? What might need attention? What does it look like?
 
-That separation is useful for agents. “Make it nicer” is a very large request. A structured finding narrows the next edit. The agent can revise the source, run the checks again, and show a new result. A human can use exactly the same loop.
+That separation is useful for agents. "Make it nicer" is a very large request. A structured finding narrows it down to the next edit. The agent revises the source, runs the checks again, and shows the new result. A human can use the same loop.
 
-## A valid diagram can still tell the wrong story
+## What the checks cannot tell you
 
-This is the limit I find most useful to keep in mind: layout checks cannot decide which parts of your architecture deserve the reader's attention.
+This is the limit I keep in mind: layout checks cannot decide which parts of your architecture deserve the reader's attention.
 
-A perfectly aligned drawing of every component may explain less than a small diagram with five boxes. A correct arrow does not explain whether a dependency is desirable. Sometimes the best repair is deleting half the diagram.
+A perfectly aligned drawing of every component often explains less than a diagram with five boxes. A correct arrow says nothing about whether the dependency is a good idea. Sometimes the right fix is deleting half the diagram.
 
-Sceno helps with the mechanics so that more of the conversation can be about the system. It does not remove the need for that conversation.
+Sceno takes care of the mechanics so that more of the conversation can be about the system. It doesn't remove the need for that conversation.
 
-If you want to try the approach, start with one small flow you already understand. Put it in a file. Change one relationship. Read the diff, inspect the scene, and export the result.
+If you want to try it, start with one small flow you already understand. Put it in a file. Change one relationship. Read the diff, inspect the scene, export the result. If that saves you from nudging one rectangle back and forth while muttering "nearly", it has done its job.
 
-If that saves you from nudging one rectangle repeatedly while muttering “nearly,” I will consider it useful software.
-
-*This article describes the [Sceno 0.4 release](https://github.com/niklas-heer/sceno/releases/tag/v0.4.0). The [versioned README](https://github.com/niklas-heer/sceno/blob/v0.4.0/README.md) contains the commands and format reference.*
+*This article describes the [Sceno 0.4 release](https://github.com/niklas-heer/sceno/releases/tag/v0.4.0). The [versioned README](https://github.com/niklas-heer/sceno/blob/v0.4.0/README.md) has the commands and the format reference.*

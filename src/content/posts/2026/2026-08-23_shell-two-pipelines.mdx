@@ -11,11 +11,11 @@ inky:
     comment: "New achievement! Default Shell, Default Distraction. You turned an insufficiently distracting task into a shell migration, then let one copied command audit the whole decision. Reward: a larger notes folder."
   - section: "the-clipboard-kept-sending-me-back"
     comment: "Patch 0.1.0: Added mode switching so the surface can carry Bash habits into structured-data work without negotiating every clipboard paste. Compatibility debt now has a user interface."
-  - section: "watch-the-same-session-change-gears"
+  - section: "one-session-both-modes"
     comment: "Incident #0042: A command copied from notes, the internet, and an AI tool failed in the new shell. Severity: familiar. The session survived by switching shells instead of questioning the clipboard ritual."
-  - section: "when-i-want-data-i-ask-for-data"
+  - section: "data-mode"
     comment: "Surface announcement: Quirl now lets you type mode data for JSON latency over 50, then mode normal when you miss ordinary pipes. Your terminal has officially become a tiny meeting about context switching."
-  - section: "lua-is-the-third-ingredient"
+  - section: "lua-for-scripting"
     comment: "New achievement! Configuration Escaped. You replaced Python with embedded Lua, Rust with limits, and a whisk metaphor, all to spend less time explaining your clipboard. Reward: an extensible shell that is still 0.1."
 ---
 
@@ -26,69 +26,67 @@ import DemoVideo from '../../../components/DemoVideo.astro';
 
 I used zsh for a long time. I tried Fish and wandered through a few other shells, as one does when the actual task is insufficiently distracting.
 
-Then I found Nushell and made it the default in the terminals I use.
+Then I found Nushell and made it the default in my terminals.
 
-Working with data felt wonderful. CSV and JSON stopped being things I had to disassemble with increasingly elaborate text processing. I could inspect rows, select fields, filter values, and keep drilling into the result. Even a directory listing became something I could ask questions of.
+Working with data in it was wonderful. CSV and JSON stopped being things I had to take apart with increasingly elaborate text processing. I could look at rows, pick fields, filter values and keep drilling into the result. Even a directory listing was something I could ask questions of.
 
-Then I copied a command from my notes.
-
-It did not work.
+Then I copied a command from my notes, and it didn't work.
 
 ## The clipboard kept sending me back
 
-The same thing happened with commands from the internet and from sessions with AI tools. They assumed familiar shell syntax. My new default shell had different rules.
+The same thing happened with commands from the internet and from sessions with AI tools. They all assumed the usual shell syntax. My new default shell had different rules.
 
-Those rules were part of what made the data experience so useful. But I kept switching back to a traditional shell to run the command I had just copied. I wanted the new capabilities without making the clipboard a compatibility negotiation.
+Those rules were part of what made the data side so good. But I kept switching back to a traditional shell just to run whatever I had copied, and I didn't want every paste to turn into a compatibility negotiation.
 
-I had also spent some time with Xonsh. The idea of using Python—a real, general-purpose programming language—inside a shell appealed to me. For scripts and customization, I would rather use a language with a life beyond configuring my prompt.
+I had also spent some time with Xonsh. Having a real programming language inside the shell appealed to me. For scripts and customization I would rather use a language with a life beyond configuring my prompt.
 
-Eventually the wish list became fairly clear:
+Eventually the wish list was clear enough:
 
 - Keep a familiar mode for everyday commands and Bash/zsh habits.
 - Switch to a data mode when I actually want to work with data.
-- Use a general-purpose language to script and extend the shell.
+- Script and extend the shell with a general-purpose language.
 
-[Quirl](https://github.com/niklas-heer/quirl) is my attempt to put those things in one place.
+[Quirl](https://github.com/niklas-heer/quirl) is my attempt to put those three in one place.
 
-## Watch the same session change gears
+## One session, both modes
 
 <DemoVideo name="quirl-modes-demo" title="Familiar commands, typed data, and Lua in one Quirl session" caption="Recorded with a development build of Quirl’s 0.1 line. A byte pipeline runs first, then a JSON file becomes filtered records, followed by an explicit Bash block and a Lua expression. The sample services are local demo data." />
 
-The first command is deliberately unremarkable:
+The first command is deliberately boring:
 
 ```sh
 printf 'api\nworker\njobs\n' | wc -l && echo 'pipeline: healthy'
 ```
 
-A familiar pipe, a count, and a command that runs if the pipeline succeeds. That is the point. Not every trip to the terminal should require a new worldview.
+A pipe, a count, and a command that runs if the pipeline succeeds. That is the point. Not every trip to the terminal should require a new worldview.
 
-Quirl's native normal mode covers a defined core of shell behavior. It is not a complete Bash or zsh implementation, so dialect-specific syntax has an explicit home:
+Quirl's normal mode covers a defined core of shell behavior. It is not a complete Bash or zsh, so dialect-specific syntax gets an explicit home:
 
 ```sh
 bash { cat <(printf 'Bash still works.\n') }
 ```
 
-There are zsh blocks too. The goal is to make existing habits usable while keeping it clear which language is interpreting a command.
+There are zsh blocks too. Existing habits stay usable, and it is always clear which language is interpreting a command.
 
-## When I want data, I ask for data
+## Data mode
 
-Type `mode data`, and a command like this can work with the fields in a JSON file:
+Type `mode data`, and a command like this works with the fields in a JSON file:
 
 ```text
 open services.json | where latency > 50 | select service latency
 ```
 
-In the recording, the result contains the services whose numeric latency exceeds 50. No counting columns. No guessing which run of spaces belongs to the table formatting.
+In the recording, the result is the services whose latency is above 50. No counting columns, no guessing which run of spaces belongs to the table formatting.
 
-This is the part of the structured-shell experience I wanted to keep: exploring data should feel like exploring data. CSV files, JSON documents, and structured listings are natural places to use it.
+This is the part of the structured-shell experience I wanted to keep. Exploring data should feel like exploring data. CSV files, JSON documents and structured listings are where it earns its keep.
 
-Type `mode normal` when you want to go back. Both modes earn their place by being useful at different moments.
+Type `mode normal` to go back.
 
-## Lua is the third ingredient
+## Lua for scripting
 
-For the extension language, I ended up choosing Lua rather than Python.
+For the extension language I ended up with Lua rather than Python.
 
-I spent time looking for something fast and embeddable. Lua fit that goal, and Quirl already uses it for configuration, scripts, and extensions. Rust handles the shell's core; the embedded Lua runtime has explicit resource limits.
+I wanted something fast and embeddable, and Lua is both. Quirl already uses it for configuration, scripts and extensions. Rust handles the shell's core; the embedded Lua runtime runs with explicit resource limits.
 
 You can try it without writing a configuration file:
 
@@ -96,8 +94,8 @@ You can try it without writing a configuration file:
 lua return { answer = 6 * 7, language = _VERSION }
 ```
 
-That is a tiny example, but it shows the boundary: when I want to program the shell, there is a programming language available. I do not need to stretch a configuration format into one.
+A tiny example, but it shows the boundary. When I want to program the shell, there is a programming language available. I don't have to stretch a configuration format into one.
 
-Quirl means a whisk. I wanted to mix familiar commands, structured data, and an extension language into a shell I would enjoy using. The [0.1 release](https://github.com/niklas-heer/quirl/releases/tag/v0.1.0) is an early implementation of that vision on Linux and macOS.
+Quirl means whisk. I wanted to mix familiar commands, structured data and an extension language into a shell I would enjoy using. The [0.1 release](https://github.com/niklas-heer/quirl/releases/tag/v0.1.0) is an early version of that for Linux and macOS.
 
 Mostly, I would like to spend less time explaining my clipboard to my terminal.

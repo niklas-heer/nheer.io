@@ -1,6 +1,6 @@
 ---
-title: "Python-shaped code. A 1.47 MB executable."
-description: "Kipferl lets me write a friendly little CLI in Python-style code and ship it as one small executable—with a table, colors, and no Python installation required."
+title: "Python-style code in a 1.47 MB executable"
+description: "Kipferl turns a small command-line tool written in Python-style code into one executable. The status app in the recording comes out at 1.47 MB, table and colors included, and needs no Python on the other machine."
 date: "2026-08-06T10:00:00+02:00"
 icon: ":croissant:"
 tags: ["python", "rust", "cli", "open-source"]
@@ -9,13 +9,13 @@ lang: "en"
 inky:
   - section: "intro"
     comment: "New achievement! Executable Snack Size. You put a box, a table, and colored output on a 1,467,617-byte diet, then certified the coffee service as fictional. Reward: one fewer installation conversation."
-  - section: "the-interesting-part-is-what-you-ship"
+  - section: "what-actually-goes-into-the-file"
     comment: "Patch 0.6.0: Replaced Python’s full suitcase with PocketPy, a Rust host, and a curated CLI module lunchbox. Arbitrary CPython and PyPI compatibility are now proudly left at the pier."
-  - section: "a-small-app-that-does-something-visible"
+  - section: "the-whole-program-in-the-recording"
     comment: "Incident #1467617: The complete status program shipped, but its “standalone” binary still wants the right operating system and architecture. Severity: Portable-ish. Congratulations on distributing one file per target."
-  - section: "leave-the-unused-capabilities-at-home"
+  - section: "two-runtime-profiles"
     comment: "Surface announcement: --full-runtime makes the same source larger while the analyzer conservatively picks profiles and refuses to delete every unused function. Your byte-counting may resume."
-  - section: "small-enough-to-give-away-casually"
+  - section: "why-i-wanted-this"
     comment: "New achievement! Pastry-Based Distribution. You named Kipferl after a pastry and declared handoff should be equally harmless, provided platforms and runtime profiles cooperate. Reward: a smaller project-shaped obligation."
 ---
 
@@ -25,31 +25,29 @@ import BinarySize from '../../../components/BinarySize.astro';
 
 <GitHubRepo repo="niklas-heer/kipferl" />
 
-I want writing a little command-line tool to be easy. I also want giving it to somebody else to be easy. These are, annoyingly, two different wishes.
+I want writing a little command-line tool to be easy. I also want giving it to somebody else to be easy. Annoyingly, these are two different wishes.
 
-Python is lovely for the first part. For the second, I would like to hand over one small executable and say: “Run this.” No Python installation, no virtual environment, no conversation about which `pip` belongs to which interpreter.
+Python is lovely for the first one. For the second, I would like to hand over one small file and say "run this". No Python installation, no virtual environment, no conversation about which `pip` belongs to which interpreter.
 
-That is the idea behind [Kipferl](https://github.com/niklas-heer/kipferl): **Python-style code, packaged into a small standalone application.**
+That is the idea behind [Kipferl](https://github.com/niklas-heer/kipferl): **Python-style code, packaged into one small executable.**
 
-How small? The status app below—with a box, a table, and colored output—builds to **1,467,617 bytes on Apple Silicon. About 1.47 MB.**
+How small? The status app below, with a box, a table and colored output, builds to **1,467,617 bytes on Apple Silicon. About 1.47 MB.**
 
 <DemoVideo name="kipferl-demo" title="Build a small CLI, then run the standalone executable" caption="An actual recording with Kipferl 0.6.0 on macOS ARM64. The final command runs the built application, not the Python source." />
 
-The coffee service is fictional. The executable size is not.
+The services in the table are made up. The file size is measured.
 
-## The interesting part is what you ship
+## What actually goes into the file
 
-Putting a Python program into an executable is an established idea. The challenge I wanted to work on was the combination: a pleasant high-level language, useful terminal UI components, and an output file small enough to feel appropriate for a small tool.
+Putting a Python program into an executable is not a new idea. What I wanted was the combination: a pleasant high-level language, useful terminal UI pieces, and an output file small enough to feel right for a small tool. A five-line script should not need a removal company.
 
-A five-line script should not need a removal company.
+Kipferl uses PocketPy, an embeddable Python implementation, with a host written in Rust and a curated set of modules for command-line apps. It packages your program together with the runtime it needs. It does **not** compile arbitrary CPython code to machine code, and it does not promise that every package on PyPI will work.
 
-Kipferl uses PocketPy, an embedded Python implementation, with a Rust host and a curated set of modules for command-line applications. It packages the program with the runtime it needs. It does **not** turn arbitrary CPython code into native machine code, and it does not promise compatibility with every package on PyPI.
+That trade-off is where the size comes from. You get a focused way to build CLIs instead of a suitcase with an entire Python installation in it.
 
-That trade-off is central to the size. The product is a focused way to build CLIs, rather than a suitcase containing an entire Python installation.
+## The whole program in the recording
 
-## A small app that does something visible
-
-This is the complete program in the recording:
+This is the complete program:
 
 ```python
 import tui
@@ -71,24 +69,24 @@ kipferl build status.py -o status
 ./status
 ```
 
-The person receiving `status` does not need Kipferl or Python installed. The executable still targets a particular operating system and architecture; “standalone” does not mean the same file runs on every machine.
+Whoever receives `status` needs neither Kipferl nor Python. The file still targets one operating system and architecture, so "standalone" does not mean the same file runs everywhere.
 
-## Leave the unused capabilities at home
+## Two runtime profiles
 
-Kipferl 0.6 examines imports and conservatively chooses a prebuilt runtime profile. The status app fits the smaller **core** profile. Building that exact same source with `--full-runtime` includes the complete runtime instead.
+Kipferl 0.6 looks at the imports and picks a prebuilt runtime profile, erring on the side of caution. The status app fits the smaller **core** profile. Building the exact same source with `--full-runtime` includes the complete runtime instead.
 
 <BinarySize />
 
-These are measured outputs of the example above using the released 0.6.0 builder on macOS ARM64. MB means one million bytes. Source, runtime profile, and target platform affect the result; 1.47 MB is an example you can reproduce, not a ceiling for every application.
+These are measured outputs of the example above with the released 0.6.0 builder on macOS ARM64. MB means one million bytes. The source, the profile and the target platform all change the result, so 1.47 MB is a number you can reproduce, not a ceiling for every app.
 
-The [0.6 release notes](https://github.com/niklas-heer/kipferl/releases/tag/v0.6.0) recorded a separate minimal-app baseline of 1,450,837 bytes. The larger command-line **builder** is another artifact again: it is not the file you distribute to your users.
+The [0.6 release notes](https://github.com/niklas-heer/kipferl/releases/tag/v0.6.0) list a separate minimal-app baseline of 1,450,837 bytes. The Kipferl **builder** itself is a larger, separate artifact. It is not the file you give to your users.
 
-This is profile selection, not a promise that every unused function disappears individually. When the analyzer cannot safely choose the smaller profile, keeping the required functionality matters more than winning a few bytes.
+This is profile selection. Unused functions do not disappear one by one. When the analyzer cannot safely pick the smaller profile, keeping everything working wins over saving a few bytes.
 
-## Small enough to give away casually
+## Why I wanted this
 
-For me, the appeal is practical. A repository helper, a status report, a little interactive utility: things that are useful enough to share, but should not become installation projects of their own.
+For me the appeal is practical. A repository helper, a status report, a small interactive utility: useful enough to share, not worth turning into an installation project of their own.
 
-I want the easy part of writing Python and the easy part of distributing a small native tool to meet in the middle.
+I want the easy part of writing Python and the easy part of handing over a small native tool to meet in the middle.
 
-Kipferl is named after a pastry. Ideally, the application should be about as troublesome to hand to somebody.
+A Kipferl is a pastry. Handing someone the app should be about that much trouble.
