@@ -1,7 +1,7 @@
 # Inky in the corner: evidence and editorial notes
 
-Prepared 2026-09-20, revised the same day. Status: unpublished draft for local
-review. Article: `src/content/posts/2026/2026-09-20_an-octopus-in-the-corner.mdx`.
+Prepared 2026-09-20, revised the same day. Status: published 2026-09-20 on Niklas's
+instruction. Article: `src/content/posts/2026/2026-09-20_an-octopus-in-the-corner.mdx`.
 
 ## Voice profile
 
