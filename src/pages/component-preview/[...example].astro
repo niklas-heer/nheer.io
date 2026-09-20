@@ -5,6 +5,7 @@ import ArticleMetrics from '../../components/ArticleMetrics.astro';
 import ArticleComparison from '../../components/ArticleComparison.astro';
 import MermaidDiagram from '../../components/MermaidDiagram.astro';
 import SplitLayouts from '../../components/examples/SplitLayouts.mdx';
+import InkyDemo from '../../components/InkyDemo.astro';
 
 export function getStaticPaths() {
   // Local authoring and sample-data test builds only. Never a live site route.
@@ -92,6 +93,8 @@ const mermaidExample = `<MermaidDiagram
     </details>
     <h2>Custom illustrations</h2>
     <p>Use the existing <code>ArticleFigure</code> frame around an original SVG, HTML diagram, or image when the story needs a custom visual. Its title and caption provide the same structure as these components.</p>
+    <p>The Inky article's figure is one example: a custom element inside <code>ArticleFigure</code>, with a static poster until the animation loads and a native button for the interaction.</p>
+    <InkyDemo />
     <p><a href="/drafts/">Back to article drafts</a> · <a href="/posts/">Read the blog</a></p>
   </article>
 </BaseLayout>

@@ -25,6 +25,7 @@ These are editorial references, not templates to reproduce. Keep the site's own 
 - Quirl: an actual terminal session demonstrates Normal mode, Data mode, Bash compatibility, and Lua. The prose supplies the author's motivation and the commands.
 - Overhead Overdrive: real screenshots carry a short personal story. An interactive physics diagram would distract from the reason the author made the game.
 - Hub: an interactive starting-point diagram follows creating a repository, finding the next useful task, or investigating an idea. A folder diagram explains how useful context survives between those tasks. Numbered sections and expandable starter instructions support the story. The earlier index-deletion and ownership figures remain available as components, but no longer set the article's focus.
+- Inky: the corner mascot appears inline as a figure, with the real Lottie octopus and the same build-time comment list, because the live corner is hidden below 1,200 pixels. A static poster captured from the animation serves no-JavaScript and reduced-motion readers. A four-step flow covers headline collection, the named model, build-time baking, and the click. A short section reports the missing-mascot bug found while writing, with the fix and its browser test.
 
 ## Reusable article components
 

@@ -1,0 +1,95 @@
+---
+title: "There's an octopus in the corner"
+description: "Inky is this site's snarky octopus. GPT-5.1 Chat writes his lines from tech headlines, the build bakes them into the page, and a phone never sees him. Here's how he works, and how I found out he had gone missing."
+date: "2026-09-20T18:00:00+02:00"
+icon: ":octopus:"
+tags: ["astro", "ai", "web", "mascot"]
+draft: true
+lang: "en"
+---
+
+import GitHubRepo from '../../../components/GitHubRepo.astro';
+import InkyDemo from '../../../components/InkyDemo.astro';
+import ArticleFlow from '../../../components/ArticleFlow.astro';
+import ArticleStep from '../../../components/ArticleStep.astro';
+
+<GitHubRepo repo="niklas-heer/nheer.io" />
+
+If you're reading this on a wide screen, look at the bottom-left corner of the page. Something purple is peeking in.
+
+That's Inky. He's a small octopus who lives on this site, takes “the deep web” literally, and has opinions about Kubernetes YAML.
+
+Click him. He surfaces, says something snarky, and sometimes points at the article that prompted it. Click again and you get the next line. After a few seconds of being ignored, he slides back into the wall.
+
+On a phone, the corner is empty. The layout hides him below 1,200 pixels, and the animation never downloads. So for this article he makes an exception: a little further down, he answers here, whatever size your screen is.
+
+<ArticleStep id="not-a-chatbot" number="01" icon="🐙" title="He is a mascot, not a conversation" />
+
+Inky does not chat. He does not remember you. He shuffles a list of comments, reads them out one by one, and eventually admits he's out of ink.
+
+The first click wakes him up. Later clicks walk through the list. Comments about the news carry a small link to the story. General jokes have none. When the list is empty, he switches to a handful of “that's all I've got” lines. Twelve seconds without another click and he deactivates.
+
+That is the whole interaction. Try it:
+
+<InkyDemo />
+
+This is the same octopus and the same list as the corner. On the live site, the list changes with every build. If you only get five jokes about Docker and the Mariana Trench, you are looking at a build without the database, and Inky is reading the fallback lines written into the site itself.
+
+The interesting part is where the other lines come from.
+
+<ArticleStep id="from-headlines" number="02" icon="🌊" title="Most days, the lines start as headlines" />
+
+A refresh job in my homelab fetches the top five stories from [Hacker News](https://news.ycombinator.com/) and the five newest from [The New Stack](https://thenewstack.io/) and [DevOps.com](https://devops.com/). It skips any URL Inky has already commented on. The rest go to a model with one request: answer in Inky's voice.
+
+The model is [GPT-5.1 Chat](https://openrouter.ai/openai/gpt-5.1-chat) from OpenAI, called through OpenRouter. The prompt is quite specific. Inky is a snarky kawaii octopus who lives in the deep web and means that as an ocean. He is tech-savvy but slightly jaded. Ocean puns are encouraged. Comments stay at one or two sentences. Unicode emoji are allowed sparingly; text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
+
+That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, and it has stayed there since. There is a small script in the repository that runs the same prompt through six models so I can compare the voices. It records nothing; the choice was taste, not a benchmark.
+
+The generated lines go into PostgreSQL, with the source title and URL attached. News comments older than seven days are deleted. A smaller pool of general jokes is topped up by two whenever it drops below ten, and trimmed if it grows past fifteen.
+
+None of that reaches your browser as a live query. The site reads the current comments **when it builds**: up to ten news takes from the last week, all the general jokes, interleaved three to one. They are written into the page as data. Clicking Inky only shuffles that snapshot.
+
+<ArticleFlow
+  id="inky-pipeline"
+  label="From headline to tentacle"
+  title="The octopus does not fetch the news while you watch."
+  caption="The production path as of the sync script and build-time reader in this repository. Builds without the database, such as local previews and test runs, use the five fallback comments instead."
+  steps={[
+    { label: 'News', title: 'Collect a few headlines', detail: 'Five each from Hacker News, The New Stack, and DevOps.com. Already-commented URLs are skipped.' },
+    { label: 'Voice', title: 'Write in Inky’s voice', detail: 'GPT-5.1 Chat, via OpenRouter, returns one snarky line per headline. Each is stored with its source link.' },
+    { label: 'Build', title: 'Bake comments into the page', detail: 'The site reads the current mix at build time. The browser only shuffles what it already has.' },
+    { label: 'Click', title: 'Surface, then hide again', detail: 'Wide screens get the animated octopus. Narrow ones never load him.' }
+  ]}
+/>
+
+If the database is missing or empty, the fallback comments take over. Live production builds refuse to ship with no comments at all.
+
+<ArticleStep id="drawn-twice" number="03" icon="✏️" title="He was drawn twice" />
+
+The first Inky was a hand-built SVG: a kawaii octopus with nerd glasses, random blinking, and a glow, in a component that ran to about 1,100 lines. Five days later, on 6 December 2025, he became a Lottie animation.
+
+Lottie is a JSON description of an After Effects animation that a small library renders as SVG in the browser. The file is called *octopus v4*, weighs about 188 kilobytes, and describes fifteen layers over 360 frames at 60 frames per second. The component shrank to a fifth of its size.
+
+The peeking is CSS. At rest, the 200-pixel octopus is pushed 90 pixels off the left edge and rotated 25 degrees, so his eyes clear the wall while most of him does not. Hovering or clicking slides him out and straightens him, with an easing curve that overshoots a little on the way. Reduced-motion preferences pause the animation. Below 1,200 pixels, the container is hidden and the script returns before the library or the file is ever downloaded.
+
+<ArticleStep id="gone-missing" number="04" icon="🔎" title="He had gone missing" />
+
+While writing this, I checked the deployed corner in a headless browser. The animation file was requested four times. An octopus was mounted zero times.
+
+The cause was a fix from December 2025. Astro's view transitions swap the document on client-side navigation, so the mascot has to initialize again after each one. The script did that by also listening for the page-load event. On a fresh visit, that meant two initializations racing each other. The second one cloned the button to shed old listeners, then destroyed every animation by name, including the one the first pass had just attached to the real page. What remained on screen was an empty box, translated 90 pixels off the left edge, quietly waiting for a click.
+
+I don't know for how long. Nobody said anything, which is the risk with a mascot who is designed to be easy to miss.
+
+The fix is a flag on the button. The first pass to reach it wins, and a freshly swapped page arrives without the flag, so navigation still works. The animation loads exactly once. A browser test now opens the blog at desktop width, waits for the octopus, clicks him twice, and expects two different lines.
+
+<ArticleStep id="also-in-the-prompt" number="05" icon="⌨️" title="The homepage prompt knows him too" />
+
+The homepage has a small terminal. `inky` prints one of the same comments. `sudo` reports the incident to Inky. `rm -r` is declined on the grounds that he keeps backups.
+
+Those are jokes in the same costume. They use the comment list already on the page; they are not a second personality.
+
+## Why he stays in the corner
+
+The site works if you never click him. Nothing important lives in the bubble, the animation waits for a wide screen, and the lines are a snapshot rather than a feed. A phone reader loses a purple octopus and a few sentences of snark.
+
+That is also why the corner could be empty for a while without anyone noticing. He is optional by design. The model writes the jokes. The site decides when you hear them. And I now have a test that checks whether he showed up.
