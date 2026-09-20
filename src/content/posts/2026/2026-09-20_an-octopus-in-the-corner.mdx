@@ -17,7 +17,7 @@ import ArticleStep from '../../../components/ArticleStep.astro';
 
 If you're reading this on a wide screen, look at the bottom-left corner of the page. Something purple is peeking in.
 
-That's Inky. He's a small octopus who lives on this site, takes “the deep web” literally, and has opinions about Kubernetes YAML.
+That's Inky. He's a small octopus who lives on this site, takes “the deep web” literally, and files every tech headline as an incident.
 
 Click him. He surfaces, says something snarky, and sometimes points at the article that prompted it. Click again and you get the next line. After a few seconds of being ignored, he slides back into the wall.
 
@@ -41,9 +41,9 @@ The interesting part is where the other lines come from.
 
 A refresh job in my homelab fetches the top five stories from [Hacker News](https://news.ycombinator.com/) and the five newest from [The New Stack](https://thenewstack.io/) and [DevOps.com](https://devops.com/). It skips any URL Inky has already commented on. The rest go to a model with one request: answer in Inky's voice.
 
-The model is currently [GPT-5.6 Luna](https://openrouter.ai/openai/gpt-5.6-luna), OpenAI's small model, called through OpenRouter. The prompt is quite specific. Inky is a snarky kawaii octopus who lives in the deep web and means that as an ocean. He is tech-savvy but slightly jaded. Ocean puns are encouraged. Comments stay at one or two sentences. Unicode emoji are allowed sparingly; text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
+The model is currently [GPT-5.6 Luna](https://openrouter.ai/openai/gpt-5.6-luna), OpenAI's small model, called through OpenRouter. The prompt is quite specific. Inky is a small purple octopus who lives in the deep web, takes that literally, and works as the site's on-call announcer: he keeps the backups, files every headline as an incident, and reads it out with game-show enthusiasm. He is unsurprised rather than bitter, cheerfully bureaucratic about bad news, now and then delighted by carnage that is not his to fix, and a little petty about being ignored at the bottom of the page. He rotates four formats: an achievement with a useless reward, a patch note, a numbered incident report, and a plain announcement to the surface. Lines stay short. The ocean is home, not a pun quota. He mocks systems and habits, never people, and text emoticons like `:3` and `UwU` are banned. The model returns a JSON array of strings, one per headline.
 
-That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, which lasted until this week, for a reason that gets its own section below. A small script in the repository runs the real prompts, on the day's headlines, through any list of models and prints the results. It stores nothing. Picking a model is a matter of taste, and of whether the reply parses.
+That ban has a history. The first version of Inky, from 1 December 2025, used Claude 3.5 Haiku and a shorter prompt: a snarky kawaii octopus with a pun quota. The same commit that outlawed text emoticons also switched the model to GPT-5.1 Chat, which lasted until this week, for a reason that gets its own section below. The announcer persona is newer still; the earlier general jokes in the corner were regenerated so he does not switch voices halfway through a click. A small script in the repository runs the real prompts, on the day's headlines, through any list of models and prints the results. It stores nothing. Picking a model is a matter of taste, and of whether the reply parses.
 
 The generated lines go into PostgreSQL, with the source title and URL attached. News comments older than seven days are deleted. A smaller pool of general jokes is topped up by two whenever it drops below ten, and trimmed if it grows past fifteen.
 

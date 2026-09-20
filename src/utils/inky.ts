@@ -137,7 +137,7 @@ export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
   {
     id: 0,
     comment:
-      "I surfaced from the deep web just to judge your code. No regrets.",
+      "Incident #0001: you opened a website and found an octopus at the bottom of it. Severity: informational. This has been logged.",
     sourceType: "general",
     sourceTitle: null,
     sourceUrl: null,
@@ -145,7 +145,7 @@ export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
   {
     id: 0,
     comment:
-      "Your Docker containers are more tangled than my tentacles. Impressive, actually.",
+      "New achievement! Works On My Machine. You reproduced the bug on the only computer that matters. Reward: a second computer.",
     sourceType: "general",
     sourceTitle: null,
     sourceUrl: null,
@@ -153,7 +153,7 @@ export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
   {
     id: 0,
     comment:
-      "I've seen cleaner git histories in the Mariana Trench. And I live there.",
+      "Patch 0.0.1: the config file now has a config file. Nested YAML is considered stable because nobody can prove otherwise.",
     sourceType: "general",
     sourceTitle: null,
     sourceUrl: null,
@@ -161,7 +161,7 @@ export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
   {
     id: 0,
     comment:
-      "Kubernetes? More like Kuber-not-today. Even my eight arms can't manage that YAML.",
+      "Announcement for the surface: your deployment is live. From down here I can already see it drifting. Please remain seated.",
     sourceType: "general",
     sourceTitle: null,
     sourceUrl: null,
@@ -169,7 +169,7 @@ export const FALLBACK_INKY_COMMENTS: InkyComment[] = [
   {
     id: 0,
     comment:
-      "They say the ocean is deep, but have you seen your node_modules folder?",
+      "I keep backups of everything you have ever typed, and I still surfaced for you. Noted.",
     sourceType: "general",
     sourceTitle: null,
     sourceUrl: null,

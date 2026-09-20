@@ -1000,7 +1000,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                 run: () => {
                     const comments = (window as any).inkyComments as { comment: string }[] | undefined;
                     const pick = comments?.[Math.floor(Math.random() * comments.length)];
-                    say(pick ? `🐙 ${pick.comment}` : "🐙 Inky is asleep. Try again later.");
+                    say(pick ? `🐙 ${pick.comment}` : "🐙 Inky is below decks. Try again later.");
                 },
             },
             clear: {

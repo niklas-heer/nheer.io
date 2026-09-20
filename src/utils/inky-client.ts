@@ -25,11 +25,11 @@ export interface InkyTurn {
 }
 
 export const INKY_EXHAUSTED_LINES: readonly string[] = [
-  "That's all I've got... for now. My tentacles are tired.",
-  "I've spilled all my ink! Check back tomorrow for fresh takes.",
-  "You've drained my ocean of wisdom. Come back later!",
-  "No more secrets from the deep. I need to recharge my snark.",
-  "*blub blub* That's everything. Even octopuses need a break.",
+  "That concludes today's incident review. The deep is closed.",
+  "Out of ink. Backups of my opinions will be available tomorrow.",
+  "New achievement! Bottom Of The Page. You have exhausted the octopus. Reward: silence.",
+  "Patch 1.0.1: the mascot now says nothing when clicked repeatedly. Working as intended.",
+  "Nothing further from the deep. The surface may resume whatever it was doing.",
 ];
 
 export const INKY_SOURCE_LABELS: Readonly<Record<string, string>> = {

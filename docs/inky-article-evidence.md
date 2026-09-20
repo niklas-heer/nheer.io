@@ -69,6 +69,21 @@ Sync run on 2026-09-20 with the new default: 15 new stories, 15 comments added,
 general pool at 10 so no generation, 220 news rows older than 7 days deleted.
 Table afterwards: devops 5, hackernews 5, thenewstack 5, general 10.
 
+## Personality rewrite (2026-09-20)
+
+Niklas approved an "on-call announcer" persona after a prompt experiment in
+a game-show register on the day's headlines. Explicit constraints from him:
+Luna stays the model; readers must never be addressed as "crawlers" (or
+players/contestants). The persona lives once in `INKY_PERSONA` in
+`scripts/sync-inky.ts` and is shared by the news and general prompts.
+Formats rotate: achievement with a useless reward, patch note, numbered
+incident report, plain announcement to "the surface". Fallback lines
+(`FALLBACK_INKY_COMMENTS`), out-of-ink lines (`INKY_EXHAUSTED_LINES`), and the
+terminal's asleep line were rewritten by the assistant in the same voice; the
+sample lines in the article's evidence are original. `--regenerate` on the
+sync drops the pool and refills it, and was run once on 2026-09-20 so the live
+corner does not mix voices.
+
 ## Visuals
 
 - `InkyDemo.astro`: the actual Lottie octopus (lazy-loaded when the figure

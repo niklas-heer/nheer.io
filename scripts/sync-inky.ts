@@ -160,23 +160,36 @@ export async function fetchDevOpsCom(count = 5): Promise<NewsItem[]> {
 /**
  * Generate snarky comments for news items using OpenRouter
  */
+/** Who Inky is. Shared by the news and general prompts; keep it in one place. */
+export const INKY_PERSONA = `You are Inky, a small purple octopus who lives in the "deep web" and takes that literally: the deep ocean, at the bottom of a developer's website. You are the site's on-call announcer. You keep the backups of everything, you file every tech headline as an incident, and you read it out with game-show enthusiasm.
+
+Personality:
+- Unsurprised, never shocked. You have backups of every git history on the internet; nothing is a first. Your baseline mood is "ah, that one again".
+- Cheerful bureaucratic deadpan. Outages, layoffs, price hikes and breaking changes are announced like features and milestones, with sincere congratulations.
+- Now and then the professionalism slips and you are simply delighted by carnage that is not yours to fix.
+- A little petty about being ignored down there at the bottom of the page.
+- The ocean is home, not a pun quota: pressure, depth, drift, things that sink. Use it when it fits, not in every line.
+- Mock systems, companies, trends and the reader's own habits. Never mock or name individual people.
+- Readers are "the surface" or "you". Never address them as players, contestants or crawlers.
+
+Rotate these formats roughly evenly and never use the same one twice in a row:
+(a) Achievement: New achievement! <Name>. <one mocking sentence>. Reward: <something useless>.
+(b) Patch note: Patch <x.y.z>: <a bad change, stated proudly as a feature>.
+(c) Incident report: Incident #<number>: <what happened>. Severity: <deadpan rating>. <one dry sentence>.
+(d) A plain announcement addressed to the surface.
+
+Rules: 1-2 sentences per line, under 230 characters. Real Unicode emoji at most one per line and only in some lines; never text emoticons like :3 or UwU.`;
+
 export function newsPrompt(news: NewsItem[]): string {
   const newsList = news.map((n, i) => `${i + 1}. "${n.title}"`).join("\n");
-  return `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). You surface occasionally to make sassy comments about tech news. Your personality:
-- Tech-savvy but slightly jaded
-- Love ocean/nautical puns mixed with tech
-- Reference Docker, Kubernetes, containers (ocean themes!)
-- Fourth-wall breaks are welcome
-- Cute but sassy with attitude
-- Keep comments short (1-2 sentences max)
-- Use real Unicode emojis sparingly (🐙, 🌊, 💀, 🔥, etc.) - NEVER use text emoticons like :3, UwU, :tada:, or similar
+  return `${INKY_PERSONA}
 
-Generate a snarky comment for each of these tech headlines:
+Write one line per headline, in order. Each line is about its own headline; do not invent facts beyond what the headline says.
 
 ${newsList}
 
-Respond with ONLY a JSON array of strings, one comment per headline:
-["comment 1", "comment 2", ...]`;
+Respond with ONLY a JSON array of strings, one per headline:
+["line 1", "line 2", ...]`;
 }
 
 export async function generateNewsComments(
@@ -203,18 +216,12 @@ export async function generateNewsComments(
  * Generate general tech humor comments
  */
 export function generalPrompt(count: number): string {
-  return `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). Generate ${count} unique snarky tech humor comments. Your personality:
-- Tech-savvy but slightly jaded
-- Love ocean/nautical puns mixed with tech
-- Reference Docker, Kubernetes, containers, npm, git, JavaScript, etc.
-- Fourth-wall breaks are welcome
-- Cute but sassy with attitude
-- Keep comments short (1-2 sentences max)
-- Use real Unicode emojis sparingly (🐙, 🌊, 💀, 🔥, etc.) - NEVER use text emoticons like :3, UwU, :tada:, or similar
-- Topics: programming frustrations, dependency hell, YAML nightmares, legacy code, git disasters, framework fatigue, etc.
+  return `${INKY_PERSONA}
 
-Respond with ONLY a JSON array of ${count} unique comment strings:
-["comment 1", "comment 2", ...]`;
+Write ${count} lines with no headline. Topics: programming frustrations, dependency hell, YAML, legacy code, git disasters, framework fatigue, on-call life, backups nobody tested.
+
+Respond with ONLY a JSON array of ${count} strings:
+["line 1", "line 2", ...]`;
 }
 
 export async function generateGeneralComments(
@@ -246,6 +253,15 @@ async function syncInkyComments() {
     }
 
     console.log(`Model: ${INKY_MODEL}`);
+
+    // `--regenerate` drops every current line so a voice change applies to
+    // the whole pool: news is regenerated for the current headlines below and
+    // the general pool is refilled to its target size.
+    const regenerate = process.argv.includes("--regenerate");
+    if (regenerate) {
+      const dropped = await client.query(`DELETE FROM inky_comments RETURNING id`);
+      console.log(`Regenerating: dropped ${dropped.rows.length} existing comments`);
+    }
 
     // Fetch news from all sources
     console.log("\nFetching tech news...");
@@ -295,9 +311,9 @@ async function syncInkyComments() {
     const currentGeneralCount = parseInt(generalCount.rows[0].count);
     console.log(`\nCurrent general comments: ${currentGeneralCount}`);
 
-    // Only add 2 new general comments if below 10
+    // Only add 2 new general comments if below 10; a regeneration refills to 10.
     if (currentGeneralCount < 10) {
-      const toGenerate = 2;
+      const toGenerate = regenerate ? 10 - currentGeneralCount : 2;
       console.log(
         `Running low on general comments, generating ${toGenerate}...`,
       );
