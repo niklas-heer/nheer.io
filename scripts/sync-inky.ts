@@ -5,13 +5,60 @@ import pg from "pg";
 
 const env = process.env;
 
-interface NewsItem {
+/** Model used for every Inky line. Override with INKY_MODEL; ids are OpenRouter ids. */
+export const DEFAULT_INKY_MODEL = "openai/gpt-5.6-luna";
+export const INKY_MODEL = env.INKY_MODEL || DEFAULT_INKY_MODEL;
+
+export class InkyGenerationError extends Error {}
+
+/**
+ * Ask OpenRouter for a JSON array of strings. A missing model, a rejected key,
+ * or a reply without an array throws: a silent empty list is how the corner
+ * went quiet for weeks without anyone noticing.
+ */
+export async function requestCommentArray(
+  prompt: string,
+  apiKey: string,
+  model: string,
+  maxTokens: number,
+): Promise<string[]> {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: maxTokens,
+    }),
+  });
+
+  const data: any = await response.json().catch(() => ({}));
+  if (!response.ok || data.error) {
+    const message = data.error?.message ?? `HTTP ${response.status}`;
+    throw new InkyGenerationError(`OpenRouter rejected model ${model}: ${message}`);
+  }
+  const content: string = data.choices?.[0]?.message?.content ?? "";
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new InkyGenerationError(`No JSON array in reply from ${model}: ${content.slice(0, 120)}`);
+  }
+  const parsed = JSON.parse(jsonMatch[0]);
+  if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === "string")) {
+    throw new InkyGenerationError(`Reply from ${model} is not an array of strings`);
+  }
+  return parsed;
+}
+
+export interface NewsItem {
   title: string;
   url: string;
   source: "hackernews" | "thenewstack" | "devops";
 }
 
-interface GeneratedComment {
+export interface GeneratedComment {
   comment: string;
   sourceTitle: string;
   sourceUrl: string;
@@ -21,7 +68,7 @@ interface GeneratedComment {
 /**
  * Fetch top stories from Hacker News
  */
-async function fetchHackerNews(count = 5): Promise<NewsItem[]> {
+export async function fetchHackerNews(count = 5): Promise<NewsItem[]> {
   try {
     const topStoriesRes = await fetch(
       "https://hacker-news.firebaseio.com/v0/topstories.json",
@@ -85,7 +132,7 @@ function parseRssFeed(
 /**
  * Fetch latest from The New Stack (DevOps/Cloud Native focused)
  */
-async function fetchTheNewStack(count = 5): Promise<NewsItem[]> {
+export async function fetchTheNewStack(count = 5): Promise<NewsItem[]> {
   try {
     const res = await fetch("https://thenewstack.io/feed/");
     const xml = await res.text();
@@ -99,7 +146,7 @@ async function fetchTheNewStack(count = 5): Promise<NewsItem[]> {
 /**
  * Fetch latest from DevOps.com
  */
-async function fetchDevOpsCom(count = 5): Promise<NewsItem[]> {
+export async function fetchDevOpsCom(count = 5): Promise<NewsItem[]> {
   try {
     const res = await fetch("https://devops.com/feed/");
     const xml = await res.text();
@@ -113,15 +160,9 @@ async function fetchDevOpsCom(count = 5): Promise<NewsItem[]> {
 /**
  * Generate snarky comments for news items using OpenRouter
  */
-async function generateNewsComments(
-  news: NewsItem[],
-  apiKey: string,
-): Promise<GeneratedComment[]> {
-  if (news.length === 0) return [];
-
+export function newsPrompt(news: NewsItem[]): string {
   const newsList = news.map((n, i) => `${i + 1}. "${n.title}"`).join("\n");
-
-  const prompt = `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). You surface occasionally to make sassy comments about tech news. Your personality:
+  return `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). You surface occasionally to make sassy comments about tech news. Your personality:
 - Tech-savvy but slightly jaded
 - Love ocean/nautical puns mixed with tech
 - Reference Docker, Kubernetes, containers (ocean themes!)
@@ -136,55 +177,33 @@ ${newsList}
 
 Respond with ONLY a JSON array of strings, one comment per headline:
 ["comment 1", "comment 2", ...]`;
+}
 
-  try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-5.1-chat",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1000,
-        }),
-      },
+export async function generateNewsComments(
+  news: NewsItem[],
+  apiKey: string,
+  model = INKY_MODEL,
+): Promise<GeneratedComment[]> {
+  if (news.length === 0) return [];
+  const comments = await requestCommentArray(newsPrompt(news), apiKey, model, 1000);
+  if (comments.length !== news.length) {
+    throw new InkyGenerationError(
+      `Asked ${model} for ${news.length} comments, received ${comments.length}`,
     );
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "[]";
-
-    // Extract JSON array from response
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.error("No JSON array found in response");
-      return [];
-    }
-
-    const comments: string[] = JSON.parse(jsonMatch[0]);
-    return comments.map((comment, i) => ({
-      comment,
-      sourceTitle: news[i].title,
-      sourceUrl: news[i].url,
-      sourceType: news[i].source,
-    }));
-  } catch (error) {
-    console.error("Failed to generate news comments:", error);
-    return [];
   }
+  return comments.map((comment, i) => ({
+    comment,
+    sourceTitle: news[i].title,
+    sourceUrl: news[i].url,
+    sourceType: news[i].source,
+  }));
 }
 
 /**
  * Generate general tech humor comments
  */
-async function generateGeneralComments(
-  count: number,
-  apiKey: string,
-): Promise<GeneratedComment[]> {
-  const prompt = `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). Generate ${count} unique snarky tech humor comments. Your personality:
+export function generalPrompt(count: number): string {
+  return `You are Inky, a snarky kawaii octopus mascot who lives in the "deep web" (you take this literally as the deep ocean). Generate ${count} unique snarky tech humor comments. Your personality:
 - Tech-savvy but slightly jaded
 - Love ocean/nautical puns mixed with tech
 - Reference Docker, Kubernetes, containers, npm, git, JavaScript, etc.
@@ -196,44 +215,20 @@ async function generateGeneralComments(
 
 Respond with ONLY a JSON array of ${count} unique comment strings:
 ["comment 1", "comment 2", ...]`;
+}
 
-  try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "openai/gpt-5.1-chat",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1500,
-        }),
-      },
-    );
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "[]";
-
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.error("No JSON array found in response");
-      return [];
-    }
-
-    const comments: string[] = JSON.parse(jsonMatch[0]);
-    return comments.map((comment) => ({
-      comment,
-      sourceTitle: null as any,
-      sourceUrl: `general-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      sourceType: "general",
-    }));
-  } catch (error) {
-    console.error("Failed to generate general comments:", error);
-    return [];
-  }
+export async function generateGeneralComments(
+  count: number,
+  apiKey: string,
+  model = INKY_MODEL,
+): Promise<GeneratedComment[]> {
+  const comments = await requestCommentArray(generalPrompt(count), apiKey, model, 1500);
+  return comments.map((comment) => ({
+    comment,
+    sourceTitle: null as any,
+    sourceUrl: `general-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    sourceType: "general",
+  }));
 }
 
 async function syncInkyComments() {
@@ -249,6 +244,8 @@ async function syncInkyComments() {
       await client.end();
       return;
     }
+
+    console.log(`Model: ${INKY_MODEL}`);
 
     // Fetch news from all sources
     console.log("\nFetching tech news...");
@@ -371,9 +368,11 @@ async function syncInkyComments() {
     await client.end();
   } catch (error: any) {
     console.error("Inky sync failed:", error.message);
-    await client.end();
+    await client.end().catch(() => {});
     process.exit(1);
   }
 }
 
-syncInkyComments();
+if (import.meta.main) {
+  syncInkyComments();
+}
