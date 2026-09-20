@@ -4,9 +4,9 @@ const currentYear = new Date().getFullYear();
 const startYear = 2011;
 ---
 
-<footer class="mt-16 border-t border-border pt-8 text-sm text-muted">
-  <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-    <div>
+<footer class="site-footer">
+  <div class="site-footer-row">
+    <div class="site-footer-meta">
       <p>&copy; {startYear}&ndash;{currentYear} Niklas Heer</p>
       <PageViews />
       <p class="mt-1">
@@ -15,24 +15,73 @@ const startYear = 2011;
           href="https://creativecommons.org/licenses/by-nc/4.0/"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-accent hover:underline"
         >
           CC BY-NC 4.0
         </a>
       </p>
     </div>
 
-    <div class="flex items-center gap-4">
-      <a href="/imprint" class="hover:text-foreground transition-colors">Imprint</a>
-      <a href="/rss.xml" class="hover:text-foreground transition-colors">RSS</a>
+    <nav class="site-footer-links" aria-label="Footer">
+      <a href="/imprint">Imprint</a>
+      <a href="/rss.xml">RSS</a>
       <a
         href="https://github.com/niklas-heer"
         target="_blank"
         rel="noopener noreferrer"
-        class="hover:text-foreground transition-colors"
       >
         GitHub
       </a>
-    </div>
+    </nav>
   </div>
 </footer>
+
+<style>
+  .site-footer {
+    margin-top: 5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.875rem;
+    color: var(--color-muted);
+  }
+
+  .site-footer-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .site-footer-meta a {
+    color: var(--color-muted);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-color: color-mix(in srgb, var(--color-muted) 40%, transparent);
+  }
+
+  .site-footer-meta a:hover {
+    color: var(--color-accent);
+    text-decoration-color: currentColor;
+  }
+
+  .site-footer-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .site-footer-links a {
+    color: var(--color-muted);
+    font-weight: 500;
+  }
+
+  .site-footer-links a:hover {
+    color: var(--color-foreground);
+  }
+
+  @media (min-width: 40rem) {
+    .site-footer-row {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+  }
+</style>

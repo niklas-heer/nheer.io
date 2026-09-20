@@ -16,7 +16,6 @@ const yearsAtTradebyte = Math.floor(
     description="About Niklas Heer - Engineering Manager, Central Platform Services at Tradebyte. Experience, skills, and downloadable CV."
 >
     <div class="about-hero">
-        <div class="hero-glow"></div>
         <div class="about-image-container">
             <img
                 src="/assets/images/about/nheer-memoji.png"
@@ -34,7 +33,7 @@ const yearsAtTradebyte = Math.floor(
     </div>
 
     <div class="about-content">
-        <section class="about-section glass-card">
+        <section class="about-section about-intro">
             <p class="intro-text">Hi, I am Niklas. 👋</p>
             <p>
                 I'm an Engineering Manager at <a
@@ -303,89 +302,32 @@ const yearsAtTradebyte = Math.floor(
 <style>
     .about-hero {
         position: relative;
-        text-align: center;
-        padding: 2rem 0 3rem;
-    }
-
-    .hero-glow {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: min(400px, 100vw);
-        height: 400px;
-        background: radial-gradient(
-            circle,
-            color-mix(in srgb, var(--color-accent) 20%, transparent) 0%,
-            color-mix(in srgb, var(--color-pink) 10%, transparent) 40%,
-            transparent 70%
-        );
-        filter: blur(60px);
-        pointer-events: none;
-        z-index: -1;
+        padding: 0 0 2.5rem;
     }
 
     .about-image-container {
-        position: relative;
         display: inline-block;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+        margin-left: -0.5rem;
     }
 
     .about-image {
-        width: 160px;
-        height: 160px;
+        width: 112px;
+        height: 112px;
         object-fit: contain;
-        filter: drop-shadow(
-                0 0 20px
-                    color-mix(in srgb, var(--color-accent) 60%, transparent)
-            )
-            drop-shadow(
-                0 0 40px color-mix(in srgb, var(--color-pink) 40%, transparent)
-            );
-        animation: glow-pulse 4s ease-in-out infinite;
-    }
-
-    @keyframes glow-pulse {
-        0%,
-        100% {
-            filter: drop-shadow(
-                    0 0 15px
-                        color-mix(in srgb, var(--color-accent) 50%, transparent)
-                )
-                drop-shadow(
-                    0 0 30px
-                        color-mix(in srgb, var(--color-pink) 30%, transparent)
-                );
-        }
-        50% {
-            filter: drop-shadow(
-                    0 0 25px
-                        color-mix(in srgb, var(--color-accent) 70%, transparent)
-                )
-                drop-shadow(
-                    0 0 50px
-                        color-mix(in srgb, var(--color-pink) 50%, transparent)
-                );
-        }
     }
 
     .about-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(
-            135deg,
-            var(--color-foreground) 0%,
-            var(--color-accent) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        font-size: clamp(2.5rem, 6vw, 3.25rem);
+        font-weight: 750;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+        margin-bottom: 0.75rem;
     }
 
     .about-tagline {
         color: var(--color-muted);
-        font-size: 1.1rem;
+        font-size: 1.125rem;
     }
 
     .about-content {
@@ -398,19 +340,21 @@ const yearsAtTradebyte = Math.floor(
         padding: 1.5rem;
         background: var(--color-surface);
         border: 1px solid var(--color-border);
-        border-radius: 1rem;
+        border-radius: var(--radius-card);
     }
 
-    .glass-card {
-        background: linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--color-accent) 8%, var(--color-surface)),
-            color-mix(in srgb, var(--color-pink) 5%, var(--color-surface))
-        );
+    .about-intro {
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        font-size: 1.125rem;
     }
 
     .intro-text {
-        font-size: 1.25rem;
+        font-size: 1.375rem;
+        font-weight: 600;
+        letter-spacing: -0.015em;
         margin-bottom: 1rem;
     }
 
@@ -426,15 +370,15 @@ const yearsAtTradebyte = Math.floor(
 
     .about-section a {
         color: var(--color-accent);
-        text-decoration: none;
-        background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-        padding: 0.1rem 0.5rem;
-        border-radius: 9999px;
-        transition: all 0.2s ease;
+        text-decoration: underline;
+        text-decoration-thickness: 1.5px;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+        transition: text-decoration-color 0.15s ease;
     }
 
     .about-section a:hover {
-        background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+        text-decoration-color: currentColor;
     }
 
     .section-title {

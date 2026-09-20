@@ -3,14 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="404 - Page Not Found" description="The page you're looking for doesn't exist">
-  <div class="flex flex-col items-center justify-center py-16 text-center">
-    <h1 class="text-6xl font-bold text-accent mb-4">404</h1>
-    <p class="text-xl text-muted mb-8">Page not found</p>
-    <p class="text-muted mb-8">
-      The page you're looking for doesn't exist or has been moved.
+  <div class="py-12">
+    <p class="font-mono text-accent mb-4"><span aria-hidden="true">❯ </span>404: not found</p>
+    <h1 class="page-title">This page doesn't exist.</h1>
+    <p class="page-subtitle mb-8">
+      It may have moved, or the link was never right. The <a href="/posts">blog</a> and the <a href="/">homepage</a> are good places to start over.
     </p>
-    <a href="/" class="text-accent hover:underline">
-      &larr; Back to home
-    </a>
   </div>
 </BaseLayout>

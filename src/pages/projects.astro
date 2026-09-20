@@ -26,19 +26,18 @@ const joinDate = githubData?.createdAt
     title="Projects"
     description="Open source projects and side projects by Niklas Heer"
 >
-    <h1
-        class="text-3xl font-bold mb-2"
-        style="view-transition-name: page-title;"
-    >
-        Projects
-    </h1>
-    <p class="text-muted mb-8">
-        Open source projects I've built and maintain. Find me on <a
-            href="https://github.com/niklas-heer"
-            target="_blank"
-            rel="noopener">GitHub</a
-        >.
-    </p>
+    <div class="page-header">
+        <h1 class="page-title" style="view-transition-name: page-title;">
+            Projects
+        </h1>
+        <p class="page-subtitle">
+            Open source projects I've built and maintain. Find me on <a
+                href="https://github.com/niklas-heer"
+                target="_blank"
+                rel="noopener">GitHub</a
+            >.
+        </p>
+    </div>
 
     {
         !githubData && (

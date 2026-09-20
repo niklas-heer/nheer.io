@@ -156,8 +156,9 @@ connect Vercel Git builds.
 ## Tech Stack
 
 - **Framework**: Astro 7
-- **Styling**: Tailwind CSS 4
-- **Theme**: Tokyo Night
+- **Styling**: Tailwind CSS 4; design tokens live in `src/styles/global.css`
+- **Type**: Bricolage Grotesque for text, JetBrains Mono for the prompt and code (self-hosted via Fontsource)
+- **Code theme**: Tokyo Night (dark) and GitHub Light (light)
 - **Syntax Highlighting**: Expressive Code
 - **Tooling**: mise, npm (locked installs), Bun (tests and sync scripts)
 - **Deployment**: Vercel (DNS at INWX, managed in hosting-infra)
