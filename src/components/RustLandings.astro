@@ -1,0 +1,67 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+
+interface Props { id: string }
+const { id } = Astro.props;
+
+const projects = [
+  { name: 'Kipferl', what: 'Python-style CLIs as small binaries', from: 'Zig', to: 'Rust', when: '4 Aug 2026', outcome: 'moved', href: 'https://github.com/niklas-heer/kipferl' },
+  { name: 'vrdx', what: 'Decision records in Markdown', from: 'Python', to: 'Rust', when: '12 Sep 2026', outcome: 'moved', href: 'https://github.com/niklas-heer/vrdx' },
+  { name: 'Hub tooling', what: 'Private repository audit script', from: 'Python', to: 'Rust', when: '19 Sep 2026', outcome: 'moved' },
+  { name: 'Quirl', what: 'A shell with two pipelines', from: null, to: 'Rust', when: '15 Aug 2026', outcome: 'started', href: 'https://github.com/niklas-heer/quirl' },
+  { name: 'Latchrun', what: 'Credential-scoped command sessions', from: null, to: 'Rust', when: '19 Sep 2026', outcome: 'started', href: 'https://github.com/niklas-heer/latchrun' },
+  { name: 'Kindred', what: 'A local family-history graph', from: null, to: 'Rust', when: '19 Sep 2026', outcome: 'started', href: 'https://github.com/niklas-heer/kindred' },
+  { name: 'tdx', what: 'Todos in a Markdown file', from: 'Go', to: 'Go', when: '5 Sep 2026', outcome: 'stayed', href: 'https://github.com/niklas-heer/tdx', note: 'Measured; rewrite declined' },
+  { name: 'Sceno', what: 'Architecture diagrams from KDL', from: 'Go', to: 'Go', when: '', outcome: 'stayed', href: 'https://github.com/niklas-heer/sceno' },
+];
+---
+<ArticleFigure
+  id={id}
+  label="August and September 2026"
+  title="Where Rust landed, and where it did not"
+  caption="Dates are the first commit of each migration or project from the repositories' histories. Moved: an existing implementation was ported. Started: the project began in Rust. Stayed: Go remained after a measured evaluation (tdx) or without one (Sceno)."
+>
+  <ul class="landings">
+    {projects.map((project) => (
+      <li class={project.outcome}>
+        <div class="head">
+          {project.href ? <a href={project.href}>{project.name}</a> : <span class="name">{project.name}</span>}
+          <span class="outcome">{project.outcome}</span>
+        </div>
+        <p class="what">{project.what}</p>
+        <p class="path">
+          {project.from ? <span class="lang from">{project.from}</span> : <span class="lang from empty">new</span>}
+          <span class="arrow" aria-hidden="true">→</span>
+          <span class="sr-only">to</span>
+          <span class="lang to">{project.to}</span>
+        </p>
+        <p class="when">{project.note ?? project.when}</p>
+      </li>
+    ))}
+  </ul>
+</ArticleFigure>
+<style>
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .landings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin: 0; padding: 0; list-style: none; }
+  .landings li { display: flex; flex-direction: column; min-width: 0; padding: .8rem .85rem; border: 1px solid #47394f; border-top: 3px solid #8ae0c6; border-radius: 12px; background: #120f1a; }
+  .landings li.started { border-top-color: #c6adff; }
+  .landings li.stayed { border-top-color: #7d7392; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+  .head a, .name { color: #f0eafa; font-weight: 650; font-size: .95rem; text-decoration: none; }
+  .head a:hover, .head a:focus-visible { text-decoration: underline; }
+  .head a:focus-visible { outline: 3px solid #8ae0c6; outline-offset: 2px; border-radius: 3px; }
+  .outcome { color: #8ae0c6; font: 650 .6rem/1.5 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .started .outcome { color: #c6adff; }
+  .stayed .outcome { color: #a89cba; }
+  .what { flex: 1; margin: .3rem 0 .6rem; color: #c4b8d3; font-size: .76rem; line-height: 1.5; }
+  .path { display: flex; align-items: center; gap: .4rem; margin: 0; }
+  .lang { padding: .2rem .5rem; border-radius: 6px; font: 650 .68rem/1.4 ui-monospace, monospace; }
+  .from { background: #2a2338; color: #d5cce6; }
+  .from.empty { background: transparent; border: 1px dashed #58486e; color: #a89cba; }
+  .to { background: #f0cd8e; color: #241c10; }
+  .stayed .to { background: #3a3048; color: #f0eafa; }
+  .arrow { color: #7d7392; }
+  .when { margin: .55rem 0 0; color: #a89cba; font: .66rem/1.4 ui-monospace, monospace; }
+  @media (max-width: 900px) { .landings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .landings { grid-template-columns: minmax(0, 1fr); } }
+</style>

@@ -1,0 +1,41 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+
+interface Props { id: string }
+const { id } = Astro.props;
+
+const catches = [
+  { lint: 'string_slice', found: 'A 64-byte download checksum containing non-ASCII bytes could slice a UTF-8 string at an invalid boundary and panic.', fix: 'Decode validated ASCII hexadecimal bytes; a regression test uses a Unicode token of the formerly accepted length.' },
+  { lint: 'panic inside extern "C"', found: 'HTTPConnection(..., timeout=1e300) aborted the whole process: a duration conversion panicked inside a C callback.', fix: 'Fallible duration conversion and checked deadlines; the test verifies a catchable Python error and no abort.' },
+  { lint: 'unreachable', found: 'Command dispatch on strings carried an impossible unreachable! branch.', fix: 'An exhaustive Run/Dev/Build enum. Invalid states cannot reach the function.' },
+  { lint: 'arithmetic_side_effects', found: 'Progress-bar multiplication overflowed at large values; a median of two f64::MAX values overflowed too.', fix: 'Wider arithmetic and f64::midpoint, with boundary tests for both.' },
+  { lint: 'indexing_slicing', found: 'Regex replacement scanning could step into a Unicode continuation byte after a backslash.', fix: 'Advance by whole characters; test Unicode replacement input.' },
+  { lint: 'as_conversions', found: 'Logarithm-based frexp and ldexp returned zero or infinity for representable subnormal values.', fix: 'Use the platform libm with checked exponent conversions; bit-preserving round-trip tests include signed zero.' },
+];
+---
+<ArticleFigure
+  id={id}
+  label="Kipferl / Rust review, 5 September 2026"
+  title="What the strict lints turned up"
+  caption="Six of the findings recorded in Kipferl's docs/rust-review.md after enabling Clippy's pedantic and nursery groups plus the restriction lints listed later in this article. The lint column names the rule family that flagged the code; the actual fix came from reading why the compiler objected. Every entry has a regression test."
+>
+  <ol class="catches">
+    {catches.map((entry) => (
+      <li>
+        <code class="lint">{entry.lint}</code>
+        <p class="found">{entry.found}</p>
+        <p class="fix"><span>Fix</span>{entry.fix}</p>
+      </li>
+    ))}
+  </ol>
+</ArticleFigure>
+<style>
+  .catches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: 0; padding: 0; list-style: none; counter-reset: catches; }
+  .catches li { position: relative; padding: .9rem .95rem .9rem 2.6rem; border: 1px solid #47394f; border-radius: 12px; background: #120f1a; counter-increment: catches; }
+  .catches li::before { content: counter(catches, decimal-leading-zero); position: absolute; left: .85rem; top: .95rem; color: #c6adff; font: 650 .7rem/1.4 ui-monospace, monospace; }
+  .lint { display: inline-block; padding: .15rem .45rem; border-radius: 6px; background: rgba(240, 205, 142, .16); color: #fbe9c4; font: 600 .68rem/1.4 ui-monospace, monospace; }
+  .found { margin: .5rem 0 0; color: #f0eafa; font-size: .82rem; line-height: 1.55; }
+  .fix { margin: .45rem 0 0; color: #c4b8d3; font-size: .76rem; line-height: 1.55; }
+  .fix span { margin-right: .4rem; color: #8ae0c6; font: 650 .62rem/1.5 ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
+  @media (max-width: 720px) { .catches { grid-template-columns: minmax(0, 1fr); } }
+</style>

@@ -1,0 +1,73 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+
+interface Props { id: string }
+const { id } = Astro.props;
+
+// Language arrivals in speed-comparison, from the commit log (author dates, Europe/Berlin).
+const days = [
+  { date: '2018-02-17', label: 'Sat 17 Feb', languages: ['Python', 'PHP', 'Rust', 'JavaScript', 'Go'] },
+  { date: '2018-02-18', label: 'Sun 18 Feb', languages: ['Ruby', 'Crystal', 'C', 'Lua', 'Julia', 'Nim'] },
+  { date: '2018-02-19', label: 'Mon 19 Feb', languages: [] },
+  { date: '2018-02-20', label: 'Tue 20 Feb', languages: [] },
+  { date: '2018-02-21', label: 'Wed 21 Feb', languages: ['C++'] },
+  { date: '2018-02-22', label: 'Thu 22 Feb', languages: [] },
+  { date: '2018-02-23', label: 'Fri 23 Feb', languages: [] },
+  { date: '2018-02-24', label: 'Sat 24 Feb', languages: [] },
+  { date: '2018-02-25', label: 'Sun 25 Feb', languages: [] },
+  { date: '2018-02-26', label: 'Mon 26 Feb', languages: ['PyPy', 'Java'] },
+  { date: '2018-02-27', label: 'Tue 27 Feb', languages: ['Swift'] },
+  { date: '2018-02-28', label: 'Wed 28 Feb', languages: [] },
+  { date: '2018-03-01', label: 'Thu 1 Mar', languages: [] },
+  { date: '2018-03-02', label: 'Fri 2 Mar', languages: ['R', 'PHP 5.6'] },
+];
+const total = days.reduce((sum, day) => sum + day.languages.length, 0);
+const columns = days.map((day) => (day.languages.length > 0 ? 'minmax(0, 3fr)' : 'minmax(0, 1fr)')).join(' ');
+const summary = days
+  .filter((day) => day.languages.length > 0)
+  .map((day) => `${day.label}: ${day.languages.join(', ')}`)
+  .join('. ');
+---
+<ArticleFigure
+  id={id}
+  label="Speed-comparison / the first two weeks"
+  title={`${total} entries in fourteen days. Rust was the third.`}
+  caption="Arrival dates come from the commit log of niklas-heer/speed-comparison (author dates, Berlin time). PyPy is an interpreter variant, PHP 5.6 a version variant; both count as entries in the comparison. The log records when each file was committed, not how long it took to write."
+>
+  <p class="sr-only">{summary}</p>
+  <ol class="arrivals" aria-hidden="true" style={`--columns: ${columns}`}>
+    {days.map((day) => (
+      <li class:list={['day', { quiet: day.languages.length === 0 }]}>
+        <span class="day-label">{day.label}</span>
+        <span class="tick"></span>
+        <ul class="chips">
+          {day.languages.map((language) => (
+            <li class:list={['chip', { rust: language === 'Rust' }]}>{language}</li>
+          ))}
+        </ul>
+      </li>
+    ))}
+  </ol>
+</ArticleFigure>
+<style>
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .arrivals { display: grid; grid-template-columns: var(--columns); gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .day { display: flex; flex-direction: column; align-items: stretch; min-width: 0; }
+  .day-label { display: block; height: 2.4rem; color: #c4b8d3; font: .58rem/1.3 ui-monospace, monospace; text-align: center; overflow-wrap: anywhere; }
+  .quiet .day-label { font-size: .5rem; }
+  .tick { display: block; height: 3px; margin: .35rem 0 .5rem; border-radius: 2px; background: #8ae0c6; }
+  .quiet .tick { background: #3a3048; }
+  .quiet .day-label { color: #7d7392; }
+  .chips { display: flex; flex-direction: column; gap: .3rem; margin: 0; padding: 0; list-style: none; }
+  .chip { padding: .3rem .2rem; border: 1px solid #58486e; border-radius: 6px; background: #241d33; color: #f0eafa; font: 600 .62rem/1.2 ui-monospace, monospace; text-align: center; overflow-wrap: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip.rust { background: #f0cd8e; border-color: #f0cd8e; color: #241c10; }
+  @media (max-width: 720px) {
+    .arrivals { grid-template-columns: minmax(0, 1fr); gap: .5rem; }
+    .day { display: grid; grid-template-columns: 5.2rem 3px minmax(0, 1fr); align-items: start; gap: .6rem; }
+    .quiet { display: none; }
+    .day-label { height: auto; font-size: .7rem; text-align: left; }
+    .tick { height: 100%; min-height: 1.6rem; width: 3px; margin: 0; }
+    .chips { flex-direction: row; flex-wrap: wrap; }
+    .chip { font-size: .7rem; padding: .3rem .55rem; }
+  }
+</style>
