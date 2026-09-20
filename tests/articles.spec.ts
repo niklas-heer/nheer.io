@@ -19,6 +19,10 @@ for (const width of [1280, 390]) {
       // Enter through Astro client navigation, where listeners used to get lost.
       await page.locator(`main a[href*="${slug}"]`).click();
       await expect(page.locator('article')).toBeVisible();
+      const repoCard = page.locator('article a.github-repo-card');
+      await expect(repoCard).toBeVisible();
+      await expect(repoCard).toHaveAttribute('href', /^https:\/\/github\.com\/niklas-heer\//);
+      await expect(page.locator('article .github-repo-error')).toHaveCount(0);
       if (kind === 'benchmark') {
         const buttons = page.locator('pipeline-history button');
         await expect(buttons).toHaveCount(3);
@@ -89,6 +93,24 @@ for (const width of [1280, 390]) {
     });
   }
 }
+
+test('star history is a theme-aware chart link, not a zoomable figure', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/posts/2025/11/2025-11-29_building-tdx/');
+  const img = page.locator('.star-history-img');
+  await expect(img).toBeVisible();
+  await expect(img).not.toHaveClass(/medium-zoom-image/);
+  await expect(page.locator('a.star-history-link')).toHaveAttribute('href', /star-history\.com/);
+  const darkSrc = await img.getAttribute('data-dark-src');
+  const lightSrc = await img.getAttribute('data-light-src');
+  expect(darkSrc).toBeTruthy();
+  expect(lightSrc).toBeTruthy();
+  await page.getByRole('button', { name: 'Switch to light theme' }).click();
+  await expect(img).toHaveAttribute('src', lightSrc!);
+  await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+  await expect(img).toHaveAttribute('src', darkSrc!);
+  await expect(page.locator('.medium-zoom-overlay')).toHaveCount(0);
+});
 
 test('cold-load controls wait for their handlers without losing the first click', async ({ page }) => {
   let release = () => {};

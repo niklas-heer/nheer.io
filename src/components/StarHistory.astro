@@ -30,31 +30,22 @@ const lightChartUrl = `https://api.star-history.com/svg?repos=${repo}&type=Date`
 
 <script>
   function updateStarHistoryChart() {
-    const img = document.querySelector('.star-history-img') as HTMLImageElement;
-    if (!img) return;
-
     const theme = document.documentElement.getAttribute('data-theme');
-    const src = theme === 'dark' ? img.dataset.darkSrc : img.dataset.lightSrc;
-    if (src && img.src !== src) {
-      img.src = src;
+    for (const img of document.querySelectorAll<HTMLImageElement>('.star-history-img')) {
+      const src = theme === 'dark' ? img.dataset.darkSrc : img.dataset.lightSrc;
+      if (src && img.getAttribute('src') !== src) img.src = src;
     }
   }
 
-  // Run on load
   updateStarHistoryChart();
 
-  // Watch for theme changes
   const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.attributeName === 'data-theme') {
-        updateStarHistoryChart();
-      }
-    });
+    if (mutations.some((mutation) => mutation.attributeName === 'data-theme')) {
+      updateStarHistoryChart();
+    }
   });
-
   observer.observe(document.documentElement, { attributes: true });
 
-  // Handle Astro page transitions
   document.addEventListener('astro:page-load', updateStarHistoryChart);
 </script>
 

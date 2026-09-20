@@ -421,7 +421,7 @@ p.info a {
     overflow-x: auto;
 }
 
-.prose img {
+.prose img:not(.star-history-img) {
     border-radius: 0.5rem;
     margin: 1.5rem 0;
     cursor: zoom-in;
@@ -431,12 +431,12 @@ p.info a {
 }
 
 /* Progressive image loading */
-.prose img.loading {
+.prose img.loading:not(.star-history-img) {
     filter: blur(10px);
     opacity: 0.8;
 }
 
-.prose img.loaded {
+.prose img.loaded:not(.star-history-img) {
     filter: blur(0);
     opacity: 1;
 }

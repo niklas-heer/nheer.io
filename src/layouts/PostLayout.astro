@@ -169,7 +169,7 @@ const readingTime = Math.ceil(words / 200);
 
     function initProgressiveImages() {
         const images = document.querySelectorAll(
-            ".prose img",
+            ".prose img:not(.star-history-img)",
         ) as NodeListOf<HTMLImageElement>;
 
         images.forEach((img) => {
@@ -208,13 +208,13 @@ const readingTime = Math.ceil(words / 200);
     function initZoom() {
         cleanupZoom();
 
-        const images = document.querySelectorAll(".prose img");
+        const images = document.querySelectorAll(".prose img:not(.star-history-img)");
         if (images.length === 0) return;
 
         const theme = document.documentElement.getAttribute("data-theme");
         const bgColor = theme === "dark" ? "#181822" : "#fff";
 
-        window.__zoomInstance = mediumZoom(".prose img", {
+        window.__zoomInstance = mediumZoom(".prose img:not(.star-history-img)", {
             margin: 24,
             background: bgColor,
         });
