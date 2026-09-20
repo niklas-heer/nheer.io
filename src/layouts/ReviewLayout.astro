@@ -30,26 +30,21 @@ const readingDays = readingStart && readingEnd
 ---
 
 <BaseLayout title={`${title} - Review`} description={`Review of ${title}${bookAuthor ? ` by ${bookAuthor}` : ''}`} lang={review.data.lang} image={bookCover}>
-  <a href="/reviews" class="inline-flex items-center gap-1 text-muted hover:text-accent transition-colors mb-6 text-sm">
-    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-    Back to reviews
-  </a>
+  <a href="/reviews" class="back-link">Back to reviews</a>
 
   <article>
-    <header class="mb-8">
+    <header class="review-header">
       <div class="flex flex-col sm:flex-row gap-6">
         {bookCover && (
           <img
             src={bookCover}
             alt={`Cover of ${title}`}
-            class="w-32 h-auto object-cover rounded-lg shadow-lg flex-shrink-0"
+            class="w-32 h-auto object-cover rounded-md shadow-lg flex-shrink-0 self-start"
           />
         )}
 
         <div>
-          <h1 class="text-3xl font-bold mb-2" style="view-transition-name: page-title;">{title}</h1>
+          <h1 class="review-heading" style="view-transition-name: page-title;">{title}</h1>
 
           {bookAuthor && (
             <p class="text-lg text-muted mb-3">by {bookAuthor}</p>
@@ -57,7 +52,7 @@ const readingDays = readingStart && readingEnd
 
           <BookRating rating={rating} />
 
-          <div class="flex flex-wrap items-center gap-4 text-sm text-muted mt-4">
+          <div class="review-meta">
             {readingStart && readingEnd && (
               <>
                 <span>
@@ -77,11 +72,11 @@ const readingDays = readingStart && readingEnd
           </div>
 
           {tags && tags.length > 0 && (
-            <div class="flex flex-wrap gap-2 mt-4">
+            <ul class="flex flex-wrap gap-1.5 mt-4" aria-label="Tags">
               {tags.map((tag) => (
-                <span class="tag">{tag}</span>
+                <li class="tag">{tag}</li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </div>
@@ -92,3 +87,46 @@ const readingDays = readingStart && readingEnd
     </div>
   </article>
 </BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+
+  .back-link::before {
+    content: "❮";
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: var(--color-accent);
+  }
+
+  .back-link:hover {
+    color: var(--color-accent);
+  }
+
+  .review-header {
+    margin: 1.5rem 0 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .review-heading {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .review-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+</style>

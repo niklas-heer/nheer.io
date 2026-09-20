@@ -149,6 +149,30 @@ test('scroll controls work after revisiting a post', async ({ page }) => {
   }
 });
 
+test('the homepage terminal runs commands, keeps history and navigates', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  const input = page.getByRole('textbox', { name: /type a command/i });
+  const history = page.locator('[data-terminal-history]');
+  await input.fill('help');
+  await input.press('Enter');
+  await expect(history).toContainText('open a section');
+  await input.fill('nonsense');
+  await input.press('Enter');
+  await expect(history).toContainText('command not found: nonsense');
+  await input.press('ArrowUp');
+  await expect(input).toHaveValue('nonsense');
+  await input.fill('c');
+  await input.press('Tab');
+  await expect(input).toHaveValue('cd ');
+  await input.fill('cd blog');
+  await input.press('Enter');
+  await expect(page).toHaveURL(/\/posts\/?$/);
+  expect(errors).toEqual([]);
+});
+
 test('draft reviews are absent from the production build', async ({ request }) => {
   const root = 'src/content/reviews';
   const drafts = readdirSync(root, { recursive: true })
@@ -165,8 +189,10 @@ test('draft reviews are absent from the production build', async ({ request }) =
 
 test('podcast snapshots are labeled and populated data has working categories', async ({ page, request }) => {
   const report = await (await request.get('/build-health.json')).json();
+  // The page moved from /podcasts; the old address still lands on it.
   await page.goto('/podcasts');
-  await expect(page.getByRole('heading', { name: 'Podcasts', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/listening\/?$/);
+  await expect(page.getByRole('heading', { name: 'Listening', exact: true })).toBeVisible();
   expect(['fixture', 'live']).toContain(report.source);
   await expect(page.locator('[data-podcast-freshness]')).toContainText('Last data update:');
   if (report.source === 'fixture') {

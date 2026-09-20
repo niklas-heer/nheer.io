@@ -1,35 +1,59 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/jetbrains-mono/index.css";
 
-/* Color Palette - Based on original Dracula-inspired theme */
+/*
+ * Design tokens
+ *
+ * The site reads as "ink and terminal": a deep violet-ink page, one violet
+ * accent shared with the logo and Inky, Bricolage Grotesque for all text and
+ * JetBrains Mono reserved for the prompt wordmark, code and small data.
+ */
 @theme {
-    /* Dark theme */
-    --color-background: #181822;
-    --color-surface: #282a36;
-    --color-foreground: #e0e0e0;
-    --color-muted: #9899a2;
-    --color-border: #4a4b50;
-    --color-accent: #bd93f9;
-    --color-accent-hover: #caa4ff;
+    --font-sans:
+        "Bricolage Grotesque Variable", ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", sans-serif;
+    --font-mono:
+        "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas,
+        monospace;
 
-    /* Additional colors */
-    --color-red: #ff5555;
+    /* Dark theme (default) */
+    --color-background: #131019;
+    --color-surface: #1c1826;
+    --color-surface-raised: #262032;
+    --color-foreground: #ece8f4;
+    --color-muted: #9e97b2;
+    --color-border: #322b40;
+    --color-accent: #a98bff;
+    --color-accent-hover: #c3adff;
+
+    /* Signal colors used by data views and ratings */
+    --color-red: #ff6b6b;
     --color-orange: #ffb86c;
-    --color-yellow: #f1fa8c;
-    --color-green: #50fa7b;
-    --color-cyan: #8be9fd;
-    --color-purple: #bd93f9;
-    --color-pink: #ff79c6;
+    --color-yellow: #f5cf5a;
+    --color-green: #5fe39a;
+    --color-cyan: #7fd9f5;
+    --color-purple: #a98bff;
+    --color-pink: #f07ac0;
+
+    --radius-card: 0.75rem;
+    --radius-chip: 0.375rem;
 }
 
-/* Light theme overrides */
+/* Light theme: cool paper with the same violet accent, darkened for contrast */
 [data-theme="light"] {
-    --color-background: #fff;
-    --color-surface: #fafafa;
-    --color-foreground: #222;
-    --color-muted: #707070;
-    --color-border: #dcdcdc;
-    --color-accent: #8b5cf6;
-    --color-accent-hover: #7c3aed;
+    --color-background: #f8f7fc;
+    --color-surface: #ffffff;
+    --color-surface-raised: #f0edf8;
+    --color-foreground: #1b1726;
+    --color-muted: #665f7c;
+    --color-border: #e1dcee;
+    --color-accent: #6a3ff0;
+    --color-accent-hover: #5430c4;
+    --color-yellow: #e0b400;
+    --color-green: #1f9d5c;
+    --color-cyan: #0f8fb5;
+    --color-pink: #d63c93;
 }
 
 /* Base styles */
@@ -38,14 +62,26 @@ html {
 }
 
 body {
-    font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
-    line-height: 1.7;
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* A faint wash at the top gives the flat page some depth without a glow blob. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+        70rem 28rem at 50% -14rem,
+        color-mix(in srgb, var(--color-accent) 12%, transparent),
+        transparent 70%
+    );
 }
 
 /* Typography */
@@ -55,49 +91,62 @@ h3,
 h4,
 h5,
 h6 {
-    font-weight: 600;
-    line-height: 1.3;
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
     color: var(--color-foreground);
+    text-wrap: balance;
 }
 
 h1 {
-    font-size: 2.25rem;
+    font-size: clamp(2.25rem, 5vw, 3rem);
+    font-weight: 750;
+    letter-spacing: -0.03em;
 }
 h2 {
     font-size: 1.75rem;
 }
 h3 {
-    font-size: 1.5rem;
-}
-h4 {
     font-size: 1.25rem;
 }
+h4 {
+    font-size: 1.0625rem;
+}
 
-/* Links - Modern animated underline style */
+code,
+kbd,
+pre,
+samp {
+    font-family: var(--font-mono);
+}
+
+/* Links */
 a {
     color: var(--color-accent);
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 0.15s ease;
 }
 
 a:hover {
     color: var(--color-accent-hover);
 }
 
-/* Prose links - modern pill/chip style */
+/* Prose links: a quiet underline that fills in on hover */
 .prose a:not(.anchor-link):not(.github-repo-card):not(.star-history-link) {
     color: var(--color-accent);
-    text-decoration: none;
-    background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-    padding: 0.1rem 0.5rem;
-    border-radius: 9999px;
-    transition: all 0.2s ease;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    text-underline-offset: 0.2em;
+    transition:
+        color 0.15s ease,
+        text-decoration-color 0.15s ease;
 }
 
 .prose
     a:not(.anchor-link):not(.github-repo-card):not(.star-history-link):hover {
-    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
     color: var(--color-accent-hover);
+    text-decoration-color: currentColor;
 }
 
 /* External link indicator */
@@ -136,20 +185,163 @@ a:hover {
     font-weight: 400;
 }
 
+/* Shared page chrome */
+.page-header {
+    margin-bottom: 2.5rem;
+}
+
+.page-title {
+    font-size: clamp(2.5rem, 6vw, 3.25rem);
+    font-weight: 750;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin-bottom: 0.75rem;
+}
+
+.page-subtitle {
+    color: var(--color-muted);
+    font-size: 1.125rem;
+    max-width: 58ch;
+    text-wrap: pretty;
+}
+
+.page-subtitle a {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+/* Section headings carry the prompt chevron, the site's one recurring motif. */
+.section-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.625rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 1rem;
+}
+
+.section-heading::before {
+    content: "❯";
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--color-accent);
+}
+
+.section-heading .section-more {
+    margin-left: auto;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-color: transparent;
+}
+
+.section-heading .section-more:hover {
+    color: var(--color-accent);
+    text-decoration-color: currentColor;
+}
+
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+/* Emoji tiles give list rows a visual anchor without turning them into cards. */
+.emoji-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    font-size: 1.25rem;
+    line-height: 1;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-chip);
+}
+
+.emoji-tile-large {
+    width: 4rem;
+    height: 4rem;
+    font-size: 2rem;
+    border-radius: var(--radius-card);
+}
+
+/* Featured post card: the one loud element on listing pages */
+.featured-post {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-card);
+    color: var(--color-foreground);
+    transition: border-color 0.15s ease;
+}
+
+.featured-post:hover {
+    color: var(--color-foreground);
+    border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
+    border-left-color: var(--color-accent);
+}
+
+.featured-post-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.featured-post-title {
+    font-size: clamp(1.5rem, 3.5vw, 1.875rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    text-wrap: balance;
+}
+
+.featured-post:hover .featured-post-title {
+    color: var(--color-accent);
+}
+
+.featured-post-description {
+    color: var(--color-muted);
+    text-wrap: pretty;
+}
+
+.featured-post-meta {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+}
+
+@media (max-width: 30rem) {
+    .featured-post {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
 /* Prose content styling */
 .prose {
-    max-width: 65ch;
+    max-width: 68ch;
 }
 
 .prose p {
     margin-bottom: 1.25rem;
+    text-wrap: pretty;
 }
 
 .prose h2 {
-    margin-top: 2.5rem;
+    font-size: 1.625rem;
+    margin-top: 3rem;
     margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-border);
 }
 
 .prose h3 {
@@ -175,33 +367,18 @@ a:hover {
     margin-bottom: 0.5rem;
 }
 
-.prose blockquote {
-    position: relative;
-    border: none;
-    border-radius: 0.75rem;
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--color-accent) 10%, transparent),
-        color-mix(in srgb, var(--color-pink) 8%, transparent)
-    );
-    padding: 1.5rem 1.5rem 1.5rem 3rem;
-    margin: 2rem 0;
-    color: var(--color-foreground);
-    font-style: italic;
-    font-size: 1.05rem;
-    line-height: 1.7;
+.prose li::marker {
+    color: var(--color-muted);
 }
 
-.prose blockquote::before {
-    content: "\201C";
-    position: absolute;
-    top: 0.5rem;
-    left: 0.75rem;
-    font-size: 3rem;
-    font-family: Georgia, serif;
-    color: var(--color-accent);
-    opacity: 0.6;
-    line-height: 1;
+.prose blockquote {
+    margin: 2rem 0;
+    padding: 0.25rem 0 0.25rem 1.5rem;
+    border-left: 3px solid var(--color-accent);
+    color: var(--color-foreground);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
 }
 
 .prose blockquote p:last-child {
@@ -209,7 +386,6 @@ a:hover {
 }
 
 .prose blockquote footer {
-    font-style: normal;
     font-size: 0.9rem;
     color: var(--color-muted);
     margin-top: 0.75rem;
@@ -219,10 +395,11 @@ a:hover {
 .prose .info,
 p.info {
     background: var(--color-surface);
-    border-left: 4px solid var(--color-cyan);
-    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-cyan);
+    padding: 1rem 1.25rem;
     margin: 1.5rem 0;
-    border-radius: 0 0.5rem 0.5rem 0;
+    border-radius: var(--radius-chip);
 }
 
 .prose .info a,
@@ -231,15 +408,16 @@ p.info a {
 }
 
 .prose code:not(pre code) {
-    background: var(--color-surface);
-    padding: 0.2rem 0.4rem;
-    border-radius: 0.25rem;
-    font-size: 0.9em;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    padding: 0.1rem 0.375rem;
+    border-radius: var(--radius-chip);
+    font-size: 0.875em;
 }
 
 .prose pre {
     margin: 1.5rem 0;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-card);
     overflow-x: auto;
 }
 
@@ -276,11 +454,6 @@ p.info a {
 .prose figcaption {
     font-size: 0.875rem;
     color: var(--color-muted);
-    font-style: italic;
-}
-
-.prose figcaption a {
-    font-style: normal;
 }
 
 /* YouTube embeds - centered and responsive */
@@ -315,25 +488,28 @@ p.info a {
 .prose hr {
     border: none;
     border-top: 1px solid var(--color-border);
-    margin: 2rem 0;
+    margin: 2.5rem 0;
 }
 
 .prose table {
     width: 100%;
     border-collapse: collapse;
     margin: 1.5rem 0;
+    font-size: 0.95rem;
 }
 
 .prose th,
 .prose td {
-    border: 1px solid var(--color-border);
-    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.625rem 0.75rem;
     text-align: left;
+    vertical-align: top;
 }
 
 .prose th {
-    background: var(--color-surface);
     font-weight: 600;
+    color: var(--color-muted);
+    border-bottom-color: var(--color-muted);
 }
 
 /* Image zoom overlay */
@@ -352,34 +528,27 @@ p.info a {
     font-size: 0.875rem;
 }
 
-/* Post cards */
+/* Post cards (archive) */
 .post-card {
     padding: 1rem 0;
     border-bottom: 1px solid var(--color-border);
-    transition: background-color 0.2s ease;
 }
 
 .post-card:last-child {
     border-bottom: none;
 }
 
-.post-card:hover {
-    background-color: var(--color-surface);
-    margin: 0 -1rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    border-bottom-color: transparent;
-}
-
 /* Year group headers */
 .year-header {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0;
     color: var(--color-muted);
     margin-top: 2.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .year-header:first-child {
@@ -394,17 +563,21 @@ p.info a {
 /* Tags */
 .tag {
     display: inline-block;
-    background: var(--color-surface);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
     color: var(--color-muted);
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-chip);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    transition:
+        color 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .tag:hover {
-    background: var(--color-accent);
-    color: var(--color-background);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
 /* Selection color */
@@ -417,6 +590,7 @@ p.info a {
 :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+    border-radius: 2px;
 }
 
 /* Skip to content link - accessibility */
@@ -562,7 +736,7 @@ p.info a {
     top: 0;
     left: 0;
     height: 2px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-pink));
+    background: var(--color-accent);
     z-index: 9999;
     transform-origin: left;
     transform: scaleX(0);

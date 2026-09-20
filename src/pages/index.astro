@@ -4,6 +4,9 @@ import { getCollection } from "astro:content";
 import { parseEmoji } from "../utils/emoji";
 import { siteConfig } from "../config";
 import { getPostPath } from "../utils/content-metadata";
+import { fetchReadingData } from "../utils/hardcover";
+import { fetchPodcastData } from "../utils/database";
+import { fetchGitHubData, getLanguageColor } from "../utils/github";
 
 // Get latest posts
 const allPosts = await getCollection("posts", ({ data }) => {
@@ -16,15 +19,10 @@ const latestPosts = allPosts
     )
     .slice(0, 3);
 
-// Import Hardcover data for reading section
-import { fetchReadingData } from "../utils/hardcover";
-
-
-// Import podcast data
-import { fetchPodcastData } from "../utils/database";
-
-const [readingData, podcastData] = await Promise.all([
-    fetchReadingData(), fetchPodcastData(),
+const [readingData, podcastData, githubData] = await Promise.all([
+    fetchReadingData(),
+    fetchPodcastData(),
+    fetchGitHubData(),
 ]);
 const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
 const yesterdayStats = podcastData?.yesterdayStats;
@@ -34,648 +32,1111 @@ const yesterdayMinutes = yesterdayStats
 
 // Curated introductions stay useful even when external services are unavailable.
 const featuredProjects = [
-    { name: "tdx", description: "Manage todos in plain Markdown from a fast terminal interface.", url: "https://github.com/niklas-heer/tdx" },
-    { name: "speed-comparison", description: "Compare programming-language performance with an open benchmark suite.", url: "https://github.com/niklas-heer/speed-comparison" },
+    {
+        name: "tdx",
+        description: "Manage todos in plain Markdown from a fast terminal interface.",
+        url: "https://github.com/niklas-heer/tdx",
+    },
+    {
+        name: "speed-comparison",
+        description: "Compare programming-language performance with an open benchmark suite.",
+        url: "https://github.com/niklas-heer/speed-comparison",
+    },
+].map((project) => {
+    const repo = githubData?.pinnedRepos.find((r) => r.name === project.name);
+    return {
+        ...project,
+        stars: repo?.stargazerCount ?? null,
+        language: repo?.primaryLanguage
+            ? {
+                  name: repo.primaryLanguage.name,
+                  color: getLanguageColor(
+                      repo.primaryLanguage.name,
+                      repo.primaryLanguage.color,
+                  ),
+              }
+            : null,
+    };
+});
+const featuredPost =
+    allPosts.find((post) => post.id.endsWith("saving-a-markdown-file")) ||
+    latestPosts[0];
+const newestPost = latestPosts[0];
+
+const cleanTitle = (title: string) => title.replace(/\*\*/g, "");
+const formatMonth = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(
+        date,
+    );
+const formatDay = (date: Date) =>
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(
+        date,
+    );
+const bookAuthor = (book: { contributions?: { author: { name: string } }[] }) =>
+    book.contributions?.[0]?.author?.name ?? null;
+
+const socials = [
+    { name: "GitHub", href: siteConfig.social.github },
+    { name: "LinkedIn", href: siteConfig.social.linkedin },
+    { name: "X", href: siteConfig.social.twitter },
+    { name: "Email", href: `mailto:${siteConfig.author.email}` },
 ];
-const featuredPost = allPosts.find((post) => post.id.endsWith("saving-a-markdown-file")) || latestPosts[0];
 
-
+// Everything the interactive prompt can answer without a network request.
+const terminalData = {
+    sections: [
+        { name: "blog", path: "/posts" },
+        { name: "reading", path: "/reading" },
+        { name: "listening", path: "/listening" },
+        { name: "projects", path: "/projects" },
+        { name: "reviews", path: "/reviews" },
+        { name: "about", path: "/about" },
+    ],
+    posts: allPosts
+        .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
+        .slice(0, 5)
+        .map((post) => ({
+            title: cleanTitle(post.data.title),
+            url: getPostPath(post),
+            date: formatMonth(new Date(post.data.date)),
+        })),
+    projects: featuredProjects.map(({ name, url, description }) => ({ name, url, description })),
+    socials,
+};
+const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
 ---
 
 <BaseLayout
     title="Home"
     description="Homepage and blog by Niklas Heer - Leadership, DevSecOps and Quality"
 >
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-glow"></div>
-        <div class="hero-content">
-            <div class="hero-image-container">
-                <img
-                    src="/assets/images/about/nheer-memoji.png"
-                    alt="Niklas Heer"
-                    width="140" height="140" fetchpriority="high"
-                    class="hero-image"
-                />
-            </div>
-
-            <h1 class="hero-title">
-                <span class="hero-greeting">👋 Hey, I'm</span>
-                <span class="hero-name">{siteConfig.author.name}</span>
-            </h1>
-
-            <p class="hero-tagline">
-                {siteConfig.author.tagline}
-            </p>
-
-            <div class="hero-badges">
-                <span class="badge">Leadership</span>
-                <a
-                    href="https://internaldeveloperplatform.org/"
-                    target="_blank"
-                    rel="noopener"
-                    class="badge">IDP</a
-                >
-                <span class="badge">Open Source</span>
-            </div>
-
-            <div class="hero-socials">
-                <a
-                    href={siteConfig.social.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="GitHub"
-                >
-                    <svg
-                        class="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
-                        ></path>
-                    </svg>
-                </a>
-                <a
-                    href={siteConfig.social.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="LinkedIn"
-                >
-                    <svg
-                        class="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                        ></path>
-                    </svg>
-                </a>
-                <a
-                    href={siteConfig.social.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Twitter"
-                >
-                    <svg
-                        class="h-5 w-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                        ></path>
-                    </svg>
-                </a>
-                <a href={`mailto:${siteConfig.author.email}`} aria-label="Email">
-                    <svg
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                        ></path>
-                    </svg>
-                </a>
-            </div>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-heading">
+            <img
+                src="/assets/images/about/nheer-memoji.png"
+                alt=""
+                width="88"
+                height="88"
+                fetchpriority="high"
+                class="hero-image"
+            />
+            <h1 class="hero-name">{siteConfig.author.name}</h1>
         </div>
+
+        <!--
+            A short terminal session answers the two questions a visitor has.
+            All lines are in the HTML; the script only replays them on load.
+        -->
+        <div class="terminal" data-terminal>
+            <div class="terminal-bar" aria-hidden="true">
+                <span class="terminal-dots"><i></i><i></i><i></i></span>
+                <span class="terminal-title">niklas@nheer: ~</span>
+            </div>
+            <div class="terminal-screen">
+                <p class="terminal-line terminal-command" data-command="whoami" data-intro>
+                    <span class="terminal-prompt" aria-hidden="true">❯</span>
+                    <span class="terminal-command-text">whoami</span>
+                </p>
+                <p class="terminal-line terminal-output" data-intro data-answer="whoami">
+                    Engineering manager at Tradebyte, building an internal developer
+                    platform. On the side I make small terminal tools, read a lot,
+                    and write about what I learn from both.
+                </p>
+                <p class="terminal-line terminal-command" data-command="now" data-intro>
+                    <span class="terminal-prompt" aria-hidden="true">❯</span>
+                    <span class="terminal-command-text">now</span>
+                </p>
+                <dl class="terminal-line terminal-output terminal-now" data-intro data-answer="now">
+                    <div class="terminal-now-row">
+                        <dt>reading</dt>
+                        <dd>
+                            {
+                                currentlyReading.length > 0 ? (
+                                    currentlyReading.map((item, index) => (
+                                        <>
+                                            {index > 0 && <span class="terminal-sep">, </span>}
+                                            <a
+                                                href={`https://hardcover.app/books/${item.book.slug}`}
+                                                target="_blank"
+                                                rel="noopener"
+                                            >
+                                                {item.book.title}
+                                            </a>
+                                            {bookAuthor(item.book) && (
+                                                <span class="terminal-dim"> by {bookAuthor(item.book)}</span>
+                                            )}
+                                        </>
+                                    ))
+                                ) : (
+                                    <a href="/reading">the reading list</a>
+                                )
+                            }
+                        </dd>
+                    </div>
+                    <div class="terminal-now-row">
+                        <dt>listening</dt>
+                        <dd>
+                            {
+                                yesterdayMinutes !== null ? (
+                                    <>
+                                        {yesterdayMinutes} min of podcasts yesterday
+                                        <span class="terminal-dim"> · </span>
+                                        <a href="/listening">stats</a>
+                                    </>
+                                ) : (
+                                    <a href="/listening">podcast stats</a>
+                                )
+                            }
+                        </dd>
+                    </div>
+                    {
+                        newestPost && (
+                            <div class="terminal-now-row">
+                                <dt>writing</dt>
+                                <dd>
+                                    <a href={getPostPath(newestPost)}>
+                                        {cleanTitle(newestPost.data.title)}
+                                    </a>
+                                </dd>
+                            </div>
+                        )
+                    }
+                </dl>
+                <div class="terminal-history" data-terminal-history aria-live="polite"></div>
+                <form class="terminal-line terminal-command terminal-input-line" data-terminal-form action="/" method="get">
+                    <label class="terminal-prompt" for="terminal-input" aria-hidden="true">❯</label>
+                    <input
+                        id="terminal-input"
+                        class="terminal-input"
+                        type="text"
+                        name="cmd"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        enterkeyhint="send"
+                        aria-label="Type a command, for example help"
+                        placeholder="type help"
+                        data-terminal-input
+                    />
+                </form>
+            </div>
+            <script type="application/json" is:inline data-terminal-data set:html={terminalJson} />
+        </div>
+
+        <ul class="hero-socials" aria-label="Elsewhere">
+            {
+                socials.map((social) => (
+                    <li>
+                        <a
+                            href={social.href}
+                            target={social.href.startsWith("mailto:") ? undefined : "_blank"}
+                            rel={social.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                        >
+                            {social.name}
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
     </section>
 
-    <!-- Bento Grid -->
-    <section class="bento-grid">
-        <div class="bento-card bento-large">
-            <div class="bento-card-header">
-                <span class="bento-icon" aria-hidden="true">💻</span>
-                <h2>Featured Projects</h2>
-                <a href="/projects" class="bento-link">View all →</a>
-            </div>
-            <div class="featured-projects">
-                {featuredProjects.map((project) => (
-                    <a href={project.url} class="featured-project" target="_blank" rel="noopener noreferrer">
-                        <h3>{project.name} <span aria-hidden="true">↗</span></h3>
-                        <p>{project.description}</p>
-                    </a>
-                ))}
-            </div>
-        </div>
-        {featuredPost && (
-            <div class="bento-card bento-large glass-card">
-                <div class="bento-card-header">
-                    <span class="bento-icon" aria-hidden="true">📌</span>
-                    <h2>Selected Writing</h2>
-                </div>
-                <a href={getPostPath(featuredPost)} class="featured-writing">
-                    <h3>{featuredPost.data.title.replace(/\*\*/g, "")}</h3>
-                    <p>{featuredPost.data.description}</p>
-                    <span class="bento-cta">Read the story →</span>
+    <!-- Selected writing -->
+    {
+        featuredPost && (
+            <section class="home-section">
+                <h2 class="section-heading">Selected Writing</h2>
+                <a href={getPostPath(featuredPost)} class="featured-post">
+                    <span class="emoji-tile emoji-tile-large" aria-hidden="true">
+                        {featuredPost.data.icon && parseEmoji(featuredPost.data.icon)}
+                    </span>
+                    <span class="featured-post-body">
+                        <span class="featured-post-title">
+                            {cleanTitle(featuredPost.data.title)}
+                        </span>
+                        <span class="featured-post-description">
+                            {featuredPost.data.description}
+                        </span>
+                        <span class="featured-post-meta">
+                            {formatMonth(new Date(featuredPost.data.date))}
+                        </span>
+                    </span>
                 </a>
-            </div>
-        )}
+            </section>
+        )
+    }
 
-        <!-- Latest Posts - Large Card -->
-        <div class="bento-card bento-large">
-            <div class="bento-card-header">
-                <span class="bento-icon">📝</span>
-                <h2>Latest Posts</h2>
-                <a href="/posts" class="bento-link">View all →</a>
-            </div>
-            <div class="bento-card-content">
-                {
-                    latestPosts.map((post) => (
-                        <a href={getPostPath(post)} class="bento-post">
-                            <span class="bento-post-title">
-                                {post.data.icon && (
-                                    <span class="bento-post-icon">
-                                        {parseEmoji(post.data.icon)}
+    <!-- Latest posts -->
+    <section class="home-section">
+        <h2 class="section-heading">
+            Latest Posts
+            <a href="/posts" class="section-more">All posts</a>
+        </h2>
+        <ul class="post-list">
+            {
+                latestPosts.map((post) => (
+                    <li>
+                        <a href={getPostPath(post)} class="post-row">
+                            <span class="emoji-tile" aria-hidden="true">
+                                {post.data.icon && parseEmoji(post.data.icon)}
+                            </span>
+                            <span class="post-row-body">
+                                <span class="post-row-title">
+                                    {cleanTitle(post.data.title)}
+                                </span>
+                                {post.data.description && (
+                                    <span class="post-row-description">
+                                        {post.data.description}
                                     </span>
                                 )}
-                                {post.data.title.replace(/\*\*/g, "")}
                             </span>
-                            <span class="bento-post-date">
-                                {new Intl.DateTimeFormat("en-US", {
-                                    month: "short",
-                                    year: "numeric",
-                                }).format(new Date(post.data.date))}
-                            </span>
+                            <time
+                                class="post-row-date"
+                                datetime={new Date(post.data.date).toISOString()}
+                            >
+                                {formatDay(new Date(post.data.date))}
+                            </time>
                         </a>
-                    ))
-                }
-            </div>
-        </div>
+                    </li>
+                ))
+            }
+        </ul>
+    </section>
 
-        <!-- Reading Card -->
-        <div class="bento-card bento-small">
-            <div class="bento-card-header">
-                <span class="bento-icon">📖</span>
-                <h2>Reading</h2>
-            </div>
-            <div class="bento-books">
-                {currentlyReading.length === 0 && (
-                    <p class="bento-text">Books, notes, and past reads.</p>
-                )}
+    <div class="home-columns">
+        <!-- Projects -->
+        <section class="home-section">
+            <h2 class="section-heading">
+                Featured Projects
+                <a href="/projects" class="section-more">All projects</a>
+            </h2>
+            <ul class="project-list">
                 {
-                    currentlyReading.map((item) => (
-                        <a
-                            href={`https://hardcover.app/books/${item.book.slug}`}
-                            target="_blank"
-                            rel="noopener"
-                            class="bento-book"
-                        >
-                            {item.book.image?.url && (
-                                <img
-                                    src={item.book.image.url}
-                                    alt={item.book.title}
-                                    width="60" height="90" loading="lazy" decoding="async"
-                                />
-                            )}
-                        </a>
+                    featuredProjects.map((project) => (
+                        <li>
+                            <a
+                                href={project.url}
+                                class="project-row"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <span class="project-head">
+                                    <span class="project-name">{project.name}</span>
+                                    {project.language && (
+                                        <span class="project-language">
+                                            <span
+                                                class="project-language-dot"
+                                                style={`background-color: ${project.language.color}`}
+                                            />
+                                            {project.language.name}
+                                        </span>
+                                    )}
+                                    {project.stars !== null && (
+                                        <span class="project-stars">
+                                            ★ {project.stars}
+                                        </span>
+                                    )}
+                                </span>
+                                <span class="project-description">
+                                    {project.description}
+                                </span>
+                            </a>
+                        </li>
                     ))
                 }
-            </div>
-            <a href="/reading" class="bento-cta">See reading list →</a>
-        </div>
+            </ul>
+        </section>
 
-        <!-- Podcasts Card -->
-        <div class="bento-card bento-small">
-            <div class="bento-card-header">
-                <span class="bento-icon">🎧</span>
-                <h2>Podcasts</h2>
-            </div>
+        <!-- Reading -->
+        <section class="home-section">
+            <h2 class="section-heading">On the Shelf</h2>
             {
-                yesterdayMinutes !== null ? (
-                    <div class="bento-podcast-stat">
-                        <span class="podcast-stat-number">
-                            {yesterdayMinutes}
-                        </span>
-                        <span class="podcast-stat-label">min yesterday</span>
+                currentlyReading.length > 0 ? (
+                    <div class="shelf">
+                        {currentlyReading.map((item) => (
+                            <a
+                                href={`https://hardcover.app/books/${item.book.slug}`}
+                                target="_blank"
+                                rel="noopener"
+                                class="shelf-book"
+                                title={item.book.title}
+                            >
+                                {item.book.image?.url ? (
+                                    <img
+                                        src={item.book.image.url}
+                                        alt={item.book.title}
+                                        width="72"
+                                        height="108"
+                                        loading="lazy"
+                                        decoding="async"
+                                    />
+                                ) : (
+                                    <span class="shelf-placeholder">{item.book.title}</span>
+                                )}
+                            </a>
+                        ))}
                     </div>
                 ) : (
-                    <p class="bento-text">
-                        Tracking my podcast listening habits.
-                    </p>
+                    <p class="shelf-empty">Books, notes, and past reads.</p>
                 )
             }
-            <a href="/podcasts" class="bento-cta">See listening stats →</a>
-        </div>
-
-        <!-- About Card -->
-        <div class="bento-card bento-large glass-card">
-            <div class="bento-card-header">
-                <span class="bento-icon">👋</span>
-                <h2>About</h2>
-            </div>
-            <p class="bento-text">
-                Engineering Manager building an Internal Developer Platform at
-                Tradebyte.
-            </p>
-            <a href="/about" class="bento-cta">Learn more →</a>
-        </div>
-    </section>
+            <a href="/reading" class="shelf-link">See reading list</a>
+        </section>
+    </div>
 </BaseLayout>
 
 <style>
-    .featured-projects { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-    .featured-project { padding: 1rem; background: var(--color-background); border-radius: 0.5rem; }
-    .featured-project h3, .featured-writing h3 { font-weight: 600; color: var(--color-accent); }
-    .featured-project p, .featured-writing p { margin: 0.5rem 0; color: var(--color-muted); font-size: 0.9rem; }
-    .featured-project:hover h3, .featured-writing:hover h3 { text-decoration: underline; }
-    .featured-writing { display: block; }
-    @media (max-width: 640px) {
-        .featured-projects { grid-template-columns: 1fr; }
-        .bento-post { flex-direction: column; align-items: flex-start !important; gap: 0.5rem; }
+    /* Hero */
+    .hero {
+        margin-bottom: 4rem;
     }
 
-    /* Hero Section */
-    .hero-section {
-        position: relative;
-        padding: 3rem 0 4rem;
-        text-align: center;
-    }
-
-    .hero-glow {
-        position: fixed;
-        top: 30%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 800px;
-        height: 800px;
-        background: radial-gradient(
-            circle,
-            color-mix(in srgb, var(--color-accent) 15%, transparent) 0%,
-            color-mix(in srgb, var(--color-pink) 8%, transparent) 30%,
-            transparent 60%
-        );
-        filter: blur(80px);
-        pointer-events: none;
-        animation: pulse 8s ease-in-out infinite;
-        z-index: -1;
-    }
-
-    @keyframes pulse {
-        0%,
-        100% {
-            opacity: 0.5;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        50% {
-            opacity: 0.8;
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 1;
-    }
-
-    .hero-image-container {
-        position: relative;
-        display: inline-block;
+    .hero-heading {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         margin-bottom: 1.5rem;
     }
 
     .hero-image {
-        width: 140px;
-        height: 140px;
+        width: 88px;
+        height: 88px;
         object-fit: contain;
-        filter: drop-shadow(
-                0 0 20px
-                    color-mix(in srgb, var(--color-accent) 60%, transparent)
-            )
-            drop-shadow(
-                0 0 40px color-mix(in srgb, var(--color-pink) 40%, transparent)
-            );
-        animation: glow-pulse 4s ease-in-out infinite;
-    }
-
-    @keyframes glow-pulse {
-        0%,
-        100% {
-            filter: drop-shadow(
-                    0 0 15px
-                        color-mix(in srgb, var(--color-accent) 50%, transparent)
-                )
-                drop-shadow(
-                    0 0 30px
-                        color-mix(in srgb, var(--color-pink) 30%, transparent)
-                );
-        }
-        50% {
-            filter: drop-shadow(
-                    0 0 25px
-                        color-mix(in srgb, var(--color-accent) 70%, transparent)
-                )
-                drop-shadow(
-                    0 0 50px
-                        color-mix(in srgb, var(--color-pink) 50%, transparent)
-                );
-        }
-    }
-
-    .hero-title {
-        margin-bottom: 0.75rem;
-    }
-
-    .hero-greeting {
-        display: block;
-        font-size: 1.1rem;
-        font-weight: 400;
-        color: var(--color-muted);
-        margin-bottom: 0.25rem;
+        flex-shrink: 0;
     }
 
     .hero-name {
-        display: block;
-        font-size: 2.75rem;
-        font-weight: 700;
-        background: linear-gradient(
-            135deg,
-            var(--color-foreground) 0%,
-            var(--color-accent) 50%,
-            var(--color-pink) 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .hero-tagline {
-        font-size: 1.25rem;
-        color: var(--color-muted);
-        margin-bottom: 1.5rem;
-    }
-
-    .hero-badges {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .badge {
-        padding: 0.375rem 1rem;
-        background: color-mix(in srgb, var(--color-accent) 15%, transparent);
-        border: 1px solid
-            color-mix(in srgb, var(--color-accent) 30%, transparent);
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        color: var(--color-accent);
-        transition: all 0.2s ease;
-    }
-
-    .badge:hover {
-        background: color-mix(in srgb, var(--color-accent) 25%, transparent);
-        transform: translateY(-2px);
+        font-size: clamp(2.5rem, 7vw, 3.75rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin: 0;
     }
 
     .hero-socials {
         display: flex;
-        justify-content: center;
-        gap: 1rem;
+        flex-wrap: wrap;
+        gap: 0.25rem 1.25rem;
+        font-size: 0.9375rem;
+        font-weight: 500;
     }
 
     .hero-socials a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: var(--color-surface);
-        color: var(--color-muted);
-        transition: all 0.2s ease;
+        color: var(--color-foreground);
+        text-decoration: underline;
+        text-underline-offset: 0.25em;
+        text-decoration-thickness: 1.5px;
+        text-decoration-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
     }
 
     .hero-socials a:hover {
-        background: var(--color-accent);
-        color: var(--color-background);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px
-            color-mix(in srgb, var(--color-accent) 30%, transparent);
+        color: var(--color-accent);
+        text-decoration-color: currentColor;
     }
 
-    /* Bento Grid */
-    .bento-grid {
+    /* Sections */
+    .home-section {
+        margin-bottom: 3rem;
+    }
+
+    .home-columns {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-        margin-top: 2rem;
+        grid-template-columns: 1fr;
+        gap: 0 3rem;
     }
 
-    @media (max-width: 640px) {
-        .bento-grid {
-            grid-template-columns: 1fr;
+    @media (min-width: 40rem) {
+        .home-columns {
+            grid-template-columns: 1.2fr 1fr;
         }
     }
 
-    .bento-card {
-        background: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: 1rem;
-        padding: 1.25rem;
-        transition: all 0.3s ease;
+    /* Post rows */
+    .post-list,
+    .project-list {
         display: flex;
         flex-direction: column;
     }
 
-    .bento-card:hover {
-        border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 40px
-            color-mix(in srgb, var(--color-accent) 10%, transparent);
-    }
-
-    .bento-large {
-        grid-column: span 2;
-    }
-
-    @media (max-width: 640px) {
-        .bento-large {
-            grid-column: span 1;
-        }
-    }
-
-    .bento-wide {
-        grid-column: span 2;
-    }
-
-    @media (max-width: 640px) {
-        .bento-wide {
-            grid-column: span 1;
-        }
-    }
-
-    .glass-card {
-        background: linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--color-accent) 10%, var(--color-surface)),
-            color-mix(in srgb, var(--color-pink) 5%, var(--color-surface))
-        );
-    }
-
-    .bento-card-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .bento-card-header h2 {
-        font-size: 1rem;
-        font-weight: 600;
-        flex: 1;
-    }
-
-    .bento-icon {
-        font-size: 1.25rem;
-    }
-
-    .bento-link {
-        font-size: 0.875rem;
-        color: var(--color-accent);
-    }
-
-    .bento-card-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .bento-post {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.75rem;
-        background: var(--color-background);
-        border-radius: 0.5rem;
-        transition: all 0.2s ease;
-    }
-
-    .bento-post:hover {
-        background: color-mix(
-            in srgb,
-            var(--color-accent) 10%,
-            var(--color-background)
-        );
-    }
-
-    .bento-post-title {
-        font-weight: 500;
+    .post-row {
+        display: grid;
+        grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 0.875rem;
+        padding: 0.875rem 0;
+        border-bottom: 1px solid var(--color-border);
         color: var(--color-foreground);
+    }
+
+    .post-list li:last-child .post-row {
+        border-bottom: none;
+    }
+
+    .post-row-body {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 0;
     }
 
-    .bento-post-icon {
-        flex-shrink: 0;
+    .post-row-title {
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
+        text-wrap: balance;
     }
 
-    .bento-post-date {
-        font-size: 0.75rem;
-        color: var(--color-muted);
-    }
-
-    .bento-text {
-        font-size: 0.9rem;
-        color: var(--color-muted);
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
-
-    .bento-cta {
-        font-size: 0.875rem;
+    .post-row:hover .post-row-title {
         color: var(--color-accent);
-        font-weight: 500;
-        margin-top: auto;
     }
 
-    .bento-books {
+    .post-row-description {
+        font-size: 0.9375rem;
+        color: var(--color-muted);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .post-row-date {
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+        white-space: nowrap;
+        padding-top: 0.25rem;
+    }
+
+    @media (max-width: 30rem) {
+        .post-row {
+            grid-template-columns: 2.5rem minmax(0, 1fr);
+        }
+
+        .post-row-date {
+            grid-column: 2;
+            padding-top: 0;
+        }
+    }
+
+    /* Project rows */
+    .project-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.875rem 0;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-foreground);
+    }
+
+    .project-list li:last-child .project-row {
+        border-bottom: none;
+    }
+
+    .project-head {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+
+    .project-name {
+        font-weight: 600;
+        font-size: 0.9375rem;
+    }
+
+    .project-row:hover .project-name {
+        color: var(--color-accent);
+    }
+
+    .project-language,
+    .project-stars {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--color-muted);
+        font-size: 0.8125rem;
+    }
+
+    .project-language-dot {
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 50%;
+    }
+
+    .project-description {
+        font-size: 0.9375rem;
+        color: var(--color-muted);
+        text-wrap: pretty;
+    }
+
+    /* Shelf */
+    .shelf {
         display: flex;
         gap: 0.75rem;
         margin-bottom: 1rem;
     }
 
-    .bento-book img {
-        width: 60px;
-        height: 90px;
+    .shelf-book img,
+    .shelf-placeholder {
+        width: 72px;
+        height: 108px;
         object-fit: cover;
-        border-radius: 0.375rem;
+        border-radius: 3px;
+        box-shadow:
+            0 1px 2px rgba(0, 0, 0, 0.3),
+            0 8px 20px rgba(0, 0, 0, 0.25);
         transition: transform 0.2s ease;
     }
 
-    .bento-book:hover img {
-        transform: scale(1.05);
-    }
-
-    .bento-status {
+    .shelf-placeholder {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-        font-size: 0.875rem;
+        padding: 0.5rem;
+        font-size: 0.6875rem;
+        line-height: 1.3;
+        background: var(--color-surface-raised);
         color: var(--color-muted);
     }
 
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: var(--color-green);
-        border-radius: 50%;
-        animation: blink 2s ease-in-out infinite;
+    .shelf-book:hover img {
+        transform: translateY(-3px);
     }
 
-    @keyframes blink {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.4;
-        }
+    .shelf-empty {
+        font-size: 0.9375rem;
+        color: var(--color-muted);
+        margin-bottom: 1rem;
     }
 
-    .bento-current {
-        font-size: 1rem;
-        color: var(--color-foreground);
+    .shelf-link {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    }
+
+    .shelf-link:hover {
+        text-decoration-color: currentColor;
+    }
+</style>
+
+<style is:global>
+    /* Terminal: always a dark screen, in both themes */
+    .terminal {
+        --term-bg: #14111c;
+        --term-bar: #1e1a28;
+        --term-border: #2f2940;
+        --term-fg: #ece8f4;
+        --term-muted: #9a92ad;
+        --term-accent: #b49dff;
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
         line-height: 1.6;
+        color: var(--term-fg);
+        background: var(--term-bg);
+        border: 1px solid var(--term-border);
+        border-radius: var(--radius-card);
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.04) inset,
+            0 24px 48px -24px rgba(0, 0, 0, 0.6);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        cursor: default;
     }
 
-    .bento-podcast-stat {
+    .terminal .terminal-bar {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding: 0.625rem 0.875rem;
+        background: var(--term-bar);
+        border-bottom: 1px solid var(--term-border);
+    }
+
+    .terminal .terminal-dots {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    .terminal .terminal-dots i {
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: #ff5f57;
+        opacity: 0.85;
+    }
+
+    .terminal .terminal-dots i:nth-child(2) {
+        background: #febc2e;
+    }
+
+    .terminal .terminal-dots i:nth-child(3) {
+        background: #28c840;
+    }
+
+    .terminal .terminal-title {
+        font-size: 0.75rem;
+        color: var(--term-muted);
+        letter-spacing: 0.01em;
+    }
+
+    .terminal:focus-within {
+        border-color: color-mix(in srgb, var(--term-accent) 55%, var(--term-border));
+    }
+
+    .terminal .terminal-screen {
+        padding: 1.125rem 1.5rem 1.25rem;
+        min-height: 12.5rem;
+        max-height: 30rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .terminal.is-cleared [data-intro] {
+        display: none;
+    }
+
+    .terminal .terminal-input-line {
+        align-items: center;
+    }
+
+    .terminal .terminal-input {
+        flex: 1;
+        min-width: 0;
+        padding: 0;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--term-fg);
+        font: inherit;
+        font-weight: 600;
+        caret-color: var(--term-accent);
+    }
+
+    .terminal .terminal-input::placeholder {
+        color: var(--term-muted);
+        font-weight: 400;
+        opacity: 1;
+    }
+
+    .terminal .terminal-list {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex: 1;
-        gap: 0.25rem;
+        gap: 0.125rem;
+        padding-left: 2ch;
+        color: var(--term-muted);
     }
 
-    .podcast-stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(
-            135deg,
-            var(--color-accent),
-            var(--color-pink)
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
+    .terminal .terminal-list.is-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0 2ch;
     }
 
-    .podcast-stat-label {
-        font-size: 0.875rem;
-        color: var(--color-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+    .terminal .terminal-list a {
+        color: var(--term-accent);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--term-accent) 45%, transparent);
     }
 
+    .terminal .terminal-list a:hover {
+        color: #d3c6ff;
+        text-decoration-color: currentColor;
+    }
+
+    .terminal .terminal-list kbd {
+        color: var(--term-fg);
+        font-weight: 600;
+        display: inline-block;
+        min-width: 12ch;
+    }
+
+    .terminal .terminal-error {
+        color: #ff8a80;
+    }
+
+    .terminal .terminal-line {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .terminal .terminal-line + .terminal-command {
+        margin-top: 0.75rem;
+    }
+
+    .terminal .terminal-command {
+        display: flex;
+        gap: 0.6ch;
+        color: var(--term-fg);
+        font-weight: 600;
+    }
+
+    .terminal .terminal-prompt {
+        color: var(--term-accent);
+        font-weight: 500;
+    }
+
+    .terminal .terminal-output {
+        color: var(--term-muted);
+        padding-left: 2ch;
+    }
+
+    .terminal .terminal-now-row {
+        display: grid;
+        grid-template-columns: 10ch minmax(0, 1fr);
+        gap: 0 1ch;
+    }
+
+    .terminal .terminal-now dt {
+        color: var(--term-muted);
+    }
+
+    .terminal .terminal-now dd {
+        margin: 0;
+        color: var(--term-fg);
+    }
+
+    .terminal .terminal-now a,
+    .terminal .terminal-output a {
+        color: var(--term-accent);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-color: color-mix(in srgb, var(--term-accent) 45%, transparent);
+    }
+
+    .terminal .terminal-now a:hover,
+    .terminal .terminal-output a:hover {
+        color: #d3c6ff;
+        text-decoration-color: currentColor;
+    }
+
+    .terminal .terminal-dim {
+        color: var(--term-muted);
+    }
+
+    .terminal .is-typing::after,
+    .terminal .terminal-now-row.is-typing dd::after {
+        display: inline-block;
+        width: 0.6ch;
+        height: 1.1em;
+        vertical-align: text-bottom;
+        background: var(--term-accent);
+    }
+
+    .terminal .is-typing::after,
+    .terminal .terminal-now-row.is-typing dd::after {
+        content: "";
+        margin-left: 0.1ch;
+    }
+
+    .terminal .terminal-now-row.is-typing::after {
+        content: none;
+    }
+
+    /* Replay: hide lines until the script reveals them */
+    .terminal[data-playing] .terminal-line,
+    .terminal[data-playing] .terminal-now-row {
+        display: none;
+    }
+
+    .terminal[data-playing] .terminal-line.is-shown {
+        display: block;
+    }
+
+    .terminal[data-playing] .terminal-command.is-shown {
+        display: flex;
+    }
+
+    .terminal[data-playing] .terminal-now-row.is-shown {
+        display: grid;
+    }
+
+    @media (max-width: 30rem) {
+        .terminal .terminal-screen {
+            padding: 1rem 1.125rem;
+            font-size: 0.875rem;
+        }
+
+        .terminal .terminal-now-row {
+            grid-template-columns: 1fr;
+        }
+
+        .terminal .terminal-output {
+            padding-left: 0;
+        }
+    }
 </style>
+
+<script>
+    // The hero terminal replays a short intro on load, then becomes a small
+    // interactive shell. The markup is complete without JavaScript, reduced
+    // motion skips the replay, and a click on the screen finishes it early.
+    import { navigate } from "astro:transitions/client";
+
+    type Section = { name: string; path: string };
+    type TerminalData = {
+        sections: Section[];
+        posts: { title: string; url: string; date: string }[];
+        projects: { name: string; url: string; description: string }[];
+        socials: { name: string; href: string }[];
+    };
+    type Command = { help: string; run: (args: string[]) => void | Promise<void> };
+
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    function setupShell(terminal: HTMLElement) {
+        const dataNode = terminal.querySelector("[data-terminal-data]");
+        const history = terminal.querySelector<HTMLElement>("[data-terminal-history]");
+        const form = terminal.querySelector<HTMLFormElement>("[data-terminal-form]");
+        const input = terminal.querySelector<HTMLInputElement>("[data-terminal-input]");
+        const screen = terminal.querySelector<HTMLElement>(".terminal-screen");
+        if (!dataNode || !history || !form || !input || !screen) return;
+        const data: TerminalData = JSON.parse(dataNode.textContent || "{}");
+
+        const el = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text = "") => {
+            const node = document.createElement(tag);
+            node.className = className;
+            if (text) node.textContent = text;
+            return node;
+        };
+        const link = (text: string, href: string) => {
+            const a = el("a", "", text);
+            a.href = href;
+            if (/^https?:/.test(href)) {
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+            }
+            return a;
+        };
+        const print = (...nodes: Node[]) => {
+            history.append(...nodes);
+            screen.scrollTop = screen.scrollHeight;
+        };
+        const say = (text: string, className = "terminal-output") =>
+            print(el("p", `terminal-line ${className}`, text));
+        const fail = (text: string) => say(text, "terminal-output terminal-error");
+        const list = (rows: (string | Node)[][], row = false) => {
+            const ul = el("ul", `terminal-list${row ? " is-row" : ""}`);
+            for (const cells of rows) {
+                const li = el("li", "");
+                cells.forEach((cell, index) => {
+                    if (index > 0) li.append(" ");
+                    li.append(cell);
+                });
+                ul.append(li);
+            }
+            print(ul);
+        };
+        const dim = (text: string) => el("span", "terminal-dim", text);
+        const echo = (command: string) => {
+            const p = el("p", "terminal-line terminal-command");
+            p.append(el("span", "terminal-prompt", "❯"), " ", el("span", "", command));
+            print(p);
+        };
+        const replay = (name: string) => {
+            const answer = terminal.querySelector<HTMLElement>(`[data-answer="${name}"]`);
+            if (!answer) return;
+            const clone = answer.cloneNode(true) as HTMLElement;
+            clone.removeAttribute("data-intro");
+            clone.removeAttribute("data-answer");
+            clone.classList.add("is-shown");
+            clone.querySelectorAll(".terminal-now-row").forEach((row) => row.classList.add("is-shown"));
+            print(clone);
+        };
+        const findSection = (name: string) => {
+            const aliases: Record<string, string> = { posts: "blog", podcasts: "listening", "~": "home", "..": "home", "/": "home" };
+            const wanted = (aliases[name] ?? name).replace(/\/$/, "");
+            if (wanted === "home") return { name: "home", path: "/" };
+            return data.sections.find((section) => section.name === wanted);
+        };
+
+        const commands: Record<string, Command> = {
+            help: {
+                help: "list the commands",
+                run: () => list(Object.entries(commands).map(([name, { help }]) => [el("kbd", "", name), dim(help)])),
+            },
+            whoami: { help: "who runs this site", run: () => replay("whoami") },
+            now: { help: "reading, hearing, writing", run: () => replay("now") },
+            ls: {
+                help: "list the sections",
+                run: () => list(data.sections.map((section) => [link(`${section.name}/`, section.path)]), true),
+            },
+            cd: {
+                help: "open a section",
+                run: async ([target = ""]) => {
+                    const section = findSection(target);
+                    if (!section) return fail(`cd: no such directory: ${target || "(none)"}. Try ls.`);
+                    say(`opening ${section.path}`);
+                    await wait(150);
+                    await navigate(section.path);
+                },
+            },
+            posts: {
+                help: "the newest posts",
+                run: () => list(data.posts.map((post) => [link(post.title, post.url), dim(post.date)])),
+            },
+            projects: {
+                help: "featured open source",
+                run: () => list(data.projects.map((project) => [link(project.name, project.url), dim(project.description)])),
+            },
+            contact: {
+                help: "where to find me",
+                run: () => list(data.socials.map((social) => [link(social.name, social.href)]), true),
+            },
+            theme: {
+                help: "switch light and dark",
+                run: () => {
+                    document.querySelector<HTMLElement>("[data-theme-toggle]")?.click();
+                    say(`switched to ${document.documentElement.dataset.theme} theme`);
+                },
+            },
+            inky: {
+                help: "ask the octopus",
+                run: () => {
+                    const comments = (window as any).inkyComments as { comment: string }[] | undefined;
+                    const pick = comments?.[Math.floor(Math.random() * comments.length)];
+                    say(pick ? `🐙 ${pick.comment}` : "🐙 Inky is asleep. Try again later.");
+                },
+            },
+            clear: {
+                help: "clear the screen",
+                run: () => {
+                    history.replaceChildren();
+                    terminal.classList.add("is-cleared");
+                },
+            },
+            echo: { help: "repeat after you", run: (args) => say(args.join(" ")) },
+            pwd: { help: "where you are", run: () => say("/home/niklas") },
+            date: { help: "today", run: () => say(new Date().toString()) },
+        };
+        const hidden: Record<string, Command> = {
+            sudo: { help: "", run: () => fail("niklas is not in the sudoers file. This incident will be reported to Inky. 🐙") },
+            rm: { help: "", run: (args) => fail(args.some((a) => a.startsWith("-r")) ? "Nice try. Inky keeps backups." : "rm: permission denied") },
+            exit: { help: "", run: () => say("There is no exit. Try cd blog instead.") },
+            logout: { help: "", run: () => say("There is no exit. Try cd blog instead.") },
+            vim: { help: "", run: () => say("Even here you cannot leave vim. Try help.") },
+            open: { help: "", run: (args) => commands.cd.run(args) },
+            cat: { help: "", run: (args) => commands.cd.run(args) },
+        };
+
+        const entered: string[] = [];
+        let cursor = 0;
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const raw = input.value.trim();
+            input.value = "";
+            echo(raw);
+            if (!raw) return;
+            entered.push(raw);
+            cursor = entered.length;
+            const [name, ...args] = raw.split(/\s+/);
+            const command = commands[name] ?? hidden[name];
+            if (!command) return fail(`command not found: ${name}. Try help.`);
+            await command.run(args);
+        });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (entered.length === 0) return;
+                event.preventDefault();
+                cursor = Math.max(0, Math.min(entered.length, cursor + (event.key === "ArrowUp" ? -1 : 1)));
+                input.value = entered[cursor] ?? "";
+            } else if (event.key === "Tab" && input.value) {
+                const [name, partial] = input.value.split(/\s+/);
+                const pool = partial === undefined
+                    ? Object.keys(commands)
+                    : name === "cd" ? data.sections.map((section) => section.name) : [];
+                const prefix = partial ?? name;
+                const match = pool.find((candidate) => candidate.startsWith(prefix));
+                if (match) {
+                    event.preventDefault();
+                    input.value = partial === undefined ? `${match} ` : `${name} ${match}`;
+                }
+            } else if (event.key === "l" && event.ctrlKey) {
+                event.preventDefault();
+                commands.clear.run([]);
+            }
+        });
+
+        terminal.addEventListener("click", (event) => {
+            if (terminal.dataset.playing) return;
+            if ((event.target as Element).closest("a, input")) return;
+            input.focus({ preventScroll: true });
+        });
+    }
+
+    async function playTerminal() {
+        const terminal = document.querySelector<HTMLElement>("[data-terminal]");
+        if (!terminal || terminal.dataset.played) return;
+        terminal.dataset.played = "true";
+        setupShell(terminal);
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        try {
+            if (sessionStorage.getItem("terminal-intro")) return;
+            sessionStorage.setItem("terminal-intro", "seen");
+        } catch {
+            // Without storage the intro simply replays on every visit.
+        }
+
+        let skip = false;
+        terminal.addEventListener("click", () => { skip = true; }, { once: true });
+        const pause = (ms: number) => (skip ? Promise.resolve() : wait(ms));
+
+        // Types every text node inside an element, in document order.
+        async function typeInto(element: HTMLElement, perChar: number) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+            const nodes: { node: Text; text: string }[] = [];
+            let current = walker.nextNode();
+            while (current) {
+                nodes.push({ node: current as Text, text: current.textContent ?? "" });
+                current = walker.nextNode();
+            }
+            nodes.forEach(({ node }) => { node.textContent = ""; });
+            element.classList.add("is-typing");
+            for (const { node, text } of nodes) {
+                if (skip) { node.textContent = text; continue; }
+                for (const char of text) {
+                    node.textContent += char;
+                    if (skip) { node.textContent = text; break; }
+                    if (char.trim()) await wait(perChar + Math.random() * perChar);
+                }
+            }
+            element.classList.remove("is-typing");
+        }
+
+        const lines = Array.from(terminal.querySelectorAll<HTMLElement>(".terminal-line"));
+        terminal.dataset.playing = "true";
+        await pause(400);
+
+        for (const line of lines) {
+            // Navigating away mid-replay must not leave hidden lines behind.
+            if (!terminal.isConnected) return;
+            line.classList.add("is-shown");
+            if (line.dataset.command) {
+                const text = line.querySelector<HTMLElement>(".terminal-command-text");
+                if (text) await typeInto(text, 55);
+                await pause(200);
+            } else if (line.classList.contains("terminal-now")) {
+                for (const row of line.querySelectorAll<HTMLElement>(".terminal-now-row")) {
+                    row.classList.add("is-shown");
+                    await typeInto(row, 7);
+                    await pause(140);
+                }
+            } else if (line.classList.contains("terminal-output")) {
+                await typeInto(line, 6);
+                await pause(320);
+            }
+        }
+        delete terminal.dataset.playing;
+    }
+
+    playTerminal();
+    document.addEventListener("astro:page-load", playTerminal);
+</script>

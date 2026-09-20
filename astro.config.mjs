@@ -39,6 +39,10 @@ export default defineConfig({
     ],
   },
   site: "https://nheer.com",
+  redirects: {
+    // The listening page used to live under /podcasts.
+    "/podcasts": "/listening",
+  },
   integrations: [
     expressiveCode({
       themes: ["tokyo-night", "github-light"],

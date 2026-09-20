@@ -25,6 +25,7 @@ test('Vercel package preserves tested assets, routes, redirects, 404 and static 
   assert.equal(route('/posts/example/').dest, '/posts/example/index.html');
   assert.equal(routes.at(-1).status, 404);
   assert.equal(routes.find(route => route.status === 301).headers.Location, 'https://github.com/niklas-heer/speed-comparison');
+  assert.equal(routes.find(route => route.src === '^/podcasts/?$').headers.Location, '/listening/');
   await assert.rejects(readFile(join(output, 'functions/api/views.func/index.mjs')), { code: 'ENOENT' });
   // Repackaging removes stale files from previous builds.
   await writeFile(join(output, 'static/stale.txt'), 'stale');
