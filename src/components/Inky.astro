@@ -333,12 +333,12 @@ const comments = await getInkyComments();
     .inky-lottie {
         width: 100%;
         height: 100%;
-        filter: drop-shadow(0 0 8px rgba(188, 62, 255, 0.3));
+        filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-accent) 30%, transparent));
     }
 
     .inky-mascot:hover .inky-lottie,
     .inky-mascot.activated .inky-lottie {
-        filter: drop-shadow(0 0 15px rgba(188, 62, 255, 0.5));
+        filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-accent) 50%, transparent));
     }
 
     /* Speech bubble */
@@ -347,13 +347,13 @@ const comments = await getInkyComments();
         bottom: 180px;
         left: 80px;
         background: var(--color-surface);
-        border: 2px solid #bc3eff;
+        border: 2px solid var(--color-accent);
         border-radius: 1rem;
         padding: 1rem;
         max-width: 280px;
         min-width: 200px;
         box-shadow:
-            0 0 20px rgba(188, 62, 255, 0.2),
+            0 0 20px color-mix(in srgb, var(--color-accent) 20%, transparent),
             0 4px 20px rgba(0, 0, 0, 0.15);
         opacity: 0;
         visibility: hidden;
@@ -385,7 +385,7 @@ const comments = await getInkyComments();
         left: 38px;
         border-width: 12px 12px 0;
         border-style: solid;
-        border-color: #bc3eff transparent transparent;
+        border-color: var(--color-accent) transparent transparent;
     }
 
     .inky-text {
@@ -404,7 +404,7 @@ const comments = await getInkyComments();
 
     .inky-name {
         font-size: 0.75rem;
-        color: #bc3eff;
+        color: var(--color-accent);
         font-style: italic;
     }
 
@@ -423,7 +423,7 @@ const comments = await getInkyComments();
 
     .inky-source:hover {
         opacity: 1;
-        color: #bc3eff;
+        color: var(--color-accent);
     }
 
     .source-icon {

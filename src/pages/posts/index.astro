@@ -13,8 +13,11 @@ const sortedPosts = allPosts.sort((a, b) =>
   new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
 
+// The newest post gets the featured card; the list holds the rest.
+const [newestPost, ...listedPosts] = sortedPosts;
+
 // Group posts by year
-const postsByYear = sortedPosts.reduce((acc, post) => {
+const postsByYear = listedPosts.reduce((acc, post) => {
   const year = new Date(post.data.date).getFullYear();
   if (!acc[year]) acc[year] = [];
   acc[year].push(post);
@@ -23,12 +26,26 @@ const postsByYear = sortedPosts.reduce((acc, post) => {
 
 // Get years sorted descending
 const years = Object.keys(postsByYear).map(Number).sort((a, b) => b - a);
+const firstYear = Math.min(...sortedPosts.map((post) => new Date(post.data.date).getFullYear()));
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric'
   }).format(date);
+}
+
+function formatLongDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(date);
+}
+
+function readingTime(post: typeof sortedPosts[0]): number {
+  const words = (post.body || '').split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
 }
 
 function getPostUrl(post: typeof sortedPosts[0]): string {
@@ -43,8 +60,28 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
 <BaseLayout title="Blog" description="Blog posts by Niklas Heer about Leadership, DevSecOps, and Quality">
   <div class="page-header">
     <h1 class="page-title" style="view-transition-name: page-title;">Blog</h1>
-    <p class="page-subtitle">Small tools, engineering leadership, and the occasional detour. {sortedPosts.length} posts since {years[years.length - 1]}.</p>
+    <p class="page-subtitle">Small tools, engineering leadership, and the occasional detour. {sortedPosts.length} posts since {firstYear}.</p>
   </div>
+
+  {newestPost && (
+    <section class="newest">
+      <h2 class="section-heading">Newest</h2>
+      <a href={getPostUrl(newestPost)} class="featured-post">
+        <span class="emoji-tile emoji-tile-large" aria-hidden="true">
+          {newestPost.data.icon ? parseEmoji(newestPost.data.icon) : '📄'}
+        </span>
+        <span class="featured-post-body">
+          <span class="featured-post-title" set:html={parseText(newestPost.data.title)} />
+          {newestPost.data.description && (
+            <span class="featured-post-description" set:html={parseText(newestPost.data.description)} />
+          )}
+          <span class="featured-post-meta">
+            {formatLongDate(new Date(newestPost.data.date))} · {readingTime(newestPost)} min read
+          </span>
+        </span>
+      </a>
+    </section>
+  )}
 
   <div class="posts-container">
     {years.map((year) => (
@@ -54,7 +91,7 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
           {postsByYear[year].map((post) => (
             <li>
               <a href={getPostUrl(post)} class="post-item">
-                <span class="post-icon" aria-hidden="true">
+                <span class="emoji-tile" aria-hidden="true">
                   {post.data.icon ? parseEmoji(post.data.icon) : '📄'}
                 </span>
                 <span class="post-content">
@@ -62,10 +99,20 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
                   {post.data.description && (
                     <span class="post-description" set:html={parseText(post.data.description)} />
                   )}
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <span class="post-tags">
+                      {post.data.tags.slice(0, 3).map((tag) => (
+                        <span class="tag">{tag}</span>
+                      ))}
+                    </span>
+                  )}
                 </span>
-                <time class="post-date" datetime={new Date(post.data.date).toISOString()}>
-                  {formatDate(new Date(post.data.date))}
-                </time>
+                <span class="post-meta">
+                  <time datetime={new Date(post.data.date).toISOString()}>
+                    {formatDate(new Date(post.data.date))}
+                  </time>
+                  <span>{readingTime(post)} min</span>
+                </span>
               </a>
             </li>
           ))}
@@ -74,7 +121,7 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
     ))}
   </div>
 
-  {years.length === 0 && (
+  {sortedPosts.length === 0 && (
     <p class="text-muted">No posts yet.</p>
   )}
 
@@ -84,6 +131,10 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
 </BaseLayout>
 
 <style>
+  .newest {
+    margin-bottom: 3rem;
+  }
+
   .posts-container {
     display: flex;
     flex-direction: column;
@@ -109,7 +160,7 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
     font-weight: 500;
     letter-spacing: 0;
     color: var(--color-muted);
-    padding-top: 0.875rem;
+    padding-top: 1rem;
   }
 
   .year-label::before {
@@ -126,30 +177,24 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
 
   .post-item {
     display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 0.75rem 0.875rem;
-    padding: 0.875rem 0;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem 1rem;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--color-border);
     color: var(--color-foreground);
-  }
-
-  .post-icon {
-    font-size: 1.25rem;
-    line-height: 1;
-    align-self: start;
-    padding-top: 0.125rem;
   }
 
   .post-content {
     display: flex;
     flex-direction: column;
-    gap: 0.125rem;
+    gap: 0.25rem;
     min-width: 0;
   }
 
   .post-title {
     font-weight: 600;
+    font-size: 1.0625rem;
     letter-spacing: -0.01em;
     line-height: 1.3;
     text-wrap: balance;
@@ -166,20 +211,44 @@ function getPostUrl(post: typeof sortedPosts[0]): string {
     text-wrap: pretty;
   }
 
-  .post-date {
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+  }
+
+  .post-tags .tag {
+    font-size: 0.75rem;
+    padding: 0 0.4rem;
+  }
+
+  .post-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     color: var(--color-muted);
     white-space: nowrap;
+    padding-top: 0.25rem;
+  }
+
+  .post-meta span {
+    opacity: 0.7;
   }
 
   @media (max-width: 40rem) {
     .post-item {
-      grid-template-columns: 2rem minmax(0, 1fr);
+      grid-template-columns: 2.5rem minmax(0, 1fr);
     }
 
-    .post-date {
+    .post-meta {
       grid-column: 2;
+      flex-direction: row;
+      gap: 0.75rem;
+      padding-top: 0;
     }
   }
 
