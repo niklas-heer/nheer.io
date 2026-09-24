@@ -185,6 +185,13 @@ test('the homepage social links include Bluesky and each carries an icon', async
   }
 });
 
+test('the about page connect cards include Bluesky with an icon', async ({ page }) => {
+  await page.goto('/about');
+  const bluesky = page.locator('.connect-card', { hasText: 'Bluesky' });
+  await expect(bluesky).toHaveAttribute('href', 'https://bsky.app/profile/nheer.bsky.social');
+  await expect(bluesky.locator('svg')).toHaveCount(1);
+});
+
 test('draft reviews are absent from the production build', async ({ request }) => {
   const root = 'src/content/reviews';
   const drafts = readdirSync(root, { recursive: true })
