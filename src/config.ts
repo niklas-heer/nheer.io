@@ -10,6 +10,7 @@ export const siteConfig = {
     },
     social: {
         github: "https://github.com/niklas-heer",
+        bluesky: "https://bsky.app/profile/nheer.bsky.social",
         linkedin: "https://linkedin.com/in/niklas-heer-b89364b8",
         twitter: "https://twitter.com/niklas_heer",
     },

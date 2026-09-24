@@ -173,6 +173,18 @@ test('the homepage terminal runs commands, keeps history and navigates', async (
   expect(errors).toEqual([]);
 });
 
+test('the homepage social links include Bluesky and each carries an icon', async ({ page }) => {
+  await page.goto('/');
+  const socials = page.getByRole('list', { name: 'Elsewhere' });
+  const bluesky = socials.getByRole('link', { name: 'Bluesky' });
+  await expect(bluesky).toHaveAttribute('href', 'https://bsky.app/profile/nheer.bsky.social');
+  await expect(bluesky).toHaveAttribute('rel', /noopener/);
+  for (const link of await socials.getByRole('link').all()) {
+    await expect(link.locator('svg')).toHaveCount(1);
+    await expect(link.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  }
+});
+
 test('draft reviews are absent from the production build', async ({ request }) => {
   const root = 'src/content/reviews';
   const drafts = readdirSync(root, { recursive: true })

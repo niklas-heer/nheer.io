@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import SocialIcon from "../components/SocialIcon.astro";
 import { getCollection } from "astro:content";
 import { parseEmoji } from "../utils/emoji";
 import { siteConfig } from "../config";
@@ -77,6 +78,7 @@ const bookAuthor = (book: { contributions?: { author: { name: string } }[] }) =>
 
 const socials = [
     { name: "GitHub", href: siteConfig.social.github },
+    { name: "Bluesky", href: siteConfig.social.bluesky },
     { name: "LinkedIn", href: siteConfig.social.linkedin },
     { name: "X", href: siteConfig.social.twitter },
     { name: "Email", href: `mailto:${siteConfig.author.email}` },
@@ -233,7 +235,8 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                             target={social.href.startsWith("mailto:") ? undefined : "_blank"}
                             rel={social.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                         >
-                            {social.name}
+                            <SocialIcon name={social.name} class="hero-social-icon" />
+                            <span>{social.name}</span>
                         </a>
                     </li>
                 ))
@@ -422,6 +425,9 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
     }
 
     .hero-socials a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
         color: var(--color-foreground);
         text-decoration: underline;
         text-underline-offset: 0.25em;
@@ -432,6 +438,15 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
     .hero-socials a:hover {
         color: var(--color-accent);
         text-decoration-color: currentColor;
+    }
+
+    .hero-socials a :global(.hero-social-icon) {
+        color: var(--color-muted);
+        transition: color 150ms ease;
+    }
+
+    .hero-socials a:hover :global(.hero-social-icon) {
+        color: currentColor;
     }
 
     /* Sections */
