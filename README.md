@@ -75,7 +75,10 @@ mise run preview:articles --port 4323
 
 `mise run check` runs the sample-data build, full test suite, and dependency
 audit in sequence. The audit includes development dependencies and fails on any
-reported vulnerability, including low-severity advisories.
+reported vulnerability, including low-severity advisories. The only exceptions
+are listed in `scripts/audit.mjs`, each with a reason, a maximum package version
+and an expiry date; an exception stops applying once a newer version is installed
+or the date passes.
 Browser tests start their own preview server on port 4321. If that port is in use,
 run `PLAYWRIGHT_PORT=44321 mise run check` to use another port. Ordinary `mise run build` keeps
 existing development fallbacks, but its output may lack the podcast data required

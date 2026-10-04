@@ -17,7 +17,7 @@
     "preview:articles": "PREVIEW_DRAFTS=true SITE_TEST_DATA=true astro dev --host 127.0.0.1",
     "test:sync": "node scripts/tests/podcast-sync.integration.mjs",
     "test:unit": "bun test tests/*.test.ts",
-    "audit": "npm audit --include=dev --audit-level=low"
+    "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
