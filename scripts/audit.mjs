@@ -5,16 +5,7 @@ import { fileURLToPath } from 'node:url';
 // Advisories with no patched release that cannot affect this site. Each entry
 // stops applying on its own: once a newer version of the package is installed,
 // or after the expiry date, the advisory fails the audit again.
-export const exceptions = [
-  {
-    url: 'https://github.com/advisories/GHSA-ch52-4w7c-c8xp',
-    dependency: 'http-cache-semantics',
-    maxVersion: '4.2.0',
-    expires: '2026-12-31',
-    reason:
-      'max-stale lets a shared cache serve another user\'s response; Astro only caches remote images during the static build, which has no users. No patched release exists yet.',
-  },
-];
+export const exceptions = [];
 
 function compareVersions(left, right) {
   const parts = (version) => version.split('-')[0].split('.').map(Number);
@@ -31,8 +22,8 @@ export function installedVersions(lock, name) {
     .map(([, entry]) => entry.version);
 }
 
-function exceptionFor(advisory, { lock, today }) {
-  return exceptions.find((exception) => {
+function exceptionFor(advisory, { lock, today, allowed }) {
+  return allowed.find((exception) => {
     if (exception.url !== advisory.url || exception.dependency !== advisory.dependency) return false;
     if (today > exception.expires) return false;
     const versions = installedVersions(lock, exception.dependency);
@@ -42,7 +33,7 @@ function exceptionFor(advisory, { lock, today }) {
 
 // Every advisory appears as an object in some package's `via`; string entries
 // only point at another vulnerable package, so they need no separate check.
-export function auditFindings(report, { lock, today }) {
+export function auditFindings(report, { lock, today, exceptions: allowed = exceptions }) {
   if (!report || report.error || typeof report.vulnerabilities !== 'object') {
     throw new Error(`npm audit did not return a report: ${report?.message ?? 'unexpected output'}`);
   }
@@ -55,7 +46,7 @@ export function auditFindings(report, { lock, today }) {
   const blocking = [];
   const excepted = [];
   for (const advisory of advisories.values()) {
-    const exception = exceptionFor(advisory, { lock, today });
+    const exception = exceptionFor(advisory, { lock, today, allowed });
     if (exception) excepted.push({ advisory, exception });
     else blocking.push(advisory);
   }
