@@ -45,6 +45,7 @@ describe('article image markup', () => {
     expect(html.startsWith(before)).toBe(true);
     expect(html.endsWith(after)).toBe(true);
     expect(html).toContain('src="/_astro/photo.webp"');
-    expect(html).toContain('alt="A &quot;quote&quot; > B"');
+    // parse5 8.1 escapes < and > inside attribute values (as the HTML spec now does); both forms mean the same text.
+    expect(html).toMatch(/alt="A &quot;quote&quot; (?:>|&gt;) B"/);
   });
 });
