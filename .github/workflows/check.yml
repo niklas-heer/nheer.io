@@ -17,6 +17,11 @@ jobs:
         with:
           persist-credentials: false
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          # The checks never use the Vercel CLI, and mise 2026.11 refuses to
+          # install it: Vercel stopped publishing npm provenance for the CLI
+          # and every @vercel/* dependency (trustPolicy=no-downgrade).
+          install_args: node bun
       - run: npm ci --include=dev
       - run: npx playwright install --with-deps chromium
       - run: npm run build:check
