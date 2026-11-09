@@ -20,30 +20,30 @@
     "audit": "node scripts/audit.mjs"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.3.1",
-    "@astrojs/mdx": "^8.0.1",
+    "@astrojs/markdown-remark": "^7.3.6",
+    "@astrojs/mdx": "^8.1.3",
     "@astrojs/rss": "^4.0.19",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
-    "@tailwindcss/vite": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.5",
     "@vercel/analytics": "^2.0.1",
-    "astro": "^7.3.2",
-    "astro-expressive-code": "^0.44.2",
+    "astro": "^7.4.7",
+    "astro-expressive-code": "^0.44.3",
     "lottie-web": "^5.13.0",
-    "medium-zoom": "^1.1.0",
-    "mermaid": "^12.0.0",
+    "medium-zoom": "^1.1.2",
+    "mermaid": "^12.3.0",
     "node-emoji": "^2.2.0",
-    "parse5": "^8.0.1",
+    "parse5": "^8.1.0",
     "pg": "^8.23.0",
     "reading-time": "^1.5.0",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
-    "shiki": "^4.4.3",
+    "shiki": "^4.6.0",
     "tailwindcss": "^4.3.3",
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.65.0"
   },
   "overrides": {
     "katex": "^0.18.11",
