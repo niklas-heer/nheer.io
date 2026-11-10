@@ -1,4 +1,73 @@
 [
-  { "repo": "niklas-heer/project-name-generator", "name": "project-name-generator", "year": 2019, "note": "Sample entry: random project names from adjectives and nouns." },
-  { "repo": "niklas-heer/gleam", "name": "gleam", "year": 2017, "note": "Sample entry: replaced by the archive list from the content agent.", "url": "https://example.com" }
+  {
+    "repo": "niklas-heer/project-name-generator",
+    "name": "project-name-generator",
+    "year": 2025,
+    "note": "A Bun CLI that asks a model for project names and checks registries and domains."
+  },
+  {
+    "repo": "niklas-heer/php7-compatibility-checker",
+    "name": "PHP 7 compatibility checker",
+    "year": 2018,
+    "note": "Checks whether a PHP project is ready for PHP 7, inside Docker."
+  },
+  {
+    "repo": "niklas-heer/arch-yay",
+    "name": "arch-yay",
+    "year": 2018,
+    "note": "An Arch Linux Docker image with AUR support through yay.",
+    "url": "https://hub.docker.com/r/niklasheer/arch-yay/"
+  },
+  {
+    "repo": "niklas-heer/the-lost-son",
+    "name": "The Lost Son",
+    "year": 2018,
+    "note": "A browser game made by a team of five at Global Game Jam 2018 in Ansbach.",
+    "url": "https://son-game.nheer.io"
+  },
+  {
+    "repo": "niklas-heer/dotbot-eopkg",
+    "name": "dotbot-eopkg",
+    "year": 2016,
+    "note": "A dotbot plugin that installs Solus packages with eopkg."
+  },
+  {
+    "repo": "niklas-heer/dotbot-yaourt",
+    "name": "dotbot-yaourt",
+    "year": 2016,
+    "note": "A dotbot plugin that installs Arch and AUR packages with yaourt."
+  },
+  {
+    "repo": "niklas-heer/pin-generator",
+    "name": "PIN Generator",
+    "year": 2016,
+    "note": "A page that hides PINs behind one secret PIN, digit by digit, so they can go on paper.",
+    "url": "https://pin.nheer.io"
+  },
+  {
+    "repo": "niklas-heer/awesome-presentation",
+    "name": "Awesome Presentation",
+    "year": 2016,
+    "note": "A reveal.js setup for showing talks in a Material Design style.",
+    "url": "https://talks.nheer.io"
+  },
+  {
+    "repo": "niklas-heer/simpleShot",
+    "name": "simpleShot",
+    "year": 2015,
+    "note": "A small Go tool that takes a screenshot and uploads it.",
+    "url": "https://niklas-heer.github.io/simpleShot/"
+  },
+  {
+    "repo": "niklas-heer/Forge-AdvancedWhitelist",
+    "name": "AdvancedWhitelist",
+    "year": 2013,
+    "note": "A Minecraft Forge mod that keeps a server's whitelist in a MySQL database."
+  },
+  {
+    "repo": "niklas-heer/awesome-password-change",
+    "name": "awesome-password-change",
+    "year": 2012,
+    "note": "A multilingual PHP script that lets mail users change their own password."
+  }
 ]

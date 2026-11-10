@@ -1,41 +1,703 @@
 {
   "repos": {
-    "private:homelab": {
-      "syncedAt": "2026-11-10T09:21:40.382Z",
-      "head": "a571caa07a",
-      "commits": 84,
-      "firstCommit": "2026-05-26T21:18:05.000Z",
-      "lastCommit": "2026-10-26T16:36:08.000Z",
+    "morrow-lang/morrow": {
+      "syncedAt": "2026-11-10T10:16:59.425Z",
+      "head": "7290dce31d",
+      "commits": 524,
+      "firstCommit": "2026-01-27T20:56:12.000Z",
+      "lastCommit": "2026-11-09T23:18:58.000Z",
       "contributors": 1,
-      "linesOfCode": 20370,
-      "files": 144,
+      "linesOfCode": 184196,
+      "files": 770,
       "languages": [
         {
-          "name": "Python",
-          "code": 19641,
-          "files": 136
+          "name": "Rust",
+          "code": 182518,
+          "files": 748
         },
         {
-          "name": "HTML",
-          "code": 377,
-          "files": 1
-        },
-        {
-          "name": "Nix",
-          "code": 335,
+          "name": "Elixir",
+          "code": 1005,
           "files": 6
         },
         {
+          "name": "CSS",
+          "code": 330,
+          "files": 3
+        },
+        {
+          "name": "JavaScript",
+          "code": 167,
+          "files": 1
+        },
+        {
+          "name": "Protocol Buffers",
+          "code": 77,
+          "files": 2
+        },
+        {
+          "name": "TypeScript",
+          "code": 64,
+          "files": 7
+        },
+        {
+          "name": "HTML",
+          "code": 31,
+          "files": 2
+        },
+        {
           "name": "Dockerfile",
-          "code": 17,
+          "code": 4,
           "files": 1
         }
       ],
       "latestTag": null,
-      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0, 11, 0, 0, 0, 1, 0, 2, 1, 35, 5, 13, 0, 4, 0, 0, 0, 1, 0, 0]
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 295, 44, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 97, 21, 60, 0, 0, 2, 0, 0, 0, 0, 4]
+    },
+    "niklas-heer/dotfiles": {
+      "syncedAt": "2026-11-10T10:16:47.547Z",
+      "head": "224bd98186",
+      "commits": 267,
+      "firstCommit": "2025-01-13T18:14:35.000Z",
+      "lastCommit": "2026-11-09T23:28:45.000Z",
+      "contributors": 1,
+      "linesOfCode": 10907,
+      "files": 92,
+      "languages": [
+        {
+          "name": "TypeScript",
+          "code": 7177,
+          "files": 49
+        },
+        {
+          "name": "Go",
+          "code": 1666,
+          "files": 7
+        },
+        {
+          "name": "Python",
+          "code": 1110,
+          "files": 13
+        },
+        {
+          "name": "Lua",
+          "code": 347,
+          "files": 3
+        },
+        {
+          "name": "Shell",
+          "code": 344,
+          "files": 5
+        },
+        {
+          "name": "Templ",
+          "code": 263,
+          "files": 15
+        }
+      ],
+      "latestTag": null,
+      "weekly": [17, 2, 7, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 11, 8, 2, 22, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 1, 0, 35, 12, 5, 2, 0, 0, 3, 3, 7]
+    },
+    "niklas-heer/focal": {
+      "syncedAt": "2026-11-10T10:16:48.046Z",
+      "head": "497f8bd553",
+      "commits": 169,
+      "firstCommit": "2026-03-25T16:37:10.000Z",
+      "lastCommit": "2026-11-09T22:40:23.000Z",
+      "contributors": 1,
+      "linesOfCode": 30620,
+      "files": 80,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 30289,
+          "files": 69
+        },
+        {
+          "name": "Shell",
+          "code": 155,
+          "files": 5
+        },
+        {
+          "name": "JavaScript",
+          "code": 92,
+          "files": 4
+        },
+        {
+          "name": "Swift",
+          "code": 60,
+          "files": 1
+        },
+        {
+          "name": "Ruby",
+          "code": 24,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.5.0",
+        "date": "2026-10-04T03:45:48.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 158, 0, 0, 0, 0, 0, 2]
+    },
+    "niklas-heer/Keywink": {
+      "syncedAt": "2026-11-10T10:16:48.608Z",
+      "head": "85bdb9fc31",
+      "commits": 200,
+      "firstCommit": "2024-04-19T20:55:18.000Z",
+      "lastCommit": "2026-11-09T23:05:06.000Z",
+      "contributors": 15,
+      "linesOfCode": 8945,
+      "files": 59,
+      "languages": [
+        {
+          "name": "Swift",
+          "code": 8720,
+          "files": 55
+        },
+        {
+          "name": "Shell",
+          "code": 225,
+          "files": 4
+        }
+      ],
+      "latestTag": {
+        "name": "v0.2.1",
+        "date": "2026-09-23T09:01:28.000Z"
+      },
+      "weekly": [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24, 16, 0, 0, 0, 0, 0, 0, 1]
+    },
+    "niklas-heer/kindred": {
+      "syncedAt": "2026-11-10T10:16:48.753Z",
+      "head": "8a1150d34f",
+      "commits": 306,
+      "firstCommit": "2026-09-19T15:24:59.000Z",
+      "lastCommit": "2026-11-10T01:17:42.000Z",
+      "contributors": 1,
+      "linesOfCode": 102276,
+      "files": 715,
+      "languages": [
+        {
+          "name": "TypeScript",
+          "code": 93977,
+          "files": 615
+        },
+        {
+          "name": "CSS",
+          "code": 7473,
+          "files": 51
+        },
+        {
+          "name": "SQL",
+          "code": 760,
+          "files": 47
+        },
+        {
+          "name": "Dockerfile",
+          "code": 38,
+          "files": 1
+        },
+        {
+          "name": "JavaScript",
+          "code": 28,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v2.0.0",
+        "date": "2026-11-09T11:35:49.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 1, 0, 0, 39, 132, 124]
+    },
+    "niklas-heer/kipferl": {
+      "syncedAt": "2026-11-10T10:16:49.019Z",
+      "head": "55efcc6348",
+      "commits": 248,
+      "firstCommit": "2025-12-16T03:46:16.000Z",
+      "lastCommit": "2026-11-09T23:25:13.000Z",
+      "contributors": 3,
+      "linesOfCode": 101574,
+      "files": 423,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 64011,
+          "files": 222
+        },
+        {
+          "name": "Rust",
+          "code": 31600,
+          "files": 150
+        },
+        {
+          "name": "TypeScript",
+          "code": 4273,
+          "files": 32
+        },
+        {
+          "name": "CSS",
+          "code": 1167,
+          "files": 2
+        },
+        {
+          "name": "Shell",
+          "code": 401,
+          "files": 6
+        },
+        {
+          "name": "Nix",
+          "code": 53,
+          "files": 2
+        },
+        {
+          "name": "Go",
+          "code": 48,
+          "files": 4
+        },
+        {
+          "name": "JavaScript",
+          "code": 18,
+          "files": 2
+        },
+        {
+          "name": "HEX",
+          "code": 3,
+          "files": 3
+        }
+      ],
+      "latestTag": {
+        "name": "v0.7.3",
+        "date": "2026-11-09T23:25:20.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 152, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 32, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2]
+    },
+    "niklas-heer/latchrun": {
+      "syncedAt": "2026-11-10T10:16:49.384Z",
+      "head": "576b0e9a5d",
+      "commits": 45,
+      "firstCommit": "2026-09-19T15:05:05.000Z",
+      "lastCommit": "2026-11-09T23:42:11.000Z",
+      "contributors": 1,
+      "linesOfCode": 10613,
+      "files": 31,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 10304,
+          "files": 24
+        },
+        {
+          "name": "Shell",
+          "code": 137,
+          "files": 2
+        },
+        {
+          "name": "Python",
+          "code": 59,
+          "files": 1
+        },
+        {
+          "name": "HTML",
+          "code": 48,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 44,
+          "files": 2
+        },
+        {
+          "name": "Handlebars",
+          "code": 21,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.3.1",
+        "date": "2026-11-09T23:46:00.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 29, 0, 1, 0, 0, 0, 0, 4]
+    },
+    "niklas-heer/lithra": {
+      "syncedAt": "2026-11-10T10:16:49.496Z",
+      "head": "5e7bdbc1a6",
+      "commits": 4,
+      "firstCommit": "2026-09-23T23:58:41.000Z",
+      "lastCommit": "2026-10-07T22:08:54.000Z",
+      "contributors": 1,
+      "linesOfCode": 74,
+      "files": 4,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 74,
+          "files": 4
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 0, 0, 0, 0, 0]
+    },
+    "niklas-heer/nheer.io": {
+      "syncedAt": "2026-11-10T10:16:51.414Z",
+      "head": "f7354efcac",
+      "commits": 261,
+      "firstCommit": "2019-08-10T22:47:02.000Z",
+      "lastCommit": "2026-11-09T23:02:56.000Z",
+      "contributors": 1,
+      "linesOfCode": 14367,
+      "files": 124,
+      "languages": [
+        {
+          "name": "Astro",
+          "code": 8636,
+          "files": 58
+        },
+        {
+          "name": "TypeScript",
+          "code": 4212,
+          "files": 42
+        },
+        {
+          "name": "JavaScript",
+          "code": 887,
+          "files": 21
+        },
+        {
+          "name": "CSS",
+          "code": 620,
+          "files": 1
+        },
+        {
+          "name": "Python",
+          "code": 9,
+          "files": 1
+        },
+        {
+          "name": "Shell",
+          "code": 3,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 24, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 47, 2, 2, 1, 0, 0, 1, 0, 4]
+    },
+    "niklas-heer/overhead-overdrive": {
+      "syncedAt": "2026-11-10T10:16:51.744Z",
+      "head": "f1e3c4731a",
+      "commits": 11,
+      "firstCommit": "2026-09-04T19:53:40.000Z",
+      "lastCommit": "2026-09-12T16:56:36.000Z",
+      "contributors": 1,
+      "linesOfCode": 15047,
+      "files": 55,
+      "languages": [
+        {
+          "name": "TypeScript",
+          "code": 10646,
+          "files": 38
+        },
+        {
+          "name": "CSS",
+          "code": 2791,
+          "files": 1
+        },
+        {
+          "name": "JavaScript",
+          "code": 1589,
+          "files": 15
+        },
+        {
+          "name": "HTML",
+          "code": 21,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "niklas-heer/pocketcasts-stats": {
+      "syncedAt": "2026-11-10T10:16:51.937Z",
+      "head": "4c89ee9009",
+      "commits": 235,
+      "firstCommit": "2018-08-17T14:32:46.000Z",
+      "lastCommit": "2026-11-09T22:30:53.000Z",
+      "contributors": 2,
+      "linesOfCode": 179,
+      "files": 4,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 146,
+          "files": 2
+        },
+        {
+          "name": "Makefile",
+          "code": 21,
+          "files": 1
+        },
+        {
+          "name": "Dockerfile",
+          "code": 12,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]
+    },
+    "niklas-heer/quirl": {
+      "syncedAt": "2026-11-10T10:16:52.180Z",
+      "head": "b8c249b769",
+      "commits": 442,
+      "firstCommit": "2026-08-15T12:44:31.000Z",
+      "lastCommit": "2026-11-10T01:00:24.000Z",
+      "contributors": 1,
+      "linesOfCode": 172438,
+      "files": 190,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 164539,
+          "files": 114
+        },
+        {
+          "name": "Python",
+          "code": 4109,
+          "files": 15
+        },
+        {
+          "name": "JavaScript",
+          "code": 1447,
+          "files": 9
+        },
+        {
+          "name": "TypeScript",
+          "code": 993,
+          "files": 24
+        },
+        {
+          "name": "Shell",
+          "code": 654,
+          "files": 6
+        },
+        {
+          "name": "CSS",
+          "code": 307,
+          "files": 1
+        },
+        {
+          "name": "Lua",
+          "code": 184,
+          "files": 16
+        },
+        {
+          "name": "C",
+          "code": 101,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 68,
+          "files": 2
+        },
+        {
+          "name": "Dockerfile",
+          "code": 18,
+          "files": 1
+        },
+        {
+          "name": "Go",
+          "code": 18,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.6.0",
+        "date": "2026-11-10T00:03:29.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 88, 213, 8, 37, 0, 3, 1, 45, 1, 0, 0, 0, 33, 13]
+    },
+    "niklas-heer/repot": {
+      "syncedAt": "2026-11-10T10:16:52.792Z",
+      "head": "62fe353185",
+      "commits": 62,
+      "firstCommit": "2026-09-26T12:57:21.000Z",
+      "lastCommit": "2026-11-08T11:36:49.000Z",
+      "contributors": 1,
+      "linesOfCode": 22528,
+      "files": 71,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 22086,
+          "files": 65
+        },
+        {
+          "name": "Shell",
+          "code": 229,
+          "files": 4
+        },
+        {
+          "name": "Python",
+          "code": 147,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 66,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.4.0",
+        "date": "2026-11-08T05:10:51.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 1, 1, 0, 0, 0, 31, 0]
+    },
+    "niklas-heer/sceno": {
+      "syncedAt": "2026-11-10T10:16:52.972Z",
+      "head": "86d625b9a8",
+      "commits": 78,
+      "firstCommit": "2026-06-04T23:41:02.000Z",
+      "lastCommit": "2026-09-23T22:36:51.000Z",
+      "contributors": 1,
+      "linesOfCode": 22959,
+      "files": 186,
+      "languages": [
+        {
+          "name": "Go",
+          "code": 21455,
+          "files": 172
+        },
+        {
+          "name": "Shell",
+          "code": 736,
+          "files": 7
+        },
+        {
+          "name": "JavaScript",
+          "code": 639,
+          "files": 3
+        },
+        {
+          "name": "HTML",
+          "code": 73,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 47,
+          "files": 2
+        },
+        {
+          "name": "CSS",
+          "code": 9,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.5.0",
+        "date": "2026-09-05T00:08:31.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 8, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "niklas-heer/shoalow": {
+      "syncedAt": "2026-11-10T10:16:53.119Z",
+      "head": "7f077d3ce0",
+      "commits": 50,
+      "firstCommit": "2026-09-29T14:02:16.000Z",
+      "lastCommit": "2026-10-02T12:58:52.000Z",
+      "contributors": 1,
+      "linesOfCode": 7593,
+      "files": 86,
+      "languages": [
+        {
+          "name": "TypeScript",
+          "code": 5853,
+          "files": 53
+        },
+        {
+          "name": "Svelte",
+          "code": 1548,
+          "files": 29
+        },
+        {
+          "name": "CSS",
+          "code": 147,
+          "files": 1
+        },
+        {
+          "name": "Dockerfile",
+          "code": 22,
+          "files": 1
+        },
+        {
+          "name": "HTML",
+          "code": 21,
+          "files": 1
+        },
+        {
+          "name": "JavaScript",
+          "code": 2,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0]
+    },
+    "niklas-heer/sideporch": {
+      "syncedAt": "2026-11-10T10:16:53.296Z",
+      "head": "a95dd955fc",
+      "commits": 168,
+      "firstCommit": "2026-09-27T01:13:07.000Z",
+      "lastCommit": "2026-11-08T16:25:57.000Z",
+      "contributors": 1,
+      "linesOfCode": 68211,
+      "files": 177,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 62650,
+          "files": 145
+        },
+        {
+          "name": "JavaScript",
+          "code": 3674,
+          "files": 7
+        },
+        {
+          "name": "CSS",
+          "code": 753,
+          "files": 2
+        },
+        {
+          "name": "HTML",
+          "code": 598,
+          "files": 9
+        },
+        {
+          "name": "Shell",
+          "code": 429,
+          "files": 12
+        },
+        {
+          "name": "Nix",
+          "code": 104,
+          "files": 1
+        },
+        {
+          "name": "Dockerfile",
+          "code": 3,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.7.0",
+        "date": "2026-11-08T16:26:04.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 102, 0, 0, 0, 0, 54, 0]
     },
     "niklas-heer/speed-comparison": {
-      "syncedAt": "2026-11-10T09:21:41.535Z",
+      "syncedAt": "2026-11-10T10:16:53.503Z",
       "head": "8dadefbc7a",
       "commits": 762,
       "firstCommit": "2018-02-17T15:32:48.000Z",
@@ -318,8 +980,35 @@
       "latestTag": null,
       "weekly": [0, 0, 110, 110, 48, 2, 0, 0, 0, 0, 0, 1, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 3, 6, 0, 0, 0, 0, 0, 0, 0, 4]
     },
+    "niklas-heer/spokn-tts": {
+      "syncedAt": "2026-11-10T10:16:53.929Z",
+      "head": "529cafe6b6",
+      "commits": 17,
+      "firstCommit": "2025-12-04T11:07:25.000Z",
+      "lastCommit": "2026-09-23T08:59:53.000Z",
+      "contributors": 1,
+      "linesOfCode": 2630,
+      "files": 22,
+      "languages": [
+        {
+          "name": "Swift",
+          "code": 2481,
+          "files": 17
+        },
+        {
+          "name": "Shell",
+          "code": 149,
+          "files": 5
+        }
+      ],
+      "latestTag": {
+        "name": "v0.4.0",
+        "date": "2026-09-23T09:02:08.000Z"
+      },
+      "weekly": [0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 0, 0]
+    },
     "niklas-heer/tdx": {
-      "syncedAt": "2026-11-10T09:21:42.659Z",
+      "syncedAt": "2026-11-10T10:16:54.035Z",
       "head": "699e5843e1",
       "commits": 368,
       "firstCommit": "2025-11-21T15:16:09.000Z",
@@ -364,6 +1053,243 @@
         "date": "2026-11-09T22:38:49.000Z"
       },
       "weekly": [103, 137, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 30, 0, 1, 0, 0, 0, 0, 27, 42, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    },
+    "niklas-heer/vrdx": {
+      "syncedAt": "2026-11-10T10:16:55.038Z",
+      "head": "e0b71ba91a",
+      "commits": 169,
+      "firstCommit": "2025-09-30T20:53:04.000Z",
+      "lastCommit": "2026-11-09T23:28:09.000Z",
+      "contributors": 1,
+      "linesOfCode": 7289,
+      "files": 38,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 4707,
+          "files": 18
+        },
+        {
+          "name": "CSS",
+          "code": 1217,
+          "files": 1
+        },
+        {
+          "name": "TypeScript",
+          "code": 698,
+          "files": 13
+        },
+        {
+          "name": "JavaScript",
+          "code": 506,
+          "files": 1
+        },
+        {
+          "name": "Shell",
+          "code": 76,
+          "files": 2
+        },
+        {
+          "name": "Nix",
+          "code": 44,
+          "files": 2
+        },
+        {
+          "name": "HTML",
+          "code": 41,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.4.0",
+        "date": "2026-09-21T07:34:05.000Z"
+      },
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 21, 11, 0, 1, 0, 0, 0, 0, 2]
+    },
+    "private:earlog": {
+      "syncedAt": "2026-11-10T10:16:47.825Z",
+      "head": "f258e274c8",
+      "commits": 38,
+      "firstCommit": "2026-09-26T16:34:53.000Z",
+      "lastCommit": "2026-09-27T01:20:08.000Z",
+      "contributors": 1,
+      "linesOfCode": 17645,
+      "files": 81,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 15233,
+          "files": 68
+        },
+        {
+          "name": "CSS",
+          "code": 1899,
+          "files": 3
+        },
+        {
+          "name": "Go",
+          "code": 303,
+          "files": 2
+        },
+        {
+          "name": "SQL",
+          "code": 95,
+          "files": 4
+        },
+        {
+          "name": "Protocol Buffers",
+          "code": 94,
+          "files": 2
+        },
+        {
+          "name": "HTML",
+          "code": 21,
+          "files": 2
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "private:homelab": {
+      "syncedAt": "2026-11-10T10:16:48.255Z",
+      "head": "a571caa07a",
+      "shallow": true,
+      "lastCommit": "2026-10-26T16:36:08.000Z",
+      "linesOfCode": 20370,
+      "files": 144,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 19641,
+          "files": 136
+        },
+        {
+          "name": "HTML",
+          "code": 377,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 335,
+          "files": 6
+        },
+        {
+          "name": "Dockerfile",
+          "code": 17,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0, 0, 10, 0, 0, 11, 0, 0, 0, 1, 0, 2, 1, 35, 5, 13, 0, 4, 0, 0, 0, 1, 0, 0]
+    },
+    "private:hub": {
+      "syncedAt": "2026-11-10T10:16:48.484Z",
+      "head": "34c03a6cdd",
+      "commits": 151,
+      "firstCommit": "2026-09-19T13:00:19.000Z",
+      "lastCommit": "2026-11-10T01:28:12.000Z",
+      "contributors": 1,
+      "linesOfCode": 5858,
+      "files": 20,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 5844,
+          "files": 18
+        },
+        {
+          "name": "HTML",
+          "code": 9,
+          "files": 1
+        },
+        {
+          "name": "JavaScript",
+          "code": 5,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 56, 27, 34, 1, 0, 0, 18, 4, 11]
+    },
+    "private:mailboard": {
+      "syncedAt": "2026-11-10T10:16:49.586Z",
+      "head": "4eb03318b0",
+      "commits": 35,
+      "firstCommit": "2026-10-02T14:37:08.000Z",
+      "lastCommit": "2026-10-02T15:00:02.000Z",
+      "contributors": 1,
+      "linesOfCode": 1988,
+      "files": 6,
+      "languages": [
+        {
+          "name": "Rust",
+          "code": 1957,
+          "files": 5
+        },
+        {
+          "name": "Shell",
+          "code": 31,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0]
+    },
+    "private:postcard": {
+      "syncedAt": "2026-11-10T10:16:52.053Z",
+      "head": "e4e4363b77",
+      "commits": 8,
+      "firstCommit": "2026-10-11T15:35:47.000Z",
+      "lastCommit": "2026-10-11T15:59:42.000Z",
+      "contributors": 1,
+      "linesOfCode": 6777,
+      "files": 34,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 6777,
+          "files": 34
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0]
+    },
+    "private:travel-blog": {
+      "syncedAt": "2026-11-10T10:31:30.314Z",
+      "head": "43536374a3",
+      "commits": 203,
+      "contributors": 2,
+      "linesOfCode": 25410,
+      "files": 284,
+      "languages": [
+        {
+          "name": "TypeScript",
+          "code": 14896,
+          "files": 183
+        },
+        {
+          "name": "Astro",
+          "code": 4682,
+          "files": 28
+        },
+        {
+          "name": "CSS",
+          "code": 3345,
+          "files": 32
+        },
+        {
+          "name": "JavaScript",
+          "code": 2255,
+          "files": 33
+        },
+        {
+          "name": "SQL",
+          "code": 232,
+          "files": 8
+        }
+      ],
+      "latestTag": null,
+      "datesHidden": true
     }
   }
 }
