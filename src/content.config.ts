@@ -45,7 +45,39 @@ const reviews = defineCollection({
   }),
 });
 
+// One file per project; see docs/projects.md. Images live beside the file.
+const projects = defineCollection({
+  loader: glob({ pattern: "*.{md,mdx}", base: "./src/content/projects" }),
+  schema: ({ image }) =>
+    z
+      .object({
+        title: z.string().min(1),
+        tagline: z.string().min(1).max(80),
+        summary: z.string().min(1).max(220),
+        category: z.enum(["tools", "apps", "web", "games", "infrastructure"]),
+        status: z.enum(["active", "maintained", "experimental", "paused", "archived"]),
+        visibility: z.enum(["public", "private"]),
+        repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, "owner/name"),
+        homepage: z.url().optional(),
+        docs: z.url().optional(),
+        started: z.coerce.date(),
+        stack: z.array(z.string().min(1)).min(2).max(6),
+        install: z.string().min(1).refine((value) => !value.includes("\n"), "one line").optional(),
+        featured: z.number().int().positive().optional(),
+        cover: image(),
+        coverAlt: z.string().min(1),
+        gallery: z
+          .array(z.object({ src: image(), alt: z.string().min(1), caption: z.string().optional() }))
+          .max(4)
+          .default([]),
+        posts: z.array(z.string().regex(/^\/posts\/[^?#\s]+$/, "a site path such as /posts/2025/11/slug/")).default([]),
+        highlights: z.array(z.string().min(1).max(60)).length(3).optional(),
+      })
+      .strict(),
+});
+
 export const collections = {
   posts,
   reviews,
+  projects,
 };

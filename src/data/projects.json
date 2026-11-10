@@ -1,0 +1,369 @@
+{
+  "repos": {
+    "niklas-heer/homelab": {
+      "syncedAt": "2026-11-10T09:21:40.382Z",
+      "head": "a571caa07a",
+      "commits": 84,
+      "firstCommit": "2026-05-26T21:18:05.000Z",
+      "lastCommit": "2026-10-26T16:36:08.000Z",
+      "contributors": 1,
+      "linesOfCode": 20370,
+      "files": 144,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 19641,
+          "files": 136
+        },
+        {
+          "name": "HTML",
+          "code": 377,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 335,
+          "files": 6
+        },
+        {
+          "name": "Dockerfile",
+          "code": 17,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0, 11, 0, 0, 0, 1, 0, 2, 1, 35, 5, 13, 0, 4, 0, 0, 0, 1, 0, 0]
+    },
+    "niklas-heer/speed-comparison": {
+      "syncedAt": "2026-11-10T09:21:41.535Z",
+      "head": "8dadefbc7a",
+      "commits": 762,
+      "firstCommit": "2018-02-17T15:32:48.000Z",
+      "lastCommit": "2026-11-09T23:06:02.000Z",
+      "contributors": 56,
+      "linesOfCode": 13483,
+      "files": 153,
+      "languages": [
+        {
+          "name": "Python",
+          "code": 7187,
+          "files": 50
+        },
+        {
+          "name": "CSS",
+          "code": 2440,
+          "files": 2
+        },
+        {
+          "name": "Astro",
+          "code": 1622,
+          "files": 19
+        },
+        {
+          "name": "JavaScript",
+          "code": 757,
+          "files": 10
+        },
+        {
+          "name": "Rust",
+          "code": 101,
+          "files": 3
+        },
+        {
+          "name": "C#",
+          "code": 99,
+          "files": 3
+        },
+        {
+          "name": "Shell",
+          "code": 99,
+          "files": 1
+        },
+        {
+          "name": "C++",
+          "code": 63,
+          "files": 2
+        },
+        {
+          "name": "Assembly",
+          "code": 62,
+          "files": 1
+        },
+        {
+          "name": "Java",
+          "code": 60,
+          "files": 2
+        },
+        {
+          "name": "Swift",
+          "code": 56,
+          "files": 3
+        },
+        {
+          "name": "Zig",
+          "code": 54,
+          "files": 2
+        },
+        {
+          "name": "Common Lisp",
+          "code": 52,
+          "files": 2
+        },
+        {
+          "name": "FORTRAN Modern",
+          "code": 50,
+          "files": 2
+        },
+        {
+          "name": "Just",
+          "code": 45,
+          "files": 1
+        },
+        {
+          "name": "Objective-C",
+          "code": 39,
+          "files": 3
+        },
+        {
+          "name": "F#",
+          "code": 34,
+          "files": 2
+        },
+        {
+          "name": "Kotlin",
+          "code": 34,
+          "files": 2
+        },
+        {
+          "name": "Haskell",
+          "code": 32,
+          "files": 3
+        },
+        {
+          "name": "Pony",
+          "code": 32,
+          "files": 1
+        },
+        {
+          "name": "Ada",
+          "code": 31,
+          "files": 1
+        },
+        {
+          "name": "Odin",
+          "code": 31,
+          "files": 1
+        },
+        {
+          "name": "C",
+          "code": 30,
+          "files": 2
+        },
+        {
+          "name": "Julia",
+          "code": 26,
+          "files": 2
+        },
+        {
+          "name": "SQL",
+          "code": 26,
+          "files": 1
+        },
+        {
+          "name": "Gleam",
+          "code": 22,
+          "files": 1
+        },
+        {
+          "name": "Pascal",
+          "code": 22,
+          "files": 1
+        },
+        {
+          "name": "TypeScript",
+          "code": 21,
+          "files": 2
+        },
+        {
+          "name": "Go",
+          "code": 20,
+          "files": 1
+        },
+        {
+          "name": "Headache",
+          "code": 19,
+          "files": 1
+        },
+        {
+          "name": "Janet",
+          "code": 19,
+          "files": 2
+        },
+        {
+          "name": "Haxe",
+          "code": 18,
+          "files": 1
+        },
+        {
+          "name": "MSBuild",
+          "code": 18,
+          "files": 2
+        },
+        {
+          "name": "D",
+          "code": 17,
+          "files": 1
+        },
+        {
+          "name": "Elixir",
+          "code": 17,
+          "files": 1
+        },
+        {
+          "name": "Clojure",
+          "code": 16,
+          "files": 1
+        },
+        {
+          "name": "OCaml",
+          "code": 16,
+          "files": 1
+        },
+        {
+          "name": "Erlang",
+          "code": 15,
+          "files": 1
+        },
+        {
+          "name": "Groovy",
+          "code": 15,
+          "files": 1
+        },
+        {
+          "name": "Mojo",
+          "code": 14,
+          "files": 1
+        },
+        {
+          "name": "Racket",
+          "code": 14,
+          "files": 1
+        },
+        {
+          "name": "Lua",
+          "code": 13,
+          "files": 1
+        },
+        {
+          "name": "Perl",
+          "code": 13,
+          "files": 1
+        },
+        {
+          "name": "Crystal",
+          "code": 12,
+          "files": 1
+        },
+        {
+          "name": "Dart",
+          "code": 12,
+          "files": 1
+        },
+        {
+          "name": "PHP",
+          "code": 12,
+          "files": 1
+        },
+        {
+          "name": "Ruby",
+          "code": 12,
+          "files": 1
+        },
+        {
+          "name": "Scala",
+          "code": 12,
+          "files": 1
+        },
+        {
+          "name": "Scheme",
+          "code": 11,
+          "files": 1
+        },
+        {
+          "name": "Coq",
+          "code": 10,
+          "files": 1
+        },
+        {
+          "name": "Raku",
+          "code": 9,
+          "files": 1
+        },
+        {
+          "name": "HTML",
+          "code": 8,
+          "files": 1
+        },
+        {
+          "name": "Nim",
+          "code": 7,
+          "files": 1
+        },
+        {
+          "name": "R",
+          "code": 7,
+          "files": 1
+        }
+      ],
+      "latestTag": null,
+      "weekly": [0, 0, 110, 110, 48, 2, 0, 0, 0, 0, 0, 1, 42, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 3, 6, 0, 0, 0, 0, 0, 0, 0, 4]
+    },
+    "niklas-heer/tdx": {
+      "syncedAt": "2026-11-10T09:21:42.659Z",
+      "head": "699e5843e1",
+      "commits": 368,
+      "firstCommit": "2025-11-21T15:16:09.000Z",
+      "lastCommit": "2026-11-09T22:31:17.000Z",
+      "contributors": 4,
+      "linesOfCode": 32705,
+      "files": 156,
+      "languages": [
+        {
+          "name": "Go",
+          "code": 30927,
+          "files": 139
+        },
+        {
+          "name": "Python",
+          "code": 683,
+          "files": 5
+        },
+        {
+          "name": "HTML",
+          "code": 509,
+          "files": 1
+        },
+        {
+          "name": "Shell",
+          "code": 348,
+          "files": 9
+        },
+        {
+          "name": "Rust",
+          "code": 174,
+          "files": 1
+        },
+        {
+          "name": "Nix",
+          "code": 64,
+          "files": 1
+        }
+      ],
+      "latestTag": {
+        "name": "v0.15.0",
+        "date": "2026-11-09T22:38:49.000Z"
+      },
+      "weekly": [103, 137, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 0, 30, 0, 1, 0, 0, 0, 0, 27, 42, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    }
+  }
+}

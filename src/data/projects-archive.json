@@ -1,0 +1,4 @@
+[
+  { "repo": "niklas-heer/project-name-generator", "name": "project-name-generator", "year": 2019, "note": "Sample entry: random project names from adjectives and nouns." },
+  { "repo": "niklas-heer/gleam", "name": "gleam", "year": 2017, "note": "Sample entry: replaced by the archive list from the content agent.", "url": "https://example.com" }
+]

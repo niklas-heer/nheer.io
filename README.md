@@ -60,6 +60,7 @@ mise run new-post "My post title"           # Create a draft without overwriting
 | `mise run preview:articles` | Start the local draft preview |
 | `mise run new-post "Title"` | Create an unpublished Markdown post |
 | `mise run sync:cv` | Import the committed CV artifacts; requires Poppler |
+| `mise run sync:projects` | Refresh the Projects statistics snapshot from local checkouts; requires tokei ([docs](docs/projects.md)) |
 | `mise run refresh` | Sync live data, build, and test |
 | `mise run publish` | Run the live pipeline and deploy its verified output |
 
