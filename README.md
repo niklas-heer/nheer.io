@@ -104,6 +104,14 @@ the configured 1Password `nheer Site Jobs` credentials and live-data checks.
 
 ## Dependency maintenance
 
+`@playwright/test` is pinned to one exact version and excluded from Dependabot.
+The homelab publishing job runs the browser tests in the container image
+`mcr.microsoft.com/playwright:v<version>-noble` and uses the browsers that image
+ships, so a newer package cannot find its browser there and publishing stops.
+To update Playwright, change the image tag in the homelab repository's
+`cluster/apps/nheer/workflow.yaml` and the pin here to the same version, and
+merge the two together. A pipeline test fails if the pin becomes a range.
+
 Dependabot proposes weekly npm and GitHub Actions updates. Minor and patch npm
 updates are grouped; major updates remain separate for review. Action references
 are pinned to release commits. This configuration takes effect after it reaches
