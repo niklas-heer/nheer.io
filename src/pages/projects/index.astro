@@ -116,8 +116,8 @@ const cardMeta = (project: (typeof projects)[number]) => ({
                                 <p class="featured-tagline">{data.tagline}</p>
                                 <p class="featured-summary">{data.summary}</p>
                                 <ul class="featured-facts">
-                                    {stats.stars !== undefined && (
-                                        <li><ProjectIcon name="star" /><span class="mono">{formatCount(stats.stars)}</span> stars</li>
+                                    {!!stats.stars && (
+                                        <li><ProjectIcon name="star" /><span class="mono">{formatCount(stats.stars)}</span> {stats.stars === 1 ? "star" : "stars"}</li>
                                     )}
                                     {stats.release && (
                                         <li><ProjectIcon name="tag" /><span class="mono">{stats.release.tag}</span></li>
@@ -174,7 +174,7 @@ const cardMeta = (project: (typeof projects)[number]) => ({
                                             {data.visibility === "private" ? (
                                                 <span class="private-badge"><ProjectIcon name="lock" />private</span>
                                             ) : (
-                                                project.stats.stars !== undefined && (
+                                                !!project.stats.stars && (
                                                     <span><ProjectIcon name="star" /><span class="mono">{formatCount(project.stats.stars)}</span><span class="sr-only"> stars</span></span>
                                                 )
                                             )}
@@ -207,7 +207,7 @@ const cardMeta = (project: (typeof projects)[number]) => ({
                             <a href={item.url} rel="noopener">{item.name}</a>
                             <span class="archive-note">{item.note}</span>
                         </span>
-                        {item.stars !== undefined && (
+                        {!!item.stars && (
                             <span class="archive-stars mono"><ProjectIcon name="star" />{formatCount(item.stars)}<span class="sr-only"> stars</span></span>
                         )}
                     </li>

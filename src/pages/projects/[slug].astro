@@ -45,9 +45,9 @@ const facts = [
         ? { label: "Latest release", value: stats.release.tag, detail: stats.release.date ? formatDay(stats.release.date) : undefined, mono: true }
         : null,
     stats.license ? { label: "License", value: stats.license, mono: true } : null,
-    stats.stars !== undefined ? { label: "Stars", value: number(stats.stars), mono: true } : null,
-    stats.forks !== undefined ? { label: "Forks", value: number(stats.forks), mono: true } : null,
-    stats.openIssues !== undefined ? { label: "Open issues", value: number(stats.openIssues), mono: true } : null,
+    stats.stars ? { label: "Stars", value: number(stats.stars), mono: true } : null,
+    stats.forks ? { label: "Forks", value: number(stats.forks), mono: true } : null,
+    stats.openIssues ? { label: "Open issues", value: number(stats.openIssues), mono: true } : null,
     stats.linesOfCode !== undefined ? { label: "Lines of code", value: number(stats.linesOfCode), mono: true } : null,
     stats.files !== undefined ? { label: "Files", value: number(stats.files), mono: true } : null,
     stats.commits !== undefined ? { label: "Commits", value: number(stats.commits), mono: true } : null,
