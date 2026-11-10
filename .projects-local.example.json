@@ -1,0 +1,6 @@
+{
+  "checkouts": {
+    "garden-planner": "~/Projects/github.com/example-user/garden-planner",
+    "example-user/dotfiles": "~/.local/share/chezmoi"
+  }
+}

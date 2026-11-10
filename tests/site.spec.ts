@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { initReadingFilters } from '../src/utils/reading-filters';
+import { privateRepositoryNames } from './private-project-names';
 
 test('page views are rendered in HTML and follow client navigation', async ({ page, request }) => {
   test.skip(!readFileSync('dist/index.html', 'utf8').includes('data-page-views'), 'View counts disabled');
@@ -295,3 +296,118 @@ for (const width of [390, 1280]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+// ---------------------------------------------------------------- projects
+
+const projectFiles = readdirSync('src/content/projects').filter((file) => file.endsWith('.md') || file.endsWith('.mdx'));
+const projectMeta = projectFiles.map((file) => {
+  const text = readFileSync(join('src/content/projects', file), 'utf8');
+  return {
+    slug: file.replace(/\.mdx?$/, ''),
+    title: text.match(/^title:\s*"?(.*?)"?\s*$/m)![1],
+    repo: text.match(/^repo:\s*"?([\w.-]+\/[\w.-]+)"?/m)?.[1],
+    category: text.match(/^category:\s*(\w+)/m)![1],
+    private: /^visibility:\s*private/m.test(text),
+    hideActivity: /^hideActivity:\s*true/m.test(text),
+  };
+});
+
+test('every project has a page and the index lists it once per category', async ({ page }) => {
+  await page.goto('/projects/');
+  await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'All projects' })).toBeVisible();
+  const cards = page.locator('.project-card');
+  await expect(cards).toHaveCount(projectMeta.length);
+  for (const project of projectMeta) {
+    await expect(page.locator(`.project-card[data-project="${project.slug}"] a`)).toHaveAttribute('href', `/projects/${project.slug}/`);
+    const response = await page.request.get(`/projects/${project.slug}/`);
+    expect(response.status()).toBe(200);
+  }
+  await expect(page.locator('.figures')).toContainText(`${projectMeta.length}`);
+});
+
+test('category chips filter the list and every group is visible without JavaScript', async ({ page, browser }) => {
+  const categories = [...new Set(projectMeta.map((project) => project.category))];
+  await page.goto('/projects/');
+  const chips = page.getByRole('group', { name: 'Filter by category' });
+  await expect(chips).toBeVisible();
+  const target = categories[categories.length - 1];
+  await chips.locator(`button[data-filter="${target}"]`).click();
+  await expect(chips.locator(`button[data-filter="${target}"]`)).toHaveAttribute('aria-pressed', 'true');
+  for (const category of categories) {
+    await expect(page.locator(`[data-category="${category}"]`)).toBeVisible({ visible: category === target });
+  }
+  await chips.locator('button[data-filter="all"]').click();
+  await expect(page.locator('.project-card:visible')).toHaveCount(projectMeta.length);
+
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const plain = await context.newPage();
+  await plain.goto('/projects/');
+  await expect(plain.locator('.project-card:visible')).toHaveCount(projectMeta.length);
+  await expect(plain.getByRole('group', { name: 'Filter by category' })).toBeHidden();
+  await context.close();
+});
+
+test('private projects never reveal their repository in the built site', async () => {
+  // Private content files name no repository; the schema rejects one.
+  for (const project of projectMeta.filter((entry) => entry.private)) expect(project.repo, project.slug).toBeUndefined();
+  // The names themselves are known only where .projects-local.json maps the checkouts.
+  const names = privateRepositoryNames();
+  test.skip(!names.length, 'No private checkouts mapped in .projects-local.json');
+  const files = readdirSync('dist', { recursive: true }).map(String).filter((file) => /\.(html|xml|json|txt|js|css|svg)$/.test(file));
+  for (const file of files) {
+    const text = readFileSync(join('dist', file), 'utf8').toLowerCase();
+    for (const name of names) {
+      expect(text.includes(name), `dist/${file} mentions a private repository`).toBe(false);
+    }
+  }
+});
+
+test('a project with hideActivity shows no dates of work', async ({ page }) => {
+  const hidden = projectMeta.find((entry) => entry.hideActivity);
+  test.skip(!hidden, 'No project hides its activity');
+  await page.goto(`/projects/${hidden!.slug}/`);
+  const facts = page.getByRole('complementary', { name: 'Project facts' });
+  await expect(facts).toContainText('Started');
+  await expect(facts.locator('dd').nth(1)).toHaveText(/^\s*\d{4}\s*$/);
+  await expect(facts).not.toContainText('Last commit');
+  await expect(facts).not.toContainText('Commits');
+  await expect(page.locator('[data-activity]')).toHaveCount(0);
+  await page.goto('/projects/');
+  await expect(page.locator(`.project-card[data-project="${hidden!.slug}"] .meta-push`)).toHaveCount(0);
+});
+
+for (const width of [390, 1280]) {
+  test(`a project page shows its facts and fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    for (const project of [projectMeta.find((entry) => !entry.private), projectMeta.find((entry) => entry.private)]) {
+      if (!project) continue;
+      await page.goto(`/projects/${project.slug}/`);
+      await expect(page.getByRole('heading', { level: 1, name: project.title })).toBeVisible();
+      const facts = page.getByRole('complementary', { name: 'Project facts' });
+      await expect(facts).toContainText('Status');
+      await expect(facts).toContainText('Started');
+      const source = page.getByRole('link', { name: 'Source on GitHub' });
+      if (project.private) {
+        await expect(source).toHaveCount(0);
+        await expect(page.locator('.eyebrow')).toContainText('private');
+      } else {
+        await expect(source).toHaveAttribute('href', new RegExp(`github\\.com/${project.repo}$`, 'i'));
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await page.getByRole('link', { name: 'All projects' }).first().click();
+      await expect(page).toHaveURL(/\/projects\/?$/);
+    }
+  });
+}
+
+test('related posts on project pages lead to real posts', async ({ page, request }) => {
+  const withPosts = projectFiles.filter((file) => /^posts:\s*\n\s+-/m.test(readFileSync(join('src/content/projects', file), 'utf8')));
+  test.skip(!withPosts.length, 'No project lists related posts');
+  await page.goto(`/projects/${withPosts[0].replace(/\.mdx?$/, '')}/`);
+  const links = page.locator('.related-posts a');
+  expect(await links.count()).toBeGreaterThan(0);
+  for (const href of await links.evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')!))) {
+    expect((await request.get(href)).status()).toBe(200);
+  }
+});

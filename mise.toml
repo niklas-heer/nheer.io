@@ -59,6 +59,10 @@ run = "npm run preview:articles --"
 description = "Import committed CV PDFs and regenerate the About preview (requires Poppler)"
 run = "npm run sync:cv --"
 
+[tasks."sync:projects"]
+description = "Record project statistics from local checkouts into src/data/projects.json (requires tokei)"
+run = "node scripts/sync-projects.mjs"
+
 [tasks.refresh]
 description = "Run the existing live data sync, build, and test pipeline"
 run = "npm run refresh"

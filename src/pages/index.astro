@@ -7,7 +7,7 @@ import { siteConfig } from "../config";
 import { getPostPath } from "../utils/content-metadata";
 import { fetchReadingData } from "../utils/hardcover";
 import { fetchPodcastData } from "../utils/database";
-import { fetchGitHubData, getLanguageColor } from "../utils/github";
+import { getProjectsData } from "../utils/project-data";
 
 // Get latest posts
 const allPosts = await getCollection("posts", ({ data }) => {
@@ -20,10 +20,10 @@ const latestPosts = allPosts
     )
     .slice(0, 3);
 
-const [readingData, podcastData, githubData] = await Promise.all([
+const [readingData, podcastData, projectsData] = await Promise.all([
     fetchReadingData(),
     fetchPodcastData(),
-    fetchGitHubData(),
+    getProjectsData(),
 ]);
 const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
 const yesterdayStats = podcastData?.yesterdayStats;
@@ -44,19 +44,14 @@ const featuredProjects = [
         url: "https://github.com/niklas-heer/speed-comparison",
     },
 ].map((project) => {
-    const repo = githubData?.pinnedRepos.find((r) => r.name === project.name);
+    // Statistics and the project page come from the Projects section when it lists the repository.
+    const listed = projectsData.projects.find((entry) => entry.entry.data.repo === `niklas-heer/${project.name}`);
+    const language = listed?.stats.languages[0];
     return {
         ...project,
-        stars: repo?.stargazerCount ?? null,
-        language: repo?.primaryLanguage
-            ? {
-                  name: repo.primaryLanguage.name,
-                  color: getLanguageColor(
-                      repo.primaryLanguage.name,
-                      repo.primaryLanguage.color,
-                  ),
-              }
-            : null,
+        url: listed?.url ?? project.url,
+        stars: listed?.stats.stars ?? null,
+        language: language ? { name: language.name, color: language.color } : null,
     };
 });
 const featuredPost =
@@ -320,8 +315,8 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                             <a
                                 href={project.url}
                                 class="project-row"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                target={project.url.startsWith("http") ? "_blank" : undefined}
+                                rel={project.url.startsWith("http") ? "noopener noreferrer" : undefined}
                             >
                                 <span class="project-head">
                                     <span class="project-name">{project.name}</span>

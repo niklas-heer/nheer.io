@@ -1,0 +1,714 @@
+---
+import { Image, getImage } from "astro:assets";
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ActivityChart from "../../components/projects/ActivityChart.astro";
+import LanguageBar from "../../components/projects/LanguageBar.astro";
+import ProjectIcon from "../../components/projects/ProjectIcon.astro";
+import { CATEGORIES, STATUS_LABELS, getProjectsData, type Project } from "../../utils/project-data";
+import { formatCount, formatDay, formatMonth, formatRelative } from "../../utils/projects";
+
+export async function getStaticPaths() {
+    const { projects } = await getProjectsData();
+    return projects.map((project, index) => ({
+        params: { slug: project.slug },
+        props: {
+            project,
+            previous: projects[index - 1] ?? null,
+            next: projects[index + 1] ?? null,
+        },
+    }));
+}
+
+interface Props {
+    project: Project;
+    previous: Project | null;
+    next: Project | null;
+}
+
+const { project, previous, next } = Astro.props;
+const { now } = await getProjectsData();
+const { data } = project.entry;
+const { stats } = project;
+const { Content } = await render(project.entry);
+const isPublic = data.visibility === "public";
+const category = CATEGORIES.find((entry) => entry.id === data.category)?.label;
+const ogImage = await getImage({ src: data.cover, width: 1200, format: "png" });
+
+const number = (value: number) => value.toLocaleString("en-US");
+const facts = [
+    { label: "Status", value: STATUS_LABELS[data.status] },
+    // With hideActivity the page gives no date finer than a year.
+    { label: "Started", value: data.hideActivity ? String(data.started.getUTCFullYear()) : formatMonth(data.started) },
+    stats.lastCommit ? { label: "Last commit", value: formatRelative(stats.lastCommit, now), title: formatDay(stats.lastCommit) } : null,
+    stats.release
+        ? { label: "Latest release", value: stats.release.tag, detail: stats.release.date ? formatDay(stats.release.date) : undefined, mono: true }
+        : null,
+    stats.license ? { label: "License", value: stats.license, mono: true } : null,
+    stats.stars ? { label: "Stars", value: number(stats.stars), mono: true } : null,
+    stats.forks ? { label: "Forks", value: number(stats.forks), mono: true } : null,
+    stats.openIssues ? { label: "Open issues", value: number(stats.openIssues), mono: true } : null,
+    stats.linesOfCode !== undefined ? { label: "Lines of code", value: number(stats.linesOfCode), mono: true } : null,
+    stats.files !== undefined ? { label: "Files", value: number(stats.files), mono: true } : null,
+    stats.commits !== undefined ? { label: "Commits", value: number(stats.commits), mono: true } : null,
+    stats.contributors !== undefined && stats.contributors > 1
+        ? { label: "Contributors", value: number(stats.contributors), mono: true }
+        : null,
+].filter((fact) => fact !== null) as { label: string; value: string; detail?: string; title?: string; mono?: boolean }[];
+
+const links = [
+    isPublic && stats.repoUrl ? { label: "Source on GitHub", href: stats.repoUrl, icon: "github" as const } : null,
+    data.homepage ? { label: "Website", href: data.homepage, icon: "external" as const } : null,
+    data.docs ? { label: "Documentation", href: data.docs, icon: "book" as const } : null,
+].filter((link) => link !== null);
+---
+
+<BaseLayout title={data.title} description={data.summary} image={ogImage.src}>
+    <article class="project wide-breakout" data-project={project.slug} data-visibility={data.visibility}>
+        <a href="/projects/" class="back-link"><ProjectIcon name="arrow-left" />All projects</a>
+
+        <header class="project-header">
+            <p class="eyebrow">
+                {category}
+                {!isPublic && <span class="private-badge"><ProjectIcon name="lock" />private</span>}
+            </p>
+            <h1 class="project-title" style="view-transition-name: page-title;">{data.title}</h1>
+            <p class="project-tagline">{data.tagline}</p>
+            {(links.length > 0 || data.install) && (
+                <div class="project-actions">
+                    {links.map((link, index) => (
+                        <a href={link.href} class:list={["action", { primary: index === 0 }]} rel="noopener">
+                            <ProjectIcon name={link.icon} />
+                            {link.label}
+                        </a>
+                    ))}
+                    {data.install && (
+                        <div class="install" data-install>
+                            <span class="install-prompt" aria-hidden="true">❯</span>
+                            <code>{data.install}</code>
+                            <button type="button" class="install-copy" data-copy={data.install} aria-label="Copy install command" hidden>
+                                <ProjectIcon name="copy" class="icon-copy" />
+                                <ProjectIcon name="check" class="icon-done" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </header>
+
+        <figure class="cover">
+            <Image
+                src={data.cover}
+                alt={data.coverAlt}
+                widths={[640, 960, 1280, 1600]}
+                sizes="(min-width: 68rem) 68rem, calc(100vw - 2.5rem)"
+                loading="eager"
+                fetchpriority="high"
+            />
+        </figure>
+
+        <div class="project-layout">
+            <aside class="facts" aria-label="Project facts">
+                <dl class="fact-list">
+                    {facts.map((fact) => (
+                        <div>
+                            <dt>{fact.label}</dt>
+                            <dd class:list={[{ mono: fact.mono }]} title={fact.title}>
+                                {fact.value}
+                                {fact.detail && <span class="fact-detail">{fact.detail}</span>}
+                            </dd>
+                        </div>
+                    ))}
+                </dl>
+                {stats.languages.length > 0 && (
+                    <div class="fact-block">
+                        <h2 class="fact-heading">
+                            Languages
+                            <span>{stats.languageBasis === "bytes" ? "by size on GitHub" : "by lines of code"}</span>
+                        </h2>
+                        <LanguageBar languages={stats.languages} legend="full" limit={5} />
+                    </div>
+                )}
+                {stats.activity && (
+                    <div class="fact-block">
+                        <h2 class="fact-heading">
+                            Activity
+                            <span>{stats.activity.source === "live" ? "commits per week" : "commits per week, from the last snapshot"}</span>
+                        </h2>
+                        <ActivityChart activity={stats.activity} variant="full" />
+                    </div>
+                )}
+                <div class="fact-block">
+                    <h2 class="fact-heading">Built with</h2>
+                    <ul class="stack">
+                        {data.stack.map((item) => <li>{item}</li>)}
+                    </ul>
+                </div>
+            </aside>
+
+            <div class="project-body">
+                <div class="prose project-prose">
+                    <Content />
+                </div>
+            </div>
+        </div>
+
+        {data.gallery.length > 0 && (
+            <section class="project-section" aria-labelledby="gallery-heading">
+                <h2 id="gallery-heading" class="section-heading">Gallery</h2>
+                <div class:list={["gallery", { single: data.gallery.length === 1 }]}>
+                    {data.gallery.map((item) => (
+                        <figure>
+                            <Image
+                                src={item.src}
+                                alt={item.alt}
+                                widths={[640, 960, 1280, 1600]}
+                                sizes={data.gallery.length === 1 ? "(min-width: 68rem) 68rem, calc(100vw - 2.5rem)" : "(min-width: 68rem) 34rem, (min-width: 40rem) 50vw, calc(100vw - 2.5rem)"}
+                                class="gallery-image"
+                                data-zoomable
+                            />
+                            {item.caption && <figcaption>{item.caption}</figcaption>}
+                        </figure>
+                    ))}
+                </div>
+            </section>
+        )}
+
+        {data.highlights && (
+            <section class="project-section" aria-labelledby="highlights-heading">
+                <h2 id="highlights-heading" class="section-heading">Highlights</h2>
+                <ul class="highlights">
+                    {data.highlights.map((highlight) => <li>{highlight}</li>)}
+                </ul>
+            </section>
+        )}
+
+        {project.posts.length > 0 && (
+            <section class="project-section" aria-labelledby="posts-heading">
+                <h2 id="posts-heading" class="section-heading">Writing about it</h2>
+                <ul class="related-posts">
+                    {project.posts.map((post) => (
+                        <li>
+                            <a href={post.url}>{post.title}</a>
+                            <time datetime={post.date.toISOString()}>{formatMonth(post.date)}</time>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+        )}
+
+        <nav class="pager" aria-label="More projects">
+            {previous ? (
+                <a href={previous.url} class="pager-link" rel="prev">
+                    <span class="pager-label"><ProjectIcon name="arrow-left" />Previous</span>
+                    <span class="pager-title">{previous.entry.data.title}</span>
+                </a>
+            ) : <span />}
+            {next && (
+                <a href={next.url} class="pager-link pager-next" rel="next">
+                    <span class="pager-label">Next<ProjectIcon name="arrow-right" /></span>
+                    <span class="pager-title">{next.entry.data.title}</span>
+                </a>
+            )}
+        </nav>
+    </article>
+</BaseLayout>
+
+<script>
+    import mediumZoom from "medium-zoom";
+    import type { Zoom } from "medium-zoom";
+
+    let zoom: Zoom | null = null;
+
+    function initProjectPage() {
+        zoom?.detach();
+        zoom = null;
+        const images = document.querySelectorAll<HTMLImageElement>(".project [data-zoomable]");
+        if (images.length) {
+            const dark = document.documentElement.dataset.theme !== "light";
+            zoom = mediumZoom(images, { margin: 24, background: dark ? "#131019" : "#f8f7fc" });
+        }
+
+        for (const button of document.querySelectorAll<HTMLButtonElement>(".project [data-copy]")) {
+            if (!navigator.clipboard || button.dataset.ready) continue;
+            button.dataset.ready = "true";
+            button.hidden = false;
+            button.addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(button.dataset.copy ?? "");
+                    button.dataset.copied = "true";
+                    button.setAttribute("aria-label", "Copied");
+                    setTimeout(() => {
+                        delete button.dataset.copied;
+                        button.setAttribute("aria-label", "Copy install command");
+                    }, 1600);
+                } catch {
+                    // Without clipboard permission the command stays selectable.
+                }
+            });
+        }
+    }
+
+    document.addEventListener("astro:before-swap", () => {
+        zoom?.detach();
+        zoom = null;
+    });
+    document.addEventListener("astro:page-load", initProjectPage);
+</script>
+
+<style>
+    .mono {
+        font-family: var(--font-mono);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+    }
+
+    .back-link:hover {
+        color: var(--color-accent);
+    }
+
+    .project-header {
+        margin-bottom: 2rem;
+    }
+
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+    }
+
+    .private-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.05rem 0.45rem;
+        font-size: 0.6875rem;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: var(--color-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+    }
+
+    .project-title {
+        font-size: clamp(2.75rem, 8vw, 4.25rem);
+        font-weight: 780;
+        letter-spacing: -0.045em;
+        line-height: 0.98;
+    }
+
+    .project-tagline {
+        margin-top: 0.875rem;
+        max-width: 40ch;
+        font-size: clamp(1.1875rem, 2.4vw, 1.375rem);
+        line-height: 1.4;
+        color: var(--color-muted);
+        text-wrap: balance;
+    }
+
+    .project-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.625rem;
+        margin-top: 1.5rem;
+    }
+
+    .action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.95rem;
+        font-size: 0.9375rem;
+        font-weight: 550;
+        color: var(--color-foreground);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .action:hover {
+        color: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+    .action.primary {
+        color: var(--color-background);
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+    .action.primary:hover {
+        color: var(--color-background);
+        background: var(--color-accent-hover);
+    }
+
+    .install {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.625rem;
+        max-width: 100%;
+        min-width: 0;
+        padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+    }
+
+    .install-prompt {
+        color: var(--color-accent);
+    }
+
+    .install code {
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+        color: var(--color-foreground);
+    }
+
+    .install-copy {
+        display: inline-grid;
+        place-items: center;
+        width: 1.875rem;
+        height: 1.875rem;
+        flex-shrink: 0;
+        color: var(--color-muted);
+        background: transparent;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .install-copy[hidden] {
+        display: none;
+    }
+
+    .install-copy:hover {
+        color: var(--color-foreground);
+        background: var(--color-surface-raised);
+    }
+
+    .install-copy :global(.icon-done),
+    .install-copy[data-copied] :global(.icon-copy) {
+        display: none;
+    }
+
+    .install-copy[data-copied] :global(.icon-done) {
+        display: block;
+        color: var(--color-green);
+    }
+
+    .cover {
+        margin-top: 0;
+        margin-bottom: 2.5rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        background: var(--color-surface);
+    }
+
+    .cover img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    /* Prose beside a sticky facts panel; on phones the facts come first. */
+    .project-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 19rem;
+        grid-template-areas: "body facts";
+        align-items: start;
+        gap: 3.5rem;
+    }
+
+    .project-body {
+        grid-area: body;
+        min-width: 0;
+    }
+
+    .project-prose {
+        max-width: 66ch;
+    }
+
+    .project-prose :global(p:first-child) {
+        font-size: 1.1875rem;
+        line-height: 1.6;
+    }
+
+    .project-prose :global(h2:first-child) {
+        margin-top: 0;
+    }
+
+    .facts {
+        grid-area: facts;
+        position: sticky;
+        top: 1.5rem;
+        padding: 1.25rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+    }
+
+    .fact-list {
+        display: grid;
+        margin: 0;
+    }
+
+    .fact-list div {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.4rem 0;
+        border-bottom: 1px dashed var(--color-border);
+    }
+
+    .fact-list div:first-child {
+        padding-top: 0;
+    }
+
+    .fact-list dt {
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .fact-list dd {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 550;
+        text-align: right;
+        color: var(--color-foreground);
+    }
+
+    .fact-list dd.mono {
+        font-size: 0.8125rem;
+    }
+
+    .fact-detail {
+        display: block;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--color-muted);
+    }
+
+    .fact-block {
+        margin-top: 1.25rem;
+    }
+
+    .fact-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.25rem 0.75rem;
+        margin-bottom: 0.625rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    .fact-heading span {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--color-muted);
+    }
+
+    .stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .stack li {
+        padding: 0.125rem 0.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--color-foreground);
+        background: var(--color-surface-raised);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-chip);
+    }
+
+    @media (max-width: 56rem) {
+        .project-layout {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas: "facts" "body";
+            gap: 2.5rem;
+        }
+
+        .facts {
+            position: static;
+        }
+
+        .fact-list {
+            grid-template-columns: 1fr 1fr;
+            column-gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 26rem) {
+        .fact-list {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .project-section {
+        margin-top: 4rem;
+    }
+
+    .gallery {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .gallery.single {
+        grid-template-columns: 1fr;
+    }
+
+    .gallery figure {
+        margin: 0;
+    }
+
+    .gallery-image {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        cursor: zoom-in;
+    }
+
+    .gallery figcaption {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+    }
+
+    @media (max-width: 40rem) {
+        .gallery {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .highlights {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .highlights li {
+        padding: 1rem 1.125rem;
+        font-size: 1rem;
+        font-weight: 550;
+        line-height: 1.35;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-top: 2px solid var(--color-accent);
+        border-radius: var(--radius-chip);
+        text-wrap: balance;
+    }
+
+    @media (max-width: 40rem) {
+        .highlights {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .related-posts {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .related-posts li {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .related-posts a {
+        font-weight: 600;
+    }
+
+    .related-posts time {
+        flex-shrink: 0;
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .pager {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 4rem;
+    }
+
+    .pager-link {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 1rem 1.125rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+        color: var(--color-foreground);
+        transition: border-color 0.15s ease;
+    }
+
+    .pager-link:hover {
+        border-color: var(--color-accent);
+        color: var(--color-foreground);
+    }
+
+    .pager-next {
+        grid-column: 2;
+        align-items: flex-end;
+        text-align: right;
+    }
+
+    .pager-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .pager-title {
+        font-size: 1.0625rem;
+        font-weight: 650;
+    }
+
+    .pager-link:hover .pager-title {
+        color: var(--color-accent);
+    }
+</style>

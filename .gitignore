@@ -35,3 +35,6 @@ test-results/
 
 # Machine-specific Latchrun profile (absolute paths)
 .latchrun/local.json
+
+# Where private and relocated project checkouts live (see docs/projects.md)
+.projects-local.json

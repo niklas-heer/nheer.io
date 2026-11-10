@@ -1,0 +1,135 @@
+---
+// Weekly commits over the last 52 weeks as inline SVG bars. "spark" is the
+// compact card version; "full" adds month labels and a caption.
+import type { Activity } from "../../utils/projects";
+
+interface Props {
+    activity: Activity;
+    variant?: "spark" | "full";
+    class?: string;
+}
+
+const { activity, variant = "spark", class: className } = Astro.props;
+const weeks = activity.weeks;
+const known = weeks.filter((week): week is number => week !== null);
+const total = known.reduce((sum, week) => sum + week, 0);
+const busiest = Math.max(0, ...known);
+const max = Math.max(1, busiest);
+const step = 10;
+const barWidth = 7;
+const height = variant === "full" ? 56 : 28;
+const from = new Date(activity.from);
+const weekDate = (index: number) => new Date(from.getTime() + index * 7 * 86_400_000);
+const months = weeks
+    .map((_, index) => ({ index, date: weekDate(index) }))
+    .filter(({ index, date }) => index > 0 && date.getUTCMonth() !== weekDate(index - 1).getUTCMonth())
+    .map(({ index, date }, order) => ({
+        left: (index / weeks.length) * 100,
+        label: new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" }).format(date),
+        minor: order % 2 === 1,
+    }));
+const activeWeeks = known.filter((week) => week > 0).length;
+const missing = weeks.length - known.length;
+const label = `${total} commit${total === 1 ? "" : "s"} in the last 52 weeks, active in ${activeWeeks} of them${missing ? ` (${missing} week${missing === 1 ? "" : "s"} not recorded)` : ""}`;
+---
+
+<figure class:list={["activity", `activity-${variant}`, className]} data-activity data-total={total}>
+    <svg
+        viewBox={`0 0 ${weeks.length * step} ${height}`}
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={label}
+        style={`height: ${variant === "full" ? "3.5rem" : "1.75rem"}`}
+    >
+        {weeks.map((week, index) => {
+            const x = index * step + (step - barWidth) / 2;
+            if (week === null) return <rect class="week-unknown" x={x} y={height - 1} width={barWidth} height="1" />;
+            if (week === 0) return <rect class="week-empty" x={x} y={height - 1.5} width={barWidth} height="1.5" />;
+            const barHeight = Math.max(3, (week / max) * (height - 1));
+            return <rect class="week-bar" x={x} y={height - barHeight} width={barWidth} height={barHeight} rx="1" />;
+        })}
+    </svg>
+    {variant === "full" && (
+        <div class="activity-months" aria-hidden="true">
+            {months.map((month) => (
+                <span class:list={[{ minor: month.minor }]} style={`left: ${month.left}%`}>{month.label}</span>
+            ))}
+        </div>
+    )}
+    {variant === "full" && (
+        <figcaption>
+            <span><strong>{total.toLocaleString("en-US")}</strong> commits in 52 weeks</span>
+            {busiest > 0 && <span>busiest week <strong>{busiest}</strong></span>}
+        </figcaption>
+    )}
+</figure>
+
+<style>
+    .activity {
+        margin: 0;
+        min-width: 0;
+        container-type: inline-size;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .week-bar {
+        fill: var(--color-accent);
+    }
+
+    .week-empty {
+        fill: var(--color-border);
+    }
+
+    .week-unknown {
+        fill: transparent;
+        stroke: var(--color-border);
+        stroke-dasharray: 2 2;
+        stroke-width: 0.5;
+    }
+
+    .activity-months {
+        position: relative;
+        height: 1rem;
+        margin-top: 0.375rem;
+        font-family: var(--font-mono);
+        font-size: 0.625rem;
+        color: var(--color-muted);
+    }
+
+    .activity-months span {
+        position: absolute;
+        top: 0;
+        white-space: nowrap;
+    }
+
+    @container (max-width: 30rem) {
+        .activity-months .minor {
+            display: none;
+        }
+    }
+
+    figcaption {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.25rem 1rem;
+        margin-top: 0.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--color-muted);
+    }
+
+    figcaption span {
+        white-space: nowrap;
+    }
+
+    figcaption strong {
+        font-weight: 600;
+        color: var(--color-foreground);
+    }
+</style>

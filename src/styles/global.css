@@ -764,3 +764,10 @@ p.info a {
         transform: scaleX(0.9);
     }
 }
+
+/* Break out of the 48rem reading column for visual sections (Projects). */
+.wide-breakout {
+    --wide-width: min(68rem, calc(100vw - 2.5rem));
+    width: var(--wide-width);
+    margin-inline: calc((100% - var(--wide-width)) / 2);
+}
