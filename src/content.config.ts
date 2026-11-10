@@ -57,7 +57,10 @@ const projects = defineCollection({
         category: z.enum(["tools", "apps", "web", "games", "infrastructure"]),
         status: z.enum(["active", "maintained", "experimental", "paused", "archived"]),
         visibility: z.enum(["public", "private"]),
-        repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, "owner/name"),
+        // Public projects only. A private project's checkout is named in the
+        // untracked .projects-local.json, so its repository never reaches this
+        // public site repository.
+        repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, "owner/name").optional(),
         homepage: z.url().optional(),
         docs: z.url().optional(),
         started: z.coerce.date(),
@@ -72,8 +75,23 @@ const projects = defineCollection({
           .default([]),
         posts: z.array(z.string().regex(/^\/posts\/[^?#\s]+$/, "a site path such as /posts/2025/11/slug/")).default([]),
         highlights: z.array(z.string().min(1).max(60)).length(3).optional(),
+        // Hide when the work happened: no weekly chart, last commit or commit
+        // count, and only the year it started.
+        hideActivity: z.boolean().optional(),
       })
-      .strict(),
+      .strict()
+      .superRefine((data, context) => {
+        if (data.visibility === "public" && !data.repo) {
+          context.addIssue({ code: "custom", path: ["repo"], message: "a public project needs repo: owner/name" });
+        }
+        if (data.visibility === "private" && data.repo) {
+          context.addIssue({
+            code: "custom",
+            path: ["repo"],
+            message: "a private project must not name its repository; map its checkout in .projects-local.json",
+          });
+        }
+      }),
 });
 
 export const collections = {

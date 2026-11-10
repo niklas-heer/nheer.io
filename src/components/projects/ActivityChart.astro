@@ -30,7 +30,7 @@ const months = weeks
     }));
 const activeWeeks = known.filter((week) => week > 0).length;
 const missing = weeks.length - known.length;
-const label = `${total} commit${total === 1 ? "" : "s"} in the last 52 weeks, active in ${activeWeeks} of them${missing ? ` (${missing} recent weeks not yet recorded)` : ""}`;
+const label = `${total} commit${total === 1 ? "" : "s"} in the last 52 weeks, active in ${activeWeeks} of them${missing ? ` (${missing} week${missing === 1 ? "" : "s"} not recorded)` : ""}`;
 ---
 
 <figure class:list={["activity", `activity-${variant}`, className]} data-activity data-total={total}>

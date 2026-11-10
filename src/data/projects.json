@@ -1,6 +1,6 @@
 {
   "repos": {
-    "niklas-heer/homelab": {
+    "private:homelab": {
       "syncedAt": "2026-11-10T09:21:40.382Z",
       "head": "a571caa07a",
       "commits": 84,

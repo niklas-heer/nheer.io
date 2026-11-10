@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { initReadingFilters } from '../src/utils/reading-filters';
+import { privateRepositoryNames } from './private-project-names';
 
 test('page views are rendered in HTML and follow client navigation', async ({ page, request }) => {
   test.skip(!readFileSync('dist/index.html', 'utf8').includes('data-page-views'), 'View counts disabled');
@@ -304,9 +305,10 @@ const projectMeta = projectFiles.map((file) => {
   return {
     slug: file.replace(/\.mdx?$/, ''),
     title: text.match(/^title:\s*"?(.*?)"?\s*$/m)![1],
-    repo: text.match(/^repo:\s*"?([\w.-]+\/[\w.-]+)"?/m)![1],
+    repo: text.match(/^repo:\s*"?([\w.-]+\/[\w.-]+)"?/m)?.[1],
     category: text.match(/^category:\s*(\w+)/m)![1],
     private: /^visibility:\s*private/m.test(text),
+    hideActivity: /^hideActivity:\s*true/m.test(text),
   };
 });
 
@@ -347,15 +349,32 @@ test('category chips filter the list and every group is visible without JavaScri
 });
 
 test('private projects never reveal their repository in the built site', async () => {
-  const privateRepos = projectMeta.filter((project) => project.private).map((project) => project.repo.toLowerCase());
-  test.skip(!privateRepos.length, 'No private projects');
-  const pages = readdirSync('dist', { recursive: true }).map(String).filter((file) => /\.(html|xml|json|txt)$/.test(file));
-  for (const file of pages) {
-    const html = readFileSync(join('dist', file), 'utf8').toLowerCase();
-    for (const repo of privateRepos) {
-      expect(html.includes(repo), `${file} mentions ${repo}`).toBe(false);
+  // Private content files name no repository; the schema rejects one.
+  for (const project of projectMeta.filter((entry) => entry.private)) expect(project.repo, project.slug).toBeUndefined();
+  // The names themselves are known only where .projects-local.json maps the checkouts.
+  const names = privateRepositoryNames();
+  test.skip(!names.length, 'No private checkouts mapped in .projects-local.json');
+  const files = readdirSync('dist', { recursive: true }).map(String).filter((file) => /\.(html|xml|json|txt|js|css|svg)$/.test(file));
+  for (const file of files) {
+    const text = readFileSync(join('dist', file), 'utf8').toLowerCase();
+    for (const name of names) {
+      expect(text.includes(name), `dist/${file} mentions a private repository`).toBe(false);
     }
   }
+});
+
+test('a project with hideActivity shows no dates of work', async ({ page }) => {
+  const hidden = projectMeta.find((entry) => entry.hideActivity);
+  test.skip(!hidden, 'No project hides its activity');
+  await page.goto(`/projects/${hidden!.slug}/`);
+  const facts = page.getByRole('complementary', { name: 'Project facts' });
+  await expect(facts).toContainText('Started');
+  await expect(facts.locator('dd').nth(1)).toHaveText(/^\s*\d{4}\s*$/);
+  await expect(facts).not.toContainText('Last commit');
+  await expect(facts).not.toContainText('Commits');
+  await expect(page.locator('[data-activity]')).toHaveCount(0);
+  await page.goto('/projects/');
+  await expect(page.locator(`.project-card[data-project="${hidden!.slug}"] .meta-push`)).toHaveCount(0);
 });
 
 for (const width of [390, 1280]) {

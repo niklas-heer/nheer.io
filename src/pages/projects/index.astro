@@ -27,7 +27,7 @@ const figures = [
 ].filter((figure) => figure !== null);
 
 // All projects' weekly commits added up; a week stays unknown only if no project covers it.
-const activities = projects.map((project) => project.stats.activity).filter((activity): activity is Activity => !!activity);
+const activities = projects.map((project) => project.totalsActivity).filter((activity): activity is Activity => !!activity);
 const combined: Activity | null = activities.length
     ? {
           from: activities[0].from,

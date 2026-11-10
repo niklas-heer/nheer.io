@@ -46,6 +46,10 @@ export interface LiveData {
 export interface SnapshotRepo {
   syncedAt: string;
   head?: string;
+  /** Measured from a shallow clone: no commit count, first commit or contributors. */
+  shallow?: boolean;
+  /** A project with hideActivity: no first or last commit, weekly counts or tag date. */
+  datesHidden?: boolean;
   commits?: number;
   firstCommit?: string;
   lastCommit?: string;
@@ -53,8 +57,10 @@ export interface SnapshotRepo {
   linesOfCode?: number;
   files?: number;
   languages?: { name: string; code: number; files?: number }[];
-  latestTag?: { name: string; date: string } | null;
-  weekly?: number[];
+  /** The tag's date is left out for a project with hideActivity. */
+  latestTag?: { name: string; date?: string } | null;
+  /** null for weeks a shallow checkout cannot account for. */
+  weekly?: (number | null)[];
 }
 
 export interface Snapshot { repos: Record<string, SnapshotRepo> }
@@ -114,8 +120,9 @@ export function languageColor(name: string, liveColor?: string | null): string {
 // ---------------------------------------------------------------- live query
 
 /** The repositories that may be sent to GitHub: public projects only, each once. */
-export function liveTargets(projects: { visibility: Visibility; repo: string }[]): string[] {
-  return [...new Set(projects.filter((project) => project.visibility === "public").map((project) => project.repo))];
+export function liveTargets(projects: { visibility: Visibility; repo?: string }[]): string[] {
+  const repos = projects.filter((project) => project.visibility === "public").map((project) => project.repo);
+  return [...new Set(repos.filter((repo): repo is string => !!repo))];
 }
 
 const REPO_FIELDS = (windows: { since: Date; until: Date }[]) => `
@@ -356,7 +363,7 @@ function shares(entries: { name: string; color: string | null; value: number }[]
  * Place weekly counts that start at `from` onto the current 52-week grid. Weeks
  * the source did not cover (a snapshot taken a while ago) become null.
  */
-export function alignWeeks(weeks: number[], from: string, now = new Date()): (number | null)[] {
+export function alignWeeks(weeks: (number | null)[], from: string, now = new Date()): (number | null)[] {
   const gridStart = weekWindows(now)[0].since.getTime();
   const offset = Math.round((new Date(from).getTime() - gridStart) / WEEK_MS);
   return Array.from({ length: WEEKS }, (_, index) => {
@@ -371,7 +378,7 @@ function snapshotWeeksFrom(snapshot: SnapshotRepo): string {
 
 export function mergeStats(
   visibility: Visibility,
-  repo: string,
+  repo: string | undefined,
   live: LiveRepo | undefined,
   snapshot: SnapshotRepo | undefined,
   now = new Date(),
@@ -380,7 +387,7 @@ export function mergeStats(
   const remote = isPublic ? live : undefined;
   const stats: ProjectStats = { languages: [] };
 
-  if (isPublic) stats.repoUrl = remote?.url ?? `https://github.com/${repo}`;
+  if (isPublic && repo) stats.repoUrl = remote?.url ?? `https://github.com/${repo}`;
   if (remote) {
     stats.stars = remote.stars;
     stats.forks = remote.forks;
@@ -417,6 +424,16 @@ export function mergeStats(
     }
   }
   return stats;
+}
+
+/**
+ * The figures that say when work happened, removed for a project with
+ * `hideActivity: true`: the weekly chart, last commit, commit count, first
+ * commit and the release date (the release tag stays).
+ */
+export function withoutActivity(stats: ProjectStats): ProjectStats {
+  const { activity: _activity, lastCommit: _last, commits: _commits, firstCommit: _first, ...rest } = stats;
+  return rest.release ? { ...rest, release: { tag: rest.release.tag } } : rest;
 }
 
 /** The largest languages, with the remainder folded into "Other". */

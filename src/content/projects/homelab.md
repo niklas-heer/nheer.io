@@ -6,7 +6,6 @@ summary: >-
 category: infrastructure
 status: active
 visibility: private
-repo: "niklas-heer/homelab"
 started: 2026-05-26
 stack: ["Kubernetes", "Talos", "Argo CD", "Nix"]
 cover: "./homelab/cover.png"

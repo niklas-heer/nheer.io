@@ -38,7 +38,8 @@ const ogImage = await getImage({ src: data.cover, width: 1200, format: "png" });
 const number = (value: number) => value.toLocaleString("en-US");
 const facts = [
     { label: "Status", value: STATUS_LABELS[data.status] },
-    { label: "Started", value: formatMonth(data.started) },
+    // With hideActivity the page gives no date finer than a year.
+    { label: "Started", value: data.hideActivity ? String(data.started.getUTCFullYear()) : formatMonth(data.started) },
     stats.lastCommit ? { label: "Last commit", value: formatRelative(stats.lastCommit, now), title: formatDay(stats.lastCommit) } : null,
     stats.release
         ? { label: "Latest release", value: stats.release.tag, detail: stats.release.date ? formatDay(stats.release.date) : undefined, mono: true }

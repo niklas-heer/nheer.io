@@ -3,10 +3,13 @@
 // requests once.
 import { getCollection, type CollectionEntry } from "astro:content";
 import { getPostPath } from "./content-metadata";
+import { snapshotKey } from "./project-keys.mjs";
 import {
   fetchLiveData,
   liveTargets,
   mergeStats,
+  withoutActivity,
+  type Activity,
   type LiveData,
   type ProjectStats,
   type Snapshot,
@@ -35,7 +38,10 @@ export interface Project {
   entry: ProjectEntry;
   slug: string;
   url: string;
+  /** The figures pages may show; without dates of work when `hideActivity` is set. */
   stats: ProjectStats;
+  /** Weekly commits for the index's combined chart, kept even when `hideActivity` is set. */
+  totalsActivity?: Activity;
   posts: { title: string; url: string; date: Date }[];
 }
 
@@ -91,11 +97,15 @@ async function load(): Promise<ProjectsData> {
       if (!post) throw new Error(`Project "${entry.id}" lists the post ${path}, but no published post has that address`);
       return { title: post.data.title.replace(/\*\*/g, ""), url: normalized, date: new Date(post.data.date) };
     });
+    const { visibility, repo, hideActivity } = entry.data;
+    const key = snapshotKey({ slug: entry.id, visibility, repo });
+    const stats = mergeStats(visibility, repo, repo ? live.repos.get(repo) : undefined, key ? snapshot.repos[key] : undefined, now);
     return {
       entry,
       slug: entry.id,
       url: `/projects/${entry.id}/`,
-      stats: mergeStats(entry.data.visibility, entry.data.repo, live.repos.get(entry.data.repo), snapshot.repos[entry.data.repo], now),
+      stats: hideActivity ? withoutActivity(stats) : stats,
+      totalsActivity: stats.activity,
       posts: related,
     };
   });
