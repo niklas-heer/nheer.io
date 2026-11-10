@@ -4,6 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # The publishing job in the homelab runs in the Playwright container image
+      # of exactly this version and uses its preinstalled browsers. Update the pin
+      # in package.json together with the image tag there (see README).
+      - dependency-name: "@playwright/test"
     groups:
       minor-and-patch:
         update-types:

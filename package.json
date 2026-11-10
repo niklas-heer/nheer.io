@@ -43,7 +43,7 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.0"
+    "@playwright/test": "1.63.0"
   },
   "overrides": {
     "katex": "^0.18.11",
