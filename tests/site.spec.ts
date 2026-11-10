@@ -295,3 +295,100 @@ for (const width of [390, 1280]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }
+
+// ---------------------------------------------------------------- projects
+
+const projectFiles = readdirSync('src/content/projects').filter((file) => file.endsWith('.md') || file.endsWith('.mdx'));
+const projectMeta = projectFiles.map((file) => {
+  const text = readFileSync(join('src/content/projects', file), 'utf8');
+  return {
+    slug: file.replace(/\.mdx?$/, ''),
+    title: text.match(/^title:\s*"?(.*?)"?\s*$/m)![1],
+    repo: text.match(/^repo:\s*"?([\w.-]+\/[\w.-]+)"?/m)![1],
+    category: text.match(/^category:\s*(\w+)/m)![1],
+    private: /^visibility:\s*private/m.test(text),
+  };
+});
+
+test('every project has a page and the index lists it once per category', async ({ page }) => {
+  await page.goto('/projects/');
+  await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'All projects' })).toBeVisible();
+  const cards = page.locator('.project-card');
+  await expect(cards).toHaveCount(projectMeta.length);
+  for (const project of projectMeta) {
+    await expect(page.locator(`.project-card[data-project="${project.slug}"] a`)).toHaveAttribute('href', `/projects/${project.slug}/`);
+    const response = await page.request.get(`/projects/${project.slug}/`);
+    expect(response.status()).toBe(200);
+  }
+  await expect(page.locator('.figures')).toContainText(`${projectMeta.length}`);
+});
+
+test('category chips filter the list and every group is visible without JavaScript', async ({ page, browser }) => {
+  const categories = [...new Set(projectMeta.map((project) => project.category))];
+  await page.goto('/projects/');
+  const chips = page.getByRole('group', { name: 'Filter by category' });
+  await expect(chips).toBeVisible();
+  const target = categories[categories.length - 1];
+  await chips.locator(`button[data-filter="${target}"]`).click();
+  await expect(chips.locator(`button[data-filter="${target}"]`)).toHaveAttribute('aria-pressed', 'true');
+  for (const category of categories) {
+    await expect(page.locator(`[data-category="${category}"]`)).toBeVisible({ visible: category === target });
+  }
+  await chips.locator('button[data-filter="all"]').click();
+  await expect(page.locator('.project-card:visible')).toHaveCount(projectMeta.length);
+
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const plain = await context.newPage();
+  await plain.goto('/projects/');
+  await expect(plain.locator('.project-card:visible')).toHaveCount(projectMeta.length);
+  await expect(plain.getByRole('group', { name: 'Filter by category' })).toBeHidden();
+  await context.close();
+});
+
+test('private projects never reveal their repository in the built site', async () => {
+  const privateRepos = projectMeta.filter((project) => project.private).map((project) => project.repo.toLowerCase());
+  test.skip(!privateRepos.length, 'No private projects');
+  const pages = readdirSync('dist', { recursive: true }).map(String).filter((file) => /\.(html|xml|json|txt)$/.test(file));
+  for (const file of pages) {
+    const html = readFileSync(join('dist', file), 'utf8').toLowerCase();
+    for (const repo of privateRepos) {
+      expect(html.includes(repo), `${file} mentions ${repo}`).toBe(false);
+    }
+  }
+});
+
+for (const width of [390, 1280]) {
+  test(`a project page shows its facts and fits at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    for (const project of [projectMeta.find((entry) => !entry.private), projectMeta.find((entry) => entry.private)]) {
+      if (!project) continue;
+      await page.goto(`/projects/${project.slug}/`);
+      await expect(page.getByRole('heading', { level: 1, name: project.title })).toBeVisible();
+      const facts = page.getByRole('complementary', { name: 'Project facts' });
+      await expect(facts).toContainText('Status');
+      await expect(facts).toContainText('Started');
+      const source = page.getByRole('link', { name: 'Source on GitHub' });
+      if (project.private) {
+        await expect(source).toHaveCount(0);
+        await expect(page.locator('.eyebrow')).toContainText('private');
+      } else {
+        await expect(source).toHaveAttribute('href', new RegExp(`github\\.com/${project.repo}$`, 'i'));
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await page.getByRole('link', { name: 'All projects' }).first().click();
+      await expect(page).toHaveURL(/\/projects\/?$/);
+    }
+  });
+}
+
+test('related posts on project pages lead to real posts', async ({ page, request }) => {
+  const withPosts = projectFiles.filter((file) => /^posts:\s*\n\s+-/m.test(readFileSync(join('src/content/projects', file), 'utf8')));
+  test.skip(!withPosts.length, 'No project lists related posts');
+  await page.goto(`/projects/${withPosts[0].replace(/\.mdx?$/, '')}/`);
+  const links = page.locator('.related-posts a');
+  expect(await links.count()).toBeGreaterThan(0);
+  for (const href of await links.evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')!))) {
+    expect((await request.get(href)).status()).toBe(200);
+  }
+});

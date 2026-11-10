@@ -32,10 +32,6 @@ export default defineConfig({
         protocol: "https",
         hostname: "static.pocketcasts.com",
       },
-      {
-        protocol: "https",
-        hostname: "ghchart.rshah.org",
-      },
     ],
   },
   site: "https://nheer.com",

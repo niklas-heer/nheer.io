@@ -1,0 +1,664 @@
+---
+import { Image } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ActivityChart from "../../components/projects/ActivityChart.astro";
+import LanguageBar from "../../components/projects/LanguageBar.astro";
+import ProjectIcon from "../../components/projects/ProjectIcon.astro";
+import { CATEGORIES, getProjectsData } from "../../utils/project-data";
+import { formatCount, formatRelative, type Activity } from "../../utils/projects";
+
+const { projects, featured, archive, accountCreatedAt, now } = await getProjectsData();
+
+// Header figures: each is shown only when at least one source provides it.
+const starred = projects.filter((project) => project.stats.stars !== undefined);
+const totalStars = starred.reduce((sum, project) => sum + project.stats.stars!, 0);
+const measured = projects.filter((project) => project.stats.linesOfCode !== undefined);
+const totalLines = measured.reduce((sum, project) => sum + project.stats.linesOfCode!, 0);
+const languageNames = new Set(projects.flatMap((project) => project.stats.languages.map((language) => language.name)));
+const yearsOnGitHub = accountCreatedAt
+    ? Math.floor((now.getTime() - new Date(accountCreatedAt).getTime()) / (365.25 * 86_400_000))
+    : null;
+const figures = [
+    { value: String(projects.length), label: projects.length === 1 ? "project" : "projects" },
+    starred.length ? { value: formatCount(totalStars), label: "stars" } : null,
+    measured.length ? { value: formatCount(totalLines), label: "lines of code" } : null,
+    languageNames.size ? { value: String(languageNames.size), label: "languages" } : null,
+    yearsOnGitHub ? { value: String(yearsOnGitHub), label: "years on GitHub" } : null,
+].filter((figure) => figure !== null);
+
+// All projects' weekly commits added up; a week stays unknown only if no project covers it.
+const activities = projects.map((project) => project.stats.activity).filter((activity): activity is Activity => !!activity);
+const combined: Activity | null = activities.length
+    ? {
+          from: activities[0].from,
+          source: "live",
+          weeks: activities[0].weeks.map((_, index) => {
+              const values = activities.map((activity) => activity.weeks[index]).filter((week): week is number => week !== null);
+              return values.length ? values.reduce((sum, week) => sum + week, 0) : null;
+          }),
+      }
+    : null;
+
+const groups = CATEGORIES.map((category) => ({
+    ...category,
+    projects: projects.filter((project) => project.entry.data.category === category.id),
+})).filter((group) => group.projects.length > 0);
+
+const cardMeta = (project: (typeof projects)[number]) => ({
+    language: project.stats.languages[0],
+    lastCommit: project.stats.lastCommit ? formatRelative(project.stats.lastCommit, now) : null,
+});
+---
+
+<BaseLayout
+    title="Projects"
+    description="Tools, apps, games and infrastructure Niklas Heer builds, with write-ups and live statistics from their repositories."
+>
+    <div class="projects-page wide-breakout">
+    <header class="page-header projects-header">
+        <h1 class="page-title" style="view-transition-name: page-title;">Projects</h1>
+        <p class="page-subtitle">
+            Things I build and keep running, mostly in the evenings: command-line tools, apps for the Mac and phone, websites,
+            a game and the infrastructure underneath.
+        </p>
+        {figures.length > 0 && (
+            <dl class="figures">
+                {figures.map((figure) => (
+                    <div>
+                        <dt>{figure.label}</dt>
+                        <dd>{figure.value}</dd>
+                    </div>
+                ))}
+            </dl>
+        )}
+        {combined && (
+            <div class="pulse">
+                <ActivityChart activity={combined} variant="full" />
+            </div>
+        )}
+    </header>
+
+    {featured.length > 0 && (
+        <section class="projects-section" aria-labelledby="featured-heading">
+            <h2 id="featured-heading" class="section-heading">Featured</h2>
+            <div class="featured-list">
+                {featured.map((project, index) => {
+                    const { data } = project.entry;
+                    const { stats } = project;
+                    return (
+                        <article class:list={["featured-card", { flipped: index % 2 === 1 }]} data-project={project.slug}>
+                            <a href={project.url} class="featured-media" tabindex="-1" aria-hidden="true">
+                                <Image
+                                    src={data.cover}
+                                    alt=""
+                                    widths={[560, 800, 1120, 1600]}
+                                    sizes="(min-width: 68rem) 36rem, (min-width: 48rem) 52vw, calc(100vw - 2.5rem)"
+                                    loading={index === 0 ? "eager" : "lazy"}
+                                />
+                            </a>
+                            <div class="featured-body">
+                                <p class="eyebrow">
+                                    {CATEGORIES.find((category) => category.id === data.category)?.label}
+                                    {data.visibility === "private" && (
+                                        <span class="private-badge"><ProjectIcon name="lock" />private</span>
+                                    )}
+                                </p>
+                                <h3 class="featured-title">
+                                    <a href={project.url}>{data.title}</a>
+                                </h3>
+                                <p class="featured-tagline">{data.tagline}</p>
+                                <p class="featured-summary">{data.summary}</p>
+                                <ul class="featured-facts">
+                                    {stats.stars !== undefined && (
+                                        <li><ProjectIcon name="star" /><span class="mono">{formatCount(stats.stars)}</span> stars</li>
+                                    )}
+                                    {stats.release && (
+                                        <li><ProjectIcon name="tag" /><span class="mono">{stats.release.tag}</span></li>
+                                    )}
+                                    {stats.lastCommit && <li>last commit {formatRelative(stats.lastCommit, now)}</li>}
+                                </ul>
+                                <div class="featured-charts">
+                                    {stats.languages.length > 0 && <LanguageBar languages={stats.languages} legend="compact" limit={4} />}
+                                    {stats.activity && <ActivityChart activity={stats.activity} />}
+                                </div>
+                            </div>
+                        </article>
+                    );
+                })}
+            </div>
+        </section>
+    )}
+
+    <section class="projects-section" aria-labelledby="all-heading" data-project-filter>
+        <h2 id="all-heading" class="section-heading">All projects</h2>
+        <div class="filter-chips" role="group" aria-label="Filter by category" data-filter-chips hidden>
+            <button type="button" aria-pressed="true" data-filter="all">All <span>{projects.length}</span></button>
+            {groups.map((group) => (
+                <button type="button" aria-pressed="false" data-filter={group.id}>
+                    {group.label} <span>{group.projects.length}</span>
+                </button>
+            ))}
+        </div>
+        <div>
+            {groups.map((group) => (
+                <section class="category-group" data-category={group.id} aria-labelledby={`category-${group.id}`}>
+                    <h3 id={`category-${group.id}`} class="category-title">
+                        {group.label} <span>{group.projects.length}</span>
+                    </h3>
+                    <ul class="project-grid">
+                        {group.projects.map((project) => {
+                            const { data } = project.entry;
+                            const meta = cardMeta(project);
+                            return (
+                                <li class="project-card" data-project={project.slug}>
+                                    <Image
+                                        src={data.cover}
+                                        alt=""
+                                        widths={[360, 560, 720]}
+                                        sizes="(min-width: 68rem) 21rem, (min-width: 40rem) 45vw, calc(100vw - 2.5rem)"
+                                        class="project-thumb"
+                                    />
+                                    <div class="project-card-body">
+                                        <h4 class="project-card-title">
+                                            <a href={project.url}>{data.title}</a>
+                                        </h4>
+                                        <p class="project-card-tagline">{data.tagline}</p>
+                                        <p class="project-card-meta">
+                                            {data.visibility === "private" ? (
+                                                <span class="private-badge"><ProjectIcon name="lock" />private</span>
+                                            ) : (
+                                                project.stats.stars !== undefined && (
+                                                    <span><ProjectIcon name="star" /><span class="mono">{formatCount(project.stats.stars)}</span><span class="sr-only"> stars</span></span>
+                                                )
+                                            )}
+                                            {meta.language && (
+                                                <span>
+                                                    <span class="language-dot" style={`background: ${meta.language.color}`} aria-hidden="true" />
+                                                    {meta.language.name}
+                                                </span>
+                                            )}
+                                            {meta.lastCommit && <span class="meta-push">{meta.lastCommit}</span>}
+                                        </p>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </section>
+            ))}
+        </div>
+    </section>
+
+    {archive.length > 0 && (
+        <section class="projects-section" aria-labelledby="older-heading">
+            <h2 id="older-heading" class="section-heading">Older work</h2>
+            <ul class="archive-list">
+                {archive.map((item) => (
+                    <li>
+                        <span class="archive-year mono">{item.year}</span>
+                        <span class="archive-text">
+                            <a href={item.url} rel="noopener">{item.name}</a>
+                            <span class="archive-note">{item.note}</span>
+                        </span>
+                        {item.stars !== undefined && (
+                            <span class="archive-stars mono"><ProjectIcon name="star" />{formatCount(item.stars)}<span class="sr-only"> stars</span></span>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </section>
+    )}
+    </div>
+</BaseLayout>
+
+<script>
+    // Category chips are an enhancement: without JavaScript every group stays visible.
+    function initProjectFilter() {
+        const root = document.querySelector<HTMLElement>("[data-project-filter]");
+        const chips = root?.querySelector<HTMLElement>("[data-filter-chips]");
+        if (!root || !chips || chips.dataset.ready) return;
+        chips.dataset.ready = "true";
+        chips.hidden = false;
+        const buttons = [...chips.querySelectorAll<HTMLButtonElement>("button[data-filter]")];
+        const groups = [...root.querySelectorAll<HTMLElement>("[data-category]")];
+        chips.addEventListener("click", (event) => {
+            const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button[data-filter]");
+            if (!button) return;
+            const filter = button.dataset.filter;
+            buttons.forEach((candidate) => candidate.setAttribute("aria-pressed", String(candidate === button)));
+            groups.forEach((group) => {
+                group.hidden = filter !== "all" && group.dataset.category !== filter;
+            });
+        });
+    }
+    initProjectFilter();
+    document.addEventListener("astro:page-load", initProjectFilter);
+</script>
+
+<style>
+    .mono {
+        font-family: var(--font-mono);
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .projects-header {
+        margin-bottom: 3.5rem;
+    }
+
+    /* Header figures: a quiet row of numbers, the page's only summary. */
+    .figures {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 2rem;
+        margin: 1.75rem 0 0;
+    }
+
+    .figures div {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.125rem;
+    }
+
+    .figures dd {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 1.375rem;
+        font-weight: 600;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        color: var(--color-foreground);
+    }
+
+    .figures dt {
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .pulse {
+        margin-top: 1.75rem;
+        padding: 1rem 1.125rem 0.875rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+    }
+
+    .projects-section {
+        margin-bottom: 4rem;
+    }
+
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+    }
+
+    .private-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.05rem 0.45rem;
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        letter-spacing: 0.02em;
+        text-transform: none;
+        color: var(--color-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+    }
+
+    /* Featured: image and story side by side, alternating, stacked on phones. */
+    .featured-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .featured-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 2.25rem;
+        padding: 1.25rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 1rem;
+        transition: border-color 0.15s ease;
+    }
+
+    .featured-card:hover {
+        border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+    }
+
+    .featured-card.flipped .featured-media {
+        order: 2;
+    }
+
+    .featured-media {
+        display: block;
+        overflow: hidden;
+        aspect-ratio: 16 / 10;
+        border-radius: 0.625rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-background);
+    }
+
+    .featured-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .featured-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        min-width: 0;
+        padding-block: 0.5rem;
+    }
+
+    .featured-card.flipped .featured-body {
+        padding-left: 0.75rem;
+    }
+
+    .featured-title {
+        font-size: clamp(1.75rem, 3.2vw, 2.25rem);
+        font-weight: 750;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+    }
+
+    .featured-title a,
+    .project-card-title a {
+        color: var(--color-foreground);
+    }
+
+    /* The title link covers the whole card, so there is one link per project. */
+    .featured-title a::after,
+    .project-card-title a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+    }
+
+    .featured-card:hover .featured-title a,
+    .project-card:hover .project-card-title a {
+        color: var(--color-accent);
+    }
+
+    .featured-tagline {
+        font-size: 1.125rem;
+        line-height: 1.4;
+        color: var(--color-foreground);
+        text-wrap: balance;
+    }
+
+    .featured-summary {
+        color: var(--color-muted);
+        font-size: 0.9375rem;
+        line-height: 1.55;
+        text-wrap: pretty;
+    }
+
+    .featured-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem 1.125rem;
+        margin: 0.375rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .featured-facts li {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .featured-facts .mono {
+        color: var(--color-foreground);
+    }
+
+    .featured-charts {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: end;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+        padding-top: 0.875rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    @media (max-width: 48rem) {
+        .featured-card {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 0.75rem 0.75rem 1rem;
+        }
+
+        .featured-card.flipped .featured-media {
+            order: 0;
+        }
+
+        .featured-body,
+        .featured-card.flipped .featured-body {
+            padding: 0 0.375rem;
+        }
+    }
+
+    /* All projects */
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-chips[hidden] {
+        display: none;
+    }
+
+    .filter-chips button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.75rem;
+        font: inherit;
+        font-size: 0.875rem;
+        color: var(--color-muted);
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .filter-chips button span {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        opacity: 0.75;
+    }
+
+    .filter-chips button:hover {
+        color: var(--color-foreground);
+        border-color: var(--color-muted);
+    }
+
+    .filter-chips button[aria-pressed="true"] {
+        color: var(--color-background);
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+
+    .category-group + .category-group {
+        margin-top: 2.5rem;
+    }
+
+    .category-group[hidden] {
+        display: none;
+    }
+
+    .category-title {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--color-foreground);
+    }
+
+    .category-title span {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--color-muted);
+    }
+
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+        gap: 1rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .project-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+        transition: border-color 0.15s ease;
+    }
+
+    .project-card:hover {
+        border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+    }
+
+    .project-thumb {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-background);
+    }
+
+    .project-card-body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.875rem 1rem 1rem;
+    }
+
+    .project-card-title {
+        font-size: 1.0625rem;
+        font-weight: 650;
+    }
+
+    .project-card-tagline {
+        flex: 1;
+        font-size: 0.875rem;
+        line-height: 1.45;
+        color: var(--color-muted);
+        text-wrap: pretty;
+    }
+
+    .project-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.875rem;
+        margin-top: 0.625rem;
+        font-size: 0.75rem;
+        color: var(--color-muted);
+    }
+
+    .project-card-meta > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .project-card-meta .meta-push {
+        margin-left: auto;
+    }
+
+    .language-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-foreground) 18%, transparent);
+    }
+
+    /* Older work */
+    .archive-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .archive-list li {
+        display: grid;
+        grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+        align-items: baseline;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .archive-year {
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .archive-text {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.125rem 0.75rem;
+        min-width: 0;
+    }
+
+    .archive-text a {
+        font-weight: 600;
+    }
+
+    .archive-note {
+        font-size: 0.9375rem;
+        color: var(--color-muted);
+    }
+
+    .archive-stars {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+</style>

@@ -1,0 +1,103 @@
+---
+// A thin stacked bar of language shares, optionally with a legend.
+import { topLanguages, type LanguageShare } from "../../utils/projects";
+
+interface Props {
+    languages: LanguageShare[];
+    legend?: "none" | "compact" | "full";
+    limit?: number;
+    class?: string;
+}
+
+const { languages, legend = "none", limit = 5, class: className } = Astro.props;
+const shown = topLanguages(languages, limit);
+const percent = (share: number) => {
+    const value = share * 100;
+    return value >= 10 ? `${Math.round(value)}%` : value >= 0.1 ? `${value.toFixed(1)}%` : "<0.1%";
+};
+const description = shown.map((language) => `${language.name} ${percent(language.share)}`).join(", ");
+const legendItems = legend === "compact" ? shown.filter((language) => language.name !== "Other").slice(0, 3) : shown;
+---
+
+{shown.length > 0 && (
+    <div class:list={["languages", className]}>
+        <div class="language-bar" role="img" aria-label={`Languages: ${description}`}>
+            {shown.map((language) => (
+                <span style={`flex-grow: ${language.share}; background: ${language.color}`} />
+            ))}
+        </div>
+        {legend !== "none" && (
+            <ul class:list={["language-legend", `legend-${legend}`]}>
+                {legendItems.map((language) => (
+                    <li>
+                        <span class="language-dot" style={`background: ${language.color}`} aria-hidden="true" />
+                        <span class="language-name">{language.name}</span>
+                        {legend === "full" && <span class="language-share">{percent(language.share)}</span>}
+                    </li>
+                ))}
+            </ul>
+        )}
+    </div>
+)}
+
+<style>
+    .language-bar {
+        display: flex;
+        gap: 2px;
+        height: 0.375rem;
+        overflow: hidden;
+        border-radius: 999px;
+    }
+
+    .language-bar span {
+        flex-basis: 0;
+        min-width: 3px;
+    }
+
+    .language-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 0.875rem;
+        margin-top: 0.5rem;
+        padding: 0;
+        list-style: none;
+        font-size: 0.8125rem;
+        color: var(--color-muted);
+    }
+
+    .legend-full {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.375rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .language-legend li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+
+    .language-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        flex-shrink: 0;
+        border-radius: 999px;
+        /* Dark linguist colours (Lua's navy) need an edge on the dark page. */
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-foreground) 18%, transparent);
+    }
+
+    .language-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--color-foreground);
+    }
+
+    .language-share {
+        margin-left: auto;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+    }
+</style>
