@@ -31,3 +31,23 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run build:check
       - run: npm test
+
+  # Merges Dependabot's patch and minor updates, and any update that fixes a
+  # security advisory, once the whole check above has passed. Major updates
+  # that are not security fixes stay open for review.
+  dependabot-merge:
+    needs: check
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - if: steps.metadata.outputs.update-type != 'version-update:semver-major' || steps.metadata.outputs.ghsa-id != ''
+        run: gh pr merge --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

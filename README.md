@@ -117,8 +117,11 @@ merge the two together. A pipeline test fails if the pin becomes a range.
 
 Dependabot proposes weekly npm and GitHub Actions updates. Minor and patch npm
 updates are grouped; major updates remain separate for review. Action references
-are pinned to release commits. This configuration takes effect after it reaches
-the default branch; it does not merge updates automatically.
+are pinned to release commits. Dependabot security updates are enabled for the
+repository. The `dependabot-merge` job in `.github/workflows/check.yml` squash-merges
+a Dependabot pull request once the whole check has passed, if it is a patch or minor
+update or fixes a security advisory; other major updates wait for review. The daily
+run of the same workflow audits all dependencies and fails on any advisory.
 
 Runtime versions are pinned in `mise.toml`. `mise outdated` checks runtime
 updates. Update the pins deliberately, run `mise install` and `mise run setup`,
