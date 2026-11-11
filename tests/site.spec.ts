@@ -411,3 +411,44 @@ test('related posts on project pages lead to real posts', async ({ page, request
     expect((await request.get(href)).status()).toBe(200);
   }
 });
+
+test('the sitemap lists the projects section and dates posts', async ({ request }) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  const projects = readdirSync('src/content/projects').filter((file) => /\.mdx?$/.test(file));
+  expect(sitemap).toContain('<loc>https://nheer.com/projects/</loc>');
+  for (const file of projects) {
+    expect(sitemap).toContain(`<loc>https://nheer.com/projects/${file.replace(/\.mdx?$/, '')}/</loc>`);
+  }
+  expect(sitemap).toMatch(/<loc>https:\/\/nheer\.com\/posts\/\d{4}\/\d{2}\/[^<]+\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+  expect(sitemap).not.toContain('/404');
+});
+
+test.describe('with a light system theme', () => {
+  test.use({ colorScheme: 'light' });
+
+  test('a first visit follows the system and a saved choice overrides it', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.getByRole('button', { name: 'Switch to dark theme' }).first().click();
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+});
+
+test('posts are shared as articles with their date and structured data', async ({ page }) => {
+  await page.goto('/posts/');
+  await page.locator('main a[href^="/posts/20"]').first().click();
+  await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
+  await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute('content', /^\d{4}-\d{2}-\d{2}T/);
+  const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}');
+  expect(data['@type']).toBe('BlogPosting');
+  expect(data.headline).toBeTruthy();
+  expect(data.mainEntityOfPage).toBe(await page.locator('link[rel="canonical"]').getAttribute('href'));
+  expect(data.dateModified).toBe(data.datePublished);
+  await expect(page.locator('meta[property="article:author"]')).toHaveAttribute('content', 'https://nheer.com/about/');
+
+  await page.goto('/about/');
+  await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
+  await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+  await expect(page.locator('link[rel="me"][href="https://bsky.app/profile/nheer.bsky.social"]')).toHaveCount(1);
+});

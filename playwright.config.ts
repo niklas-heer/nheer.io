@@ -9,6 +9,8 @@ export default defineConfig({
   use: {
     baseURL,
     browserName: 'chromium',
+    // The site follows the system theme; tests start from dark unless they say otherwise.
+    colorScheme: 'dark',
     trace: 'retain-on-failure',
   },
   projects: [
