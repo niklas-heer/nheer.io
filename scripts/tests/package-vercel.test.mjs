@@ -24,6 +24,10 @@ test('Vercel package preserves tested assets, routes, redirects, 404 and static 
   assert.equal(route('/posts/example').dest, '/posts/example/index.html');
   assert.equal(route('/posts/example/').dest, '/posts/example/index.html');
   assert.equal(routes.at(-1).status, 404);
+  const cache = path => routes.find(route => route.headers?.['Cache-Control'] && new RegExp(route.src).test(path))?.headers['Cache-Control'];
+  assert.equal(cache('/_astro/page.Df3cxLSt.js'), 'public, max-age=31536000, immutable');
+  assert.equal(cache('/posts/example/'), undefined);
+  assert.equal(cache('/build-health.json'), undefined);
   assert.equal(routes.find(route => route.status === 301).headers.Location, 'https://github.com/niklas-heer/speed-comparison');
   assert.equal(routes.find(route => route.src === '^/podcasts/?$').headers.Location, '/listening/');
   await assert.rejects(readFile(join(output, 'functions/api/views.func/index.mjs')), { code: 'ENOENT' });

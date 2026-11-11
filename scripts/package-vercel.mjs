@@ -11,6 +11,8 @@ export async function packageVercel({ root = process.cwd() } = {}) {
   const pathFor = file => new URL('/' + file.replace(/(^|\/)index\.html$/, '$1').replace(/\.html$/, '').replace(/\/$/, ''), 'https://nheer.com').pathname;
   const routes = [
     { src: '^/(.*)$', headers: { 'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin' }, continue: true },
+    // Astro fingerprints everything under /_astro/, so a changed file gets a new name.
+    { src: '^/_astro/(.*)$', headers: { 'Cache-Control': 'public, max-age=31536000, immutable' }, continue: true },
     { src: '^/gh/(sc|speed-comparison)/?$', status: 301, headers: { Location: 'https://github.com/niklas-heer/speed-comparison' } },
     { src: '^/podcasts/?$', status: 301, headers: { Location: '/listening/' } },
     ...pages.filter(file => pathFor(file) !== '/404').map(file => ({
