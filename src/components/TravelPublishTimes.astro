@@ -1,0 +1,93 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+
+// 25 posts that went live through the Telegram bot from 22 October until the drive home on
+// 3 November, each timed twice. Vercel: the GitHub Actions run from dispatch to finished
+// (build, deploy, "It's live" reply). Cloudflare: the mirror run sending the same post to the
+// Worker until it was live there, upload from the GitHub runner included. Same order in both.
+const vercel = [86, 84, 80, 70, 95, 84, 79, 78, 71, 110, 88, 84, 109, 94, 92, 82, 83, 124, 93, 83, 92, 90, 76, 88, 75];
+const cloudflareMs = [5420, 7016, 4514, 2426, 4319, 5836, 5891, 3902, 3315, 5109, 6507, 4130, 5765, 6627, 6003, 5373, 1377, 6930, 1896, 2118, 8345, 1965, 2795, 3579, 1466];
+const cloudflare = cloudflareMs.map(ms => ms / 1000);
+
+const max = 130;
+const median = (values: number[]) => {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+};
+const lanes = [
+  { key: 'vercel', name: 'GitHub Actions → Astro build → Vercel', values: vercel, color: '#c6adff' },
+  { key: 'cloudflare', name: 'Cloudflare Worker → D1 and R2', values: cloudflare, color: '#8ae0c6' },
+].map(lane => ({
+  ...lane,
+  median: median(lane.values),
+  min: Math.min(...lane.values),
+  max: Math.max(...lane.values),
+}));
+const ticks = [0, 30, 60, 90, 120];
+const pct = (seconds: number) => `${(seconds / max) * 100}%`;
+// Small vertical offsets so dots at similar times stay visible.
+const offset = (index: number) => [0, -9, 9, -4.5, 4.5][index % 5];
+const fmt = (seconds: number) => (seconds < 10 ? seconds.toFixed(1) : Math.round(seconds).toString());
+---
+<ArticleFigure
+  id="publish-times"
+  label="Measured / 25 posts, timed twice"
+  title="The same posts, two ways to put them online."
+  caption="Each dot is one post. The Vercel time is the GitHub Actions run from its creation, right after the bot's dispatch, until the post was live and the bot had replied. The Cloudflare time is the mirror sending that same post to the Worker until it was live there, including the upload from the GitHub runner. The mirror received photos the live pipeline had already resized, and it did not write German translations, so the comparison favours Cloudflare somewhat. Times in seconds; one scale for both rows."
+>
+  <div class="chart" role="img" aria-label={`Vercel publishes took ${lanes[0].min} to ${lanes[0].max} seconds, median ${lanes[0].median}. The same posts on Cloudflare took ${fmt(lanes[1].min)} to ${fmt(lanes[1].max)} seconds, median ${fmt(lanes[1].median)}.`}>
+    {lanes.map(lane => (
+      <div class="lane" style={`--lane: ${lane.color}`}>
+        <p class="lane-name">
+          <span>{lane.name}</span>
+          <strong>median {fmt(lane.median)} s</strong>
+        </p>
+        <div class="track" aria-hidden="true">
+          <div class="plot">
+            {lane.values.map((value, index) => (
+              <span class="dot" style={`left: ${pct(value)}; --dy: ${offset(index)}px`}></span>
+            ))}
+            <span class="median" style={`left: ${pct(lane.median)}`}></span>
+          </div>
+        </div>
+        <p class="range">{fmt(lane.min)} to {fmt(lane.max)} s</p>
+      </div>
+    ))}
+    <div class="axis" aria-hidden="true">
+      <div class="plot">
+        {ticks.map(tick => <span style={`left: ${pct(tick)}`}>{tick} s</span>)}
+      </div>
+    </div>
+  </div>
+  <details>
+    <summary>All 25 pairs</summary>
+    <table>
+      <thead><tr><th scope="col">Post</th><th scope="col">Vercel</th><th scope="col">Cloudflare</th></tr></thead>
+      <tbody>
+        {vercel.map((value, index) => (
+          <tr><td>{index + 1}</td><td>{value} s</td><td>{fmt(cloudflare[index])} s</td></tr>
+        ))}
+      </tbody>
+    </table>
+  </details>
+</ArticleFigure>
+<style>
+  .chart { display: grid; gap: 1.1rem; }
+  .lane-name { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .2rem 1rem; margin: 0 0 .5rem; font-size: .85rem; }
+  .lane-name strong { color: var(--lane); font: 600 .8rem/1.6 ui-monospace, monospace; }
+  .track { position: relative; height: 2.6rem; border-radius: 8px; background: #2a2236; border: 1px solid #3f3350; }
+  .plot { position: absolute; inset: 0 6px; }
+  .dot { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--lane); opacity: .75; transform: translateY(var(--dy)); }
+  .median { position: absolute; top: 4px; bottom: 4px; width: 2px; margin-left: -1px; background: #f0eafa; }
+  .range { margin: .35rem 0 0; color: #bfb1ce; font: .72rem/1.6 ui-monospace, monospace; }
+  .axis { position: relative; height: 1.2rem; border-top: 1px solid #58486e; color: #bfb1ce; font: .7rem/1.6 ui-monospace, monospace; }
+  .axis .plot span { position: absolute; top: .2rem; transform: translateX(-50%); white-space: nowrap; }
+  .axis .plot span:first-child { transform: translateX(-6px); }
+  details { margin-top: 1.2rem; }
+  summary { cursor: pointer; color: #c6adff; font-size: .8rem; }
+  summary:focus-visible { outline: 2px solid #8ae0c6; outline-offset: 3px; border-radius: 4px; }
+  table { margin-top: .8rem; width: 100%; max-width: 22rem; border-collapse: collapse; font: .75rem/1.6 ui-monospace, monospace; }
+  th, td { padding: .15rem .6rem; text-align: right; border-bottom: 1px solid #3f3350; }
+  th:first-child, td:first-child { text-align: left; }
+</style>

@@ -1,0 +1,107 @@
+---
+import ArticleFigure from './ArticleFigure.astro';
+
+// A schematic of the race that took two posts offline, and of the setup after the fix.
+// Positions are relative time, not measurements.
+type Build = { name: string; who: string; start?: number; end?: number; slow?: boolean; status: string };
+const panels: { key: string; title: string; note: string; builds: Build[]; live: { from: number; to: number; text: string; bad?: boolean }[] }[] = [
+  {
+    key: 'before',
+    title: 'Before: the last build to finish wins',
+    note: 'Vercel also builds Post 1 from Git. That build lands last and replaces the site that already had posts 2 and 3.',
+    builds: [
+      { name: 'Post 1', who: 'GitHub Action', start: 4, end: 16, status: 'goes live' },
+      { name: 'Post 1', who: 'Vercel Git build', start: 4, end: 76, slow: true, status: 'goes live' },
+      { name: 'Post 2', who: 'GitHub Action', start: 26, end: 40, status: 'goes live' },
+      { name: 'Post 3', who: 'GitHub Action', start: 46, end: 58, status: 'goes live' },
+    ],
+    live: [
+      { from: 0, to: 16, text: 'old' },
+      { from: 16, to: 40, text: '1' },
+      { from: 40, to: 58, text: '1–2' },
+      { from: 58, to: 76, text: '1–3' },
+      { from: 76, to: 100, text: '1 only', bad: true },
+    ],
+  },
+  {
+    key: 'after',
+    title: 'After: only GitHub Actions deploy, and only main’s newest commit',
+    note: 'Vercel’s Git builds are off for main. An Action run that finishes after a newer commit reached main is not promoted.',
+    builds: [
+      { name: 'Post 1', who: 'GitHub Action', start: 4, end: 16, status: 'goes live' },
+      { name: 'Post 1', who: 'Vercel Git build', status: 'turned off' },
+      { name: 'Post 2', who: 'GitHub Action', start: 26, end: 40, status: 'goes live' },
+      { name: 'Post 3', who: 'GitHub Action', start: 46, end: 58, status: 'goes live' },
+    ],
+    live: [
+      { from: 0, to: 16, text: 'old' },
+      { from: 16, to: 40, text: '1' },
+      { from: 40, to: 58, text: '1–2' },
+      { from: 58, to: 100, text: '1–3' },
+    ],
+  },
+];
+---
+<ArticleFigure
+  id="deploy-race"
+  label="Schematic / why two posts disappeared"
+  title="Two deploy paths, one production site."
+  caption="Not to scale. On the real day, Vercel’s Git builds of two older commits finished up to 45 minutes late. The fix turned Vercel’s own builds off for main, let only GitHub Actions deploy, and made each deploy check that its commit is still main’s newest before going live."
+>
+  <div class="panels">
+    {panels.map(panel => (
+      <section class={`panel ${panel.key}`} aria-label={panel.title}>
+        <h4>{panel.title}</h4>
+        <ol class="builds">
+          {panel.builds.map(build => (
+            <li>
+              <span class="build-name">{build.name} <small>{build.who}</small></span>
+              <span class="lane" aria-hidden="true">
+                {build.start !== undefined && build.end !== undefined && (
+                  <span class:list={['bar', { slow: build.slow }]} style={`left: ${build.start}%; width: ${build.end - build.start}%`}></span>
+                )}
+              </span>
+              <span class="status">{build.status}</span>
+            </li>
+          ))}
+        </ol>
+        <div class="live">
+          <span class="build-name">Readers see posts</span>
+          <span class="lane">
+            {panel.live.map(segment => (
+              <span class:list={['segment', { bad: segment.bad }]} style={`left: ${segment.from}%; width: ${segment.to - segment.from}%`}>{segment.text}</span>
+            ))}
+          </span>
+        </div>
+        <p class="note">{panel.note}</p>
+      </section>
+    ))}
+  </div>
+</ArticleFigure>
+<style>
+  .panels { display: grid; gap: 1.4rem; }
+  .panel { border: 1px solid #47394f; border-radius: 12px; padding: 1rem; background: #211b2c; }
+  h4 { margin: 0 0 .9rem; color: #f0eafa; font-size: .95rem; }
+  .before h4::before { content: '✗ '; color: #f0a0a0; }
+  .after h4::before { content: '✓ '; color: #8ae0c6; }
+  .builds { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+  .builds li, .live { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 6.5rem; gap: .7rem; align-items: center; }
+  .build-name { font-size: .8rem; line-height: 1.3; }
+  .build-name small { display: block; color: #bfb1ce; font-size: .68rem; }
+  .lane { position: relative; height: 1.5rem; border-radius: 6px; background: #2c2438; }
+  .bar { position: absolute; top: .3rem; bottom: .3rem; border-radius: 4px; background: #c6adff; }
+  .bar.slow { background: repeating-linear-gradient(135deg, #f0cd8e 0 6px, #c9a86c 6px 12px); }
+  .status { color: #bfb1ce; font: .7rem/1.4 ui-monospace, monospace; }
+  .live { margin-top: .9rem; padding-top: .8rem; border-top: 1px dashed #47394f; }
+  .live .lane { height: 1.9rem; }
+  .segment { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; border-right: 2px solid #191623; background: #3b5e54; color: #e6fff6; font: 600 .66rem/1 ui-monospace, monospace; }
+  .segment:first-child { border-radius: 6px 0 0 6px; background: #343a45; color: #c9d0dc; }
+  .segment:last-child { border-radius: 0 6px 6px 0; border-right: 0; }
+  .segment.bad { background: #6e3340; color: #ffe1e6; }
+  .note { margin: .8rem 0 0; color: #d0c1dd; font-size: .78rem; }
+  @media (max-width: 560px) {
+    .builds li { grid-template-columns: 1fr auto; }
+    .builds li .lane { grid-column: 1 / -1; grid-row: 2; }
+    .live { grid-template-columns: 1fr; }
+  }
+</style>

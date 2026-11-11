@@ -11,6 +11,8 @@ stack: ["TypeScript", "Astro", "TanStack Start", "Cloudflare Workers", "Telegram
 cover: "./travel-blog/cover.webp"
 coverAlt: "Diagram of the publishing pipeline: a message to a Telegram bot becomes a draft, a model writes the post, a preview offers Publish or Discard, and a workflow publishes it"
 hideActivity: true
+posts:
+  - "/posts/2026/11/2026-11-11_family-travel-blog-from-telegram/"
 highlights:
   - "Posts written from a Telegram chat"
   - "Every page in English and German"
