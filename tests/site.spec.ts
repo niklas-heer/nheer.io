@@ -174,6 +174,34 @@ test('the homepage terminal runs commands, keeps history and navigates', async (
   expect(errors).toEqual([]);
 });
 
+for (const width of [1280, 390]) {
+  test(`the header shares one shell with wide and reading pages at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const edges = async (selector: string) => {
+      const box = (await page.locator(selector).first().boundingBox())!;
+      return { left: box.x, right: box.x + box.width };
+    };
+    await page.goto('/projects/');
+    const header = await edges('.site-header');
+    const wide = await edges('.wide-breakout');
+    expect(Math.abs(header.left - wide.left)).toBeLessThan(1);
+    expect(Math.abs(header.right - wide.right)).toBeLessThan(1);
+    const wordmark = await edges('.wordmark');
+    expect(Math.abs(wordmark.left - wide.left)).toBeLessThan(1);
+    // The header does not move between a wide page, the homepage and a reading page.
+    for (const path of ['/', '/posts/']) {
+      await page.goto(path);
+      const other = await edges('.site-header');
+      expect(Math.abs(other.left - header.left)).toBeLessThan(1);
+      expect(Math.abs(other.right - header.right)).toBeLessThan(1);
+    }
+    const column = await edges('main');
+    expect(column.left).toBeGreaterThanOrEqual(header.left - 0.5);
+    expect(column.right).toBeLessThanOrEqual(header.right + 0.5);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 test('the homepage social links include Bluesky and each carries an icon', async ({ page }) => {
   await page.goto('/');
   const socials = page.getByRole('list', { name: 'Elsewhere' });

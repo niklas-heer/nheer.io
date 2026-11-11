@@ -5,9 +5,11 @@
 /*
  * Design tokens
  *
- * The site reads as "ink and terminal": a deep violet-ink page, one violet
- * accent shared with the logo and Inky, Bricolage Grotesque for all text and
- * JetBrains Mono reserved for the prompt wordmark, code and small data.
+ * The site reads as "ink and terminal", kept like a lab notebook: a deep
+ * violet-ink page, one violet accent shared with the logo and Inky, and one
+ * amber mark for annotations and whatever is current. Bricolage Grotesque
+ * sets all text; JetBrains Mono is reserved for the prompt wordmark, code,
+ * labels and small data.
  */
 @theme {
     --font-sans:
@@ -27,6 +29,13 @@
     --color-accent: #a98bff;
     --color-accent-hover: #c3adff;
 
+    /*
+     * Mark: annotation, live, now. `mark` fills bars, dots and rules (3:1 on
+     * every surface); `mark-ink` is the same idea for small text (4.5:1).
+     */
+    --color-mark: #f5cf5a;
+    --color-mark-ink: #f5cf5a;
+
     /* Signal colors used by data views and ratings */
     --color-red: #ff6b6b;
     --color-orange: #ffb86c;
@@ -36,8 +45,46 @@
     --color-purple: #a98bff;
     --color-pink: #f07ac0;
 
-    --radius-card: 0.75rem;
-    --radius-chip: 0.375rem;
+    /*
+     * Type scale: a 1.25 ratio on the 17px body. `label` is the mono caps
+     * label; the rest are sans.
+     */
+    --text-label: 0.8125rem; /* 13 */
+    --text-small: 0.9375rem; /* 15 */
+    --text-body: 1.0625rem; /* 17 */
+    --text-lead: 1.3125rem; /* 21 */
+    --text-heading: 1.6875rem; /* 27 */
+    --text-title: 2.125rem; /* 34 */
+    --text-display: 2.625rem; /* 42 */
+    --text-hero: 3.3125rem; /* 53 */
+
+    /* Radius scale: chips and inputs, cards, large panels. */
+    --radius-chip: 0.375rem; /* 6 */
+    --radius-card: 0.625rem; /* 10 */
+    --radius-panel: 1rem; /* 16 */
+}
+
+:root {
+    /* One shell for header, footer and wide pages; a reading column inside it. */
+    --shell-width: 68rem;
+    --shell-gutter: 1.25rem;
+    --reading-width: 45rem;
+
+    /* The terminal panel keeps a dark screen in both themes. */
+    --term-bg: #14111c;
+    --term-bar: #1e1a28;
+    --term-border: #2f2940;
+    --term-fg: #ece8f4;
+    --term-muted: #9a92ad;
+    --term-accent: #b49dff;
+    --term-accent-hover: #d3c6ff;
+    --term-error: #ff8a80;
+}
+
+@media (min-width: 40rem) {
+    :root {
+        --shell-gutter: 1.5rem;
+    }
 }
 
 /* Light theme: cool paper with the same violet accent, darkened for contrast */
@@ -50,10 +97,24 @@
     --color-border: #e1dcee;
     --color-accent: #6a3ff0;
     --color-accent-hover: #5430c4;
+    --color-mark: #a67c00;
+    --color-mark-ink: #7a5a00;
     --color-yellow: #a67c00;
     --color-green: #1f9d5c;
     --color-cyan: #0f8fb5;
     --color-pink: #d63c93;
+}
+
+/*
+ * The measure: line length for running text. Registered as a length so it is
+ * worked out once, in body type, and paragraphs set larger or smaller than
+ * the body still end at the same edge.
+ */
+@property --measure {
+    syntax: "<length>";
+    inherits: true;
+    /* Must not depend on a font size, so pixels rather than rem. */
+    initial-value: 640px;
 }
 
 /* Base styles */
@@ -62,8 +123,9 @@ html {
 }
 
 body {
+    --measure: 62ch;
     font-family: var(--font-sans);
-    font-size: 1.0625rem;
+    font-size: var(--text-body);
     line-height: 1.65;
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
@@ -99,18 +161,18 @@ h6 {
 }
 
 h1 {
-    font-size: clamp(2.25rem, 5vw, 3rem);
+    font-size: clamp(var(--text-title), 5vw, var(--text-display));
     font-weight: 750;
     letter-spacing: -0.03em;
 }
 h2 {
-    font-size: 1.75rem;
+    font-size: var(--text-heading);
 }
 h3 {
-    font-size: 1.25rem;
+    font-size: var(--text-lead);
 }
 h4 {
-    font-size: 1.0625rem;
+    font-size: var(--text-body);
 }
 
 code,
@@ -191,7 +253,7 @@ a:hover {
 }
 
 .page-title {
-    font-size: clamp(2.5rem, 6vw, 3.25rem);
+    font-size: clamp(var(--text-display), 6vw, var(--text-hero));
     font-weight: 750;
     letter-spacing: -0.035em;
     line-height: 1.05;
@@ -200,9 +262,16 @@ a:hover {
 
 .page-subtitle {
     color: var(--color-muted);
-    font-size: 1.125rem;
+    font-size: var(--text-body);
     max-width: 58ch;
     text-wrap: pretty;
+}
+
+@media (min-width: 40rem) {
+    .page-subtitle {
+        font-size: var(--text-lead);
+        line-height: 1.5;
+    }
 }
 
 .page-subtitle a {
@@ -211,32 +280,71 @@ a:hover {
     text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 
-/* Section headings carry the prompt chevron, the site's one recurring motif. */
+/*
+ * Mono caps label: the one label style for eyebrows, figure labels, dates and
+ * data captions. `is-prompt` adds the chevron, the site's recurring motif.
+ */
+.mono-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+}
+
+.mono-label.is-prompt::before {
+    content: "❯";
+    margin-right: 0.6em;
+    letter-spacing: 0;
+    color: var(--color-accent);
+}
+
+/* The amber mark on a label: this item is current. */
+.mono-label.is-mark {
+    color: var(--color-mark-ink);
+}
+
+/* Section headings: an optional eyebrow, the heading, an optional "more" link. */
+.section-head {
+    margin-bottom: 1.5rem;
+}
+
+.section-head .mono-label {
+    margin-bottom: 0.375rem;
+}
+
+.section-head .section-heading {
+    margin-bottom: 0;
+}
+
 .section-heading {
     display: flex;
     align-items: baseline;
-    gap: 0.625rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin-bottom: 1rem;
-}
-
-.section-heading::before {
-    content: "❯";
-    font-family: var(--font-mono);
-    font-weight: 500;
-    color: var(--color-accent);
+    flex-wrap: wrap;
+    gap: 0.25rem 1.5rem;
+    font-size: var(--text-heading);
+    font-weight: 650;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
 }
 
 .section-heading .section-more {
     margin-left: auto;
-    font-size: 0.875rem;
+    font-size: var(--text-small);
     font-weight: 500;
+    letter-spacing: 0;
     color: var(--color-muted);
     text-decoration: underline;
     text-underline-offset: 0.2em;
     text-decoration-color: transparent;
+}
+
+.section-heading .section-more::after {
+    content: " →";
+    font-family: var(--font-mono);
 }
 
 .section-heading .section-more:hover {
@@ -258,7 +366,7 @@ a:hover {
     width: 2.5rem;
     height: 2.5rem;
     flex-shrink: 0;
-    font-size: 1.25rem;
+    font-size: var(--text-lead);
     line-height: 1;
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border);
@@ -268,7 +376,7 @@ a:hover {
 .emoji-tile-large {
     width: 4rem;
     height: 4rem;
-    font-size: 2rem;
+    font-size: var(--text-title);
     border-radius: var(--radius-card);
 }
 
@@ -299,7 +407,7 @@ a:hover {
 }
 
 .featured-post-title {
-    font-size: clamp(1.5rem, 3.5vw, 1.875rem);
+    font-size: clamp(var(--text-lead), 3.5vw, var(--text-heading));
     font-weight: 700;
     letter-spacing: -0.025em;
     line-height: 1.15;
@@ -317,7 +425,7 @@ a:hover {
 
 .featured-post-meta {
     font-family: var(--font-mono);
-    font-size: 0.8125rem;
+    font-size: var(--text-label);
     color: var(--color-muted);
 }
 
@@ -328,9 +436,12 @@ a:hover {
     }
 }
 
-/* Prose content styling */
-.prose {
-    max-width: 68ch;
+/*
+ * Prose content styling. Running text keeps to the measure; figures, code and
+ * tables may use the full reading column.
+ */
+.prose > :where(p, ul, ol, dl, blockquote, h2, h3, h4, h5, h6) {
+    max-width: var(--measure);
 }
 
 .prose p {
@@ -339,7 +450,7 @@ a:hover {
 }
 
 .prose h2 {
-    font-size: 1.625rem;
+    font-size: var(--text-heading);
     margin-top: 3rem;
     margin-bottom: 1rem;
 }
@@ -376,8 +487,8 @@ a:hover {
     padding: 0.25rem 0 0.25rem 1.5rem;
     border-left: 3px solid var(--color-accent);
     color: var(--color-foreground);
-    font-size: 1.125rem;
-    line-height: 1.6;
+    font-size: var(--text-lead);
+    line-height: 1.5;
     letter-spacing: -0.01em;
 }
 
@@ -386,7 +497,7 @@ a:hover {
 }
 
 .prose blockquote footer {
-    font-size: 0.9rem;
+    font-size: var(--text-small);
     color: var(--color-muted);
     margin-top: 0.75rem;
 }
@@ -422,7 +533,7 @@ p.info a {
 }
 
 .prose img:not(.star-history-img) {
-    border-radius: 0.5rem;
+    border-radius: var(--radius-card);
     margin: 1.5rem 0;
     cursor: zoom-in;
     transition:
@@ -452,7 +563,7 @@ p.info a {
 }
 
 .prose figcaption {
-    font-size: 0.875rem;
+    font-size: var(--text-small);
     color: var(--color-muted);
 }
 
@@ -462,7 +573,7 @@ p.info a {
     display: block;
     margin: 1.5rem auto;
     max-width: 100%;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-card);
 }
 
 .prose .video-container {
@@ -473,7 +584,7 @@ p.info a {
     padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-card);
 }
 
 .prose .video-container iframe {
@@ -482,7 +593,7 @@ p.info a {
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-card);
 }
 
 .prose hr {
@@ -495,7 +606,7 @@ p.info a {
     width: 100%;
     border-collapse: collapse;
     margin: 1.5rem 0;
-    font-size: 0.95rem;
+    font-size: var(--text-small);
 }
 
 .prose th,
@@ -525,7 +636,7 @@ p.info a {
 /* Reading time and meta info */
 .meta {
     color: var(--color-muted);
-    font-size: 0.875rem;
+    font-size: var(--text-small);
 }
 
 /* Post cards (archive) */
@@ -541,7 +652,7 @@ p.info a {
 /* Year group headers */
 .year-header {
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: var(--text-label);
     font-weight: 500;
     letter-spacing: 0;
     color: var(--color-muted);
@@ -568,7 +679,7 @@ p.info a {
     color: var(--color-muted);
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-chip);
-    font-size: 0.8125rem;
+    font-size: var(--text-label);
     line-height: 1.5;
     transition:
         color 0.15s ease,
@@ -602,7 +713,7 @@ p.info a {
     background: var(--color-accent);
     color: var(--color-background);
     padding: 0.75rem 1.5rem;
-    border-radius: 0 0 0.5rem 0.5rem;
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
     font-weight: 600;
     z-index: 100;
     transition: top 0.2s ease;
@@ -765,9 +876,39 @@ p.info a {
     }
 }
 
-/* Break out of the 48rem reading column for visual sections (Projects). */
+/*
+ * Shell. Header, footer and wide pages share one width; ordinary pages keep a
+ * narrower reading column centred inside it.
+ */
+.site-shell {
+    max-width: calc(var(--shell-width) + 2 * var(--shell-gutter));
+    margin-inline: auto;
+    padding: 1.5rem var(--shell-gutter);
+}
+
+.site-header-slot {
+    position: relative;
+}
+
+.site-main {
+    max-width: var(--reading-width);
+    margin-inline: auto;
+    margin-top: 2.5rem;
+}
+
+@media (min-width: 40rem) {
+    .site-shell {
+        padding-block: 2rem;
+    }
+
+    .site-main {
+        margin-top: 3.5rem;
+    }
+}
+
+/* Visual pages (home, Projects) use the full shell instead of the reading column. */
 .wide-breakout {
-    --wide-width: min(68rem, calc(100vw - 2.5rem));
+    --wide-width: min(var(--shell-width), calc(100vw - 2 * var(--shell-gutter)));
     width: var(--wide-width);
     margin-inline: calc((100% - var(--wide-width)) / 2);
 }

@@ -150,11 +150,12 @@ const articleData = article && JSON.stringify({
         <a href="#main-content" class="skip-to-content">
             Skip to main content
         </a>
-        <div class="mx-auto max-w-3xl px-5 py-6 sm:px-6 sm:py-8">
-            <div class="relative">
+        <!-- One shell: header, footer and wide pages share its width. -->
+        <div class="site-shell">
+            <div class="site-header-slot">
                 <Header />
             </div>
-            <main id="main-content" class="mt-12 sm:mt-16">
+            <main id="main-content" class="site-main">
                 <slot />
             </main>
             <Footer />
