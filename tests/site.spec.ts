@@ -434,3 +434,19 @@ test.describe('with a light system theme', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 });
+
+test('posts are shared as articles with their date and structured data', async ({ page }) => {
+  await page.goto('/posts/');
+  await page.locator('main a[href^="/posts/20"]').first().click();
+  await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
+  await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute('content', /^\d{4}-\d{2}-\d{2}T/);
+  const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}');
+  expect(data['@type']).toBe('BlogPosting');
+  expect(data.headline).toBeTruthy();
+  expect(data.mainEntityOfPage).toBe(await page.locator('link[rel="canonical"]').getAttribute('href'));
+
+  await page.goto('/about/');
+  await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
+  await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
+  await expect(page.locator('link[rel="me"][href="https://bsky.app/profile/nheer.bsky.social"]')).toHaveCount(1);
+});
