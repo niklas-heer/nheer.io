@@ -3,9 +3,11 @@ import BaseLayout from "./BaseLayout.astro";
 import ReadingProgress from "../components/ReadingProgress.astro";
 import OptimizedContent from "../components/OptimizedContent.astro";
 import BackToTop from "../components/BackToTop.astro";
-import type { CollectionEntry } from "astro:content";
+import SocialIcon from "../components/SocialIcon.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
 import { parseText } from "../utils/emoji";
-import { getPostDescription } from "../utils/content-metadata";
+import { getPostDescription, getPostPath } from "../utils/content-metadata";
+import { siteConfig } from "../config";
 
 interface Props {
     post: CollectionEntry<"posts">;
@@ -15,6 +17,8 @@ const { post } = Astro.props;
 const { title, date, author, tags, icon, inky } = post.data;
 const heckles = inky?.length ? JSON.stringify(inky).replace(/</g, "\\u003c") : null;
 const description = getPostDescription(post);
+// The dek is the author's own summary; posts without one get no generated excerpt.
+const dek = post.data.description?.trim() ? parseText(post.data.description.trim()) : null;
 const parsedTitle = parseText(title);
 const parsedIcon = icon ? parseText(icon) : null;
 
@@ -30,6 +34,18 @@ function formatDate(date: Date): string {
 const content = post.body || "";
 const words = content.split(/\s+/).length;
 const readingTime = Math.ceil(words / 200);
+
+// Neighbours in time among the posts listed alongside this one: published,
+// same language, and archived or not like this post. A draft has none.
+const siblings = (
+    await getCollection(
+        "posts",
+        ({ data }) => !data.draft && data.lang === post.data.lang && data.archive === post.data.archive,
+    )
+).sort((a, b) => new Date(a.data.date).getTime() - new Date(b.data.date).getTime());
+const position = siblings.findIndex((candidate) => candidate.id === post.id);
+const older = position > 0 ? siblings[position - 1] : null;
+const newer = position >= 0 && position < siblings.length - 1 ? siblings[position + 1] : null;
 ---
 
 <BaseLayout
@@ -48,6 +64,8 @@ const readingTime = Math.ceil(words / 200);
                 {parsedIcon && <span class="post-heading-icon">{parsedIcon}</span>}
                 <span set:html={parsedTitle} />
             </h1>
+
+            {dek && <p class="post-dek" set:html={dek} />}
 
             <p class="post-meta">
                 <time datetime={date.toISOString()}>
@@ -81,7 +99,42 @@ const readingTime = Math.ceil(words / 200);
         </OptimizedContent>
 
         <footer class="post-footer">
-            <a href="/posts" class="back-link">Back to all posts</a>
+            {
+                (older || newer) && (
+                    <nav class="post-pair" aria-label="Older and newer posts">
+                        {older ? (
+                            <a href={getPostPath(older)} rel="prev" class="post-pair-link">
+                                <span class="mono-label">← Older</span>
+                                <span class="post-pair-title" set:html={parseText(older.data.title)} />
+                            </a>
+                        ) : (
+                            <span />
+                        )}
+                        {newer && (
+                            <a href={getPostPath(newer)} rel="next" class="post-pair-link is-newer">
+                                <span class="mono-label">Newer →</span>
+                                <span class="post-pair-title" set:html={parseText(newer.data.title)} />
+                            </a>
+                        )}
+                    </nav>
+                )
+            }
+
+            <div class="post-ending">
+                <p class="mono-label is-prompt">End of post</p>
+                <p class="post-ending-text">
+                    New posts arrive by
+                    <a href="/rss.xml" class="post-ending-link">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"></path>
+                            <circle cx="5" cy="19" r="1"></circle>
+                        </svg>RSS</a>.
+                    I am also on
+                    <a href={siteConfig.social.bluesky} target="_blank" rel="noopener noreferrer" class="post-ending-link">
+                        <SocialIcon name="Bluesky" class="post-ending-icon" />Bluesky</a>.
+                </p>
+                <a href="/posts" class="back-link">Back to all posts</a>
+            </div>
         </footer>
     </article>
 
@@ -93,7 +146,7 @@ const readingTime = Math.ceil(words / 200);
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        font-size: 0.9375rem;
+        font-size: var(--text-small);
         font-weight: 500;
         color: var(--color-muted);
     }
@@ -116,7 +169,7 @@ const readingTime = Math.ceil(words / 200);
     }
 
     .post-heading {
-        font-size: clamp(2rem, 5vw, 2.75rem);
+        font-size: clamp(var(--text-title), 5vw, var(--text-display));
         margin-bottom: 1rem;
     }
 
@@ -124,12 +177,23 @@ const readingTime = Math.ceil(words / 200);
         margin-right: 0.375rem;
     }
 
+    /* The dek: the post's own summary, set as a lead under the title. */
+    .post-dek {
+        max-width: var(--measure);
+        margin-bottom: 1.25rem;
+        font-size: var(--text-lead);
+        line-height: 1.45;
+        letter-spacing: -0.01em;
+        color: var(--color-muted);
+        text-wrap: pretty;
+    }
+
     .post-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         font-family: var(--font-mono);
-        font-size: 0.8125rem;
+        font-size: var(--text-label);
         color: var(--color-muted);
     }
 
@@ -141,9 +205,104 @@ const readingTime = Math.ceil(words / 200);
     }
 
     .post-footer {
-        margin-top: 3rem;
-        padding-top: 1.5rem;
+        margin-top: 3.5rem;
+    }
+
+    /* Older and newer: two quiet columns between rules. */
+    .post-pair {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
         border-top: 1px solid var(--color-border);
+    }
+
+    .post-pair > span {
+        display: none;
+    }
+
+    .post-pair-link {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        padding: 1.25rem 0;
+        border-bottom: 1px solid var(--color-border);
+        color: var(--color-foreground);
+    }
+
+    .post-pair-title {
+        font-size: var(--text-lead);
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+        text-wrap: balance;
+    }
+
+    .post-pair-link:hover .post-pair-title {
+        color: var(--color-accent);
+    }
+
+    @media (min-width: 40rem) {
+        .post-pair {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .post-pair > span {
+            display: block;
+        }
+
+        .post-pair-link {
+            padding: 1.5rem 1.5rem 1.5rem 0;
+            border-bottom: none;
+        }
+
+        .post-pair-link.is-newer {
+            align-items: flex-end;
+            padding: 1.5rem 0 1.5rem 1.5rem;
+            border-left: 1px solid var(--color-border);
+            text-align: right;
+        }
+    }
+
+    /* Ending: where to follow along, then the way back. */
+    .post-ending {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.625rem;
+        padding-top: 1.75rem;
+    }
+
+    .post-ending-text {
+        color: var(--color-muted);
+    }
+
+    .post-ending-link {
+        font-weight: 500;
+        white-space: nowrap;
+        color: var(--color-foreground);
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        text-decoration-thickness: 1.5px;
+        text-decoration-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+    }
+
+    .post-ending-link:hover {
+        color: var(--color-accent);
+        text-decoration-color: currentColor;
+    }
+
+    .post-ending-link svg,
+    .post-ending-link :global(.post-ending-icon) {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        margin-right: 0.3em;
+        vertical-align: -0.125em;
+        color: var(--color-muted);
+    }
+
+    .post-ending .back-link {
+        margin-top: 0.5rem;
     }
 </style>
 
@@ -216,8 +375,10 @@ const readingTime = Math.ceil(words / 200);
         const images = document.querySelectorAll(".prose img:not(.star-history-img)");
         if (images.length === 0) return;
 
-        const theme = document.documentElement.getAttribute("data-theme");
-        const bgColor = theme === "dark" ? "#181822" : "#fff";
+        // The overlay takes the page colour of the theme in use.
+        const bgColor = getComputedStyle(document.documentElement)
+            .getPropertyValue("--color-background")
+            .trim();
 
         window.__zoomInstance = mediumZoom(".prose img:not(.star-history-img)", {
             margin: 24,

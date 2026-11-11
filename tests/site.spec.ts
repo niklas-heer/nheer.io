@@ -262,6 +262,53 @@ for (const width of [1280, 390]) {
   });
 }
 
+test('a post carries its summary, its neighbours and a way to follow along', async ({ page }) => {
+  await page.goto('/posts/');
+  // Start from the second-newest listed post, which has a neighbour on each side.
+  const hrefs = await page.locator('main a[href^="/posts/2"]').evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute('href')!))]);
+  expect(hrefs.length).toBeGreaterThan(2);
+  await page.goto(hrefs[1]);
+  const description = await page.locator('meta[name="description"]').getAttribute('content');
+  const dek = page.locator('article .post-dek');
+  await expect(dek).toBeVisible();
+  expect((await dek.textContent())!.trim()).toBe(description);
+  // Running text keeps one measure whatever its size; figures may run wider.
+  const measures = await page.evaluate(() => ['.post-dek', '.prose > p', '.prose > h2'].map((selector) => getComputedStyle(document.querySelector(selector)!).maxWidth));
+  expect(new Set(measures).size).toBe(1);
+  expect(parseFloat(measures[0])).toBeGreaterThan(400);
+  const pair = page.getByRole('navigation', { name: 'Older and newer posts' });
+  await expect(pair.locator('a[rel="next"]')).toHaveAttribute('href', hrefs[0]);
+  await expect(pair.locator('a[rel="prev"]')).toHaveAttribute('href', hrefs[2]);
+  const ending = page.locator('.post-ending');
+  await expect(ending.getByRole('link', { name: 'RSS' })).toHaveAttribute('href', '/rss.xml');
+  await expect(ending.getByRole('link', { name: 'Bluesky' })).toHaveAttribute('href', 'https://bsky.app/profile/nheer.bsky.social');
+  await expect(ending.getByRole('link', { name: 'Back to all posts' })).toHaveAttribute('href', '/posts');
+  // The newest post has nothing newer; the pair still leads back in time.
+  await pair.locator('a[rel="next"]').click();
+  await expect(page).toHaveURL(new RegExp(`${hrefs[0]}$`));
+  const newestPair = page.getByRole('navigation', { name: 'Older and newer posts' });
+  await expect(newestPair.locator('a[rel="next"]')).toHaveCount(0);
+  await expect(newestPair.locator('a[rel="prev"]')).toHaveAttribute('href', hrefs[1]);
+});
+
+test('a post without a description shows no dek', async ({ page }) => {
+  // Find a built post whose source has no description; the layout must not invent one.
+  const root = 'src/content/posts';
+  const undescribed = new Set(readdirSync(root, { recursive: true }).map(String).filter((candidate) => {
+    if (!/\.mdx?$/.test(candidate)) return false;
+    const text = readFileSync(join(root, candidate), 'utf8');
+    return !/^description:/m.test(text) && !/^draft: true$/m.test(text);
+  }).map((candidate) => candidate.split('/').pop()!.replace(/\.mdx?$/, '').toLowerCase()));
+  const built = readdirSync('dist/posts', { recursive: true }).map(String)
+    .filter((file) => file.endsWith('/index.html'))
+    .find((file) => undescribed.has(file.split('/').at(-2)!.toLowerCase()));
+  test.skip(!built, 'Every published post has a description');
+  await page.goto(`/posts/${built!.replace(/index\.html$/, '')}`);
+  await expect(page.locator('article h1')).toBeVisible();
+  await expect(page.locator('article .post-dek')).toHaveCount(0);
+  await expect(page.locator('.post-ending')).toBeVisible();
+});
+
 for (const width of [1280, 390]) {
   test(`the listening and reading charts use flat ink and keep their axes at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
