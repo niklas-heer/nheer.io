@@ -174,6 +174,220 @@ test('the homepage terminal runs commands, keeps history and navigates', async (
   expect(errors).toEqual([]);
 });
 
+test('the homepage opens with a readable introduction and three selected articles', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  // The introduction is ordinary text beside the name, not terminal output.
+  const lead = page.locator('.hero-lead');
+  await expect(lead).toContainText('Engineering manager at Tradebyte');
+  expect(await lead.evaluate((element) => getComputedStyle(element).fontFamily)).toContain('Bricolage');
+  expect(await lead.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(20);
+  const terminal = page.locator('[data-terminal]');
+  const [introBox, terminalBox] = [await page.locator('.hero-intro').boundingBox(), await terminal.boundingBox()];
+  expect(terminalBox!.x).toBeGreaterThan(introBox!.x + introBox!.width - 1);
+  // The terminal is as tall as its lines, and still answers whoami.
+  expect(terminalBox!.height).toBeLessThan(320);
+  const input = page.getByRole('textbox', { name: /type a command/i });
+  await input.fill('whoami');
+  await input.press('Enter');
+  await expect(page.locator('[data-terminal-history]')).toContainText('Engineering manager at Tradebyte');
+
+  const writing = page.getByRole('region', { name: 'Selected writing' });
+  const articles = writing.getByRole('article');
+  await expect(articles).toHaveCount(3);
+  const hrefs = new Set<string>();
+  for (const article of await articles.all()) {
+    const link = article.getByRole('heading', { level: 3 }).getByRole('link');
+    const href = await link.getAttribute('href');
+    expect(href).toMatch(/^\/posts\/\d{4}\/\d{2}\/[^/]+\/$/);
+    hrefs.add(href!);
+    expect((await page.request.get(href!)).status()).toBe(200);
+    await expect(article.locator('.lead-sentence')).not.toBeEmpty();
+  }
+  expect(hrefs.size).toBe(3);
+  // The newest posts follow without repeating a selected one.
+  for (const href of await writing.locator('.latest-post').evaluateAll((links) => links.map((link) => link.getAttribute('href')!))) {
+    expect(hrefs.has(href)).toBe(false);
+  }
+  // Projects reuse the screenshot cards; the shelf row holds at most five covers.
+  const projects = page.getByRole('region', { name: 'Featured projects' });
+  await expect(projects.locator('.project-card')).toHaveCount(3);
+  await expect(projects.locator('.project-card img').first()).toBeVisible();
+  expect(await page.getByRole('region', { name: 'On the shelf' }).locator('.shelf-item').count()).toBeLessThanOrEqual(5);
+});
+
+for (const width of [1280, 390]) {
+  test(`the terminal replay does not move the homepage at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // A first visit replays the terminal intro line by line.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => document.fonts.ready);
+    const terminal = page.locator('[data-terminal]');
+    await expect(terminal).toHaveAttribute('data-playing', 'true');
+    const measure = () => page.evaluate(() => ({
+      terminal: document.querySelector('[data-terminal]')!.getBoundingClientRect().height,
+      below: document.querySelector('#writing-heading')!.getBoundingClientRect().top + window.scrollY,
+    }));
+    const during = await measure();
+    await expect(terminal).not.toHaveAttribute('data-playing', /.*/, { timeout: 20_000 });
+    expect(await measure()).toEqual(during);
+  });
+}
+
+for (const width of [1280, 390]) {
+  test(`the header shares one shell with wide and reading pages at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const edges = async (selector: string) => {
+      const box = (await page.locator(selector).first().boundingBox())!;
+      return { left: box.x, right: box.x + box.width };
+    };
+    await page.goto('/projects/');
+    const header = await edges('.site-header');
+    const wide = await edges('.wide-breakout');
+    expect(Math.abs(header.left - wide.left)).toBeLessThan(1);
+    expect(Math.abs(header.right - wide.right)).toBeLessThan(1);
+    const wordmark = await edges('.wordmark');
+    expect(Math.abs(wordmark.left - wide.left)).toBeLessThan(1);
+    // The header does not move between a wide page, the homepage and reading pages,
+    // and none of them scrolls sideways.
+    for (const path of ['/', '/posts/', '/about/', '/reviews/', '/archive/', '/imprint/', '/listening/', '/reading/']) {
+      await page.goto(path);
+      const other = await edges('.site-header');
+      expect(Math.abs(other.left - header.left), path).toBeLessThan(1);
+      expect(Math.abs(other.right - header.right), path).toBeLessThan(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true);
+    }
+    const column = await edges('main');
+    expect(column.left).toBeGreaterThanOrEqual(header.left - 0.5);
+    expect(column.right).toBeLessThanOrEqual(header.right + 0.5);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
+test('a post carries its summary, its neighbours and a way to follow along', async ({ page }) => {
+  await page.goto('/posts/');
+  // Start from the second-newest listed post, which has a neighbour on each side.
+  const hrefs = await page.locator('main a[href^="/posts/2"]').evaluateAll((links) => [...new Set(links.map((link) => link.getAttribute('href')!))]);
+  expect(hrefs.length).toBeGreaterThan(2);
+  await page.goto(hrefs[1]);
+  const description = await page.locator('meta[name="description"]').getAttribute('content');
+  const dek = page.locator('article .post-dek');
+  await expect(dek).toBeVisible();
+  expect((await dek.textContent())!.trim()).toBe(description);
+  // Running text keeps one measure whatever its size; figures may run wider.
+  const measures = await page.evaluate(() => ['.post-dek', '.prose > p', '.prose > h2'].map((selector) => getComputedStyle(document.querySelector(selector)!).maxWidth));
+  expect(new Set(measures).size).toBe(1);
+  expect(parseFloat(measures[0])).toBeGreaterThan(400);
+  const pair = page.getByRole('navigation', { name: 'Older and newer posts' });
+  await expect(pair.locator('a[rel="next"]')).toHaveAttribute('href', hrefs[0]);
+  await expect(pair.locator('a[rel="prev"]')).toHaveAttribute('href', hrefs[2]);
+  const ending = page.locator('.post-ending');
+  await expect(ending.getByRole('link', { name: 'RSS' })).toHaveAttribute('href', '/rss.xml');
+  await expect(ending.getByRole('link', { name: 'Bluesky' })).toHaveAttribute('href', 'https://bsky.app/profile/nheer.bsky.social');
+  await expect(ending.getByRole('link', { name: 'Back to all posts' })).toHaveAttribute('href', '/posts');
+  // The newest post has nothing newer; the pair still leads back in time.
+  await pair.locator('a[rel="next"]').click();
+  await expect(page).toHaveURL(new RegExp(`${hrefs[0]}$`));
+  const newestPair = page.getByRole('navigation', { name: 'Older and newer posts' });
+  await expect(newestPair.locator('a[rel="next"]')).toHaveCount(0);
+  await expect(newestPair.locator('a[rel="prev"]')).toHaveAttribute('href', hrefs[1]);
+});
+
+test('a post without a description shows no dek', async ({ page }) => {
+  // Find a built post whose source has no description; the layout must not invent one.
+  const root = 'src/content/posts';
+  const undescribed = new Set(readdirSync(root, { recursive: true }).map(String).filter((candidate) => {
+    if (!/\.mdx?$/.test(candidate)) return false;
+    const text = readFileSync(join(root, candidate), 'utf8');
+    return !/^description:/m.test(text) && !/^draft: true$/m.test(text);
+  }).map((candidate) => candidate.split('/').pop()!.replace(/\.mdx?$/, '').toLowerCase()));
+  const built = readdirSync('dist/posts', { recursive: true }).map(String)
+    .filter((file) => file.endsWith('/index.html'))
+    .find((file) => undescribed.has(file.split('/').at(-2)!.toLowerCase()));
+  test.skip(!built, 'Every published post has a description');
+  await page.goto(`/posts/${built!.replace(/index\.html$/, '')}`);
+  await expect(page.locator('article h1')).toBeVisible();
+  await expect(page.locator('article .post-dek')).toHaveCount(0);
+  await expect(page.locator('.post-ending')).toBeVisible();
+});
+
+for (const width of [1280, 390]) {
+  test(`the listening and reading charts use flat ink and keep their axes at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/listening');
+    const plot = page.locator('.chart-bars');
+    await expect(plot).toBeVisible();
+    const plotBox = (await plot.boundingBox())!;
+    // Axis labels sit on their gridlines: the scale's top, its half and the baseline.
+    const labels = page.locator('.chart-y-label');
+    await expect(labels).toHaveCount(3);
+    const centres = await labels.evaluateAll((nodes) => nodes.map((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const box = range.getBoundingClientRect();
+      return box.top + box.height / 2;
+    }));
+    expect(Math.abs(centres[0] - plotBox.y)).toBeLessThan(2);
+    expect(Math.abs(centres[1] - (plotBox.y + plotBox.height / 2))).toBeLessThan(2);
+    expect(Math.abs(centres[2] - (plotBox.y + plotBox.height))).toBeLessThan(2);
+    await expect(labels.last()).toHaveText('0');
+    // Day labels stay inside the chart card, below the bars.
+    const card = (await page.locator('.monthly-chart').boundingBox())!;
+    const dayLabels = await page.locator('.chart-day-label').evaluateAll((nodes) => nodes.filter((node) => node.textContent!.trim()).map((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rect = range.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
+    }));
+    expect(dayLabels.length).toBeGreaterThan(3);
+    // Neighbouring labels never run into each other.
+    for (let index = 1; index < dayLabels.length; index++) {
+      expect(dayLabels[index].left).toBeGreaterThan(dayLabels[index - 1].right);
+    }
+    for (const box of dayLabels) {
+      expect(box.top).toBeGreaterThanOrEqual(plotBox.y + plotBox.height);
+      expect(box.bottom).toBeLessThanOrEqual(card.y + card.height);
+      expect(box.left).toBeGreaterThanOrEqual(card.x);
+      expect(box.right).toBeLessThanOrEqual(card.x + card.width);
+    }
+    const tokens = await page.evaluate(() => {
+      const probe = document.createElement('i');
+      document.body.append(probe);
+      const resolve = (name: string) => { probe.style.color = `var(${name})`; return getComputedStyle(probe).color; };
+      const colours = { accent: resolve('--color-accent'), mark: resolve('--color-mark') };
+      probe.remove();
+      return colours;
+    });
+    const bars = await page.locator('.chart-bar').evaluateAll((nodes) => nodes.map((node) => ({
+      today: node.parentElement!.classList.contains('today'),
+      colour: getComputedStyle(node).backgroundColor,
+      image: getComputedStyle(node).backgroundImage,
+    })));
+    for (const bar of bars) {
+      expect(bar.image).toBe('none');
+      expect(bar.colour).toBe(bar.today ? tokens.mark : tokens.accent);
+    }
+
+    await page.goto('/reading');
+    const years = page.locator('.chart-bar-group');
+    test.skip(await years.count() === 0, 'No reading data in this build');
+    const yearBars = await years.evaluateAll((groups) => groups.map((group) => {
+      const bar = group.querySelector('.chart-bar')!;
+      return {
+        current: group.getAttribute('data-current') === 'true',
+        colour: getComputedStyle(bar).backgroundColor,
+        image: getComputedStyle(bar).backgroundImage,
+      };
+    }));
+    expect(yearBars.filter((bar) => bar.current).length).toBeLessThanOrEqual(1);
+    for (const bar of yearBars) {
+      expect(bar.image).toBe('none');
+      expect(bar.colour).toBe(bar.current ? tokens.mark : tokens.accent);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 test('the homepage social links include Bluesky and each carries an icon', async ({ page }) => {
   await page.goto('/');
   const socials = page.getByRole('list', { name: 'Elsewhere' });
@@ -451,4 +665,13 @@ test('posts are shared as articles with their date and structured data', async (
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
   await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
   await expect(page.locator('link[rel="me"][href="https://bsky.app/profile/nheer.bsky.social"]')).toHaveCount(1);
+});
+
+test('the listening chart gives every day so far to screen readers', async ({ page }) => {
+  await page.goto('/listening');
+  const table = page.getByRole('table', { name: /Minutes listened per day in/ });
+  test.skip(await table.count() === 0, 'No listening data in this build');
+  const days = await page.locator('.chart-bar-wrapper:not(.future)').count();
+  await expect(table.locator('tbody tr')).toHaveCount(days);
+  await expect(table.locator('tbody tr').first().locator('td')).toHaveText(/^\d+$/);
 });

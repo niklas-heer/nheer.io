@@ -92,3 +92,31 @@ export function createInkyDeck(
     },
   };
 }
+
+/** Where the visitor's choice to hide the corner mascot is remembered. */
+export const INKY_HIDDEN_KEY = "inky-hidden";
+
+type InkyStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+
+// Reaching for localStorage can itself throw (blocked storage, sandboxed
+// frames), so the storage is looked up inside the try block.
+const browserStorage = (): InkyStorage => localStorage;
+
+/** Whether the visitor hid the mascot. Unreadable storage counts as "shown". */
+export function readInkyHidden(storage: () => InkyStorage = browserStorage): boolean {
+  try {
+    return storage().getItem(INKY_HIDDEN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/** Remember the choice; without storage it simply lasts for this page view. */
+export function writeInkyHidden(hidden: boolean, storage: () => InkyStorage = browserStorage): void {
+  try {
+    if (hidden) storage().setItem(INKY_HIDDEN_KEY, "true");
+    else storage().removeItem(INKY_HIDDEN_KEY);
+  } catch {
+    // Nothing to do: the mascot is already hidden or shown on this page.
+  }
+}

@@ -1,13 +1,17 @@
 ---
-// Inky - The snarky tech octopus mascot (Lottie animation version)
+// Inky - The snarky tech octopus mascot.
+// He is a still picture first. The animation (lottie-web and its JSON, about
+// half a megabyte together) is fetched only once the browser is idle or the
+// visitor reaches for him, and never when reduced motion is requested.
 import { getInkyComments } from "../utils/inky";
+import { INKY_HIDDEN_KEY } from "../utils/inky-client";
 
 const comments = await getInkyComments();
 ---
 
 <div class="inky-container" id="inky-container">
     <!-- Speech bubble (hidden by default) -->
-    <div class="inky-bubble" id="inky-bubble">
+    <div class="inky-bubble" id="inky-bubble" role="status" aria-live="polite">
         <p class="inky-text" id="inky-text"></p>
         <div class="inky-footer">
             <span class="inky-name">- Inky</span>
@@ -53,16 +57,52 @@ const comments = await getInkyComments();
         </div>
     </div>
 
-    <!-- Inky the Octopus - Lottie Animation -->
+    <!-- Inky the Octopus: a still poster, replaced by the animation when it arrives -->
     <button
+        type="button"
         class="inky-mascot"
         id="inky-mascot"
-        aria-label="Click Inky for a snarky tech comment"
+        aria-label="Ask Inky for a snarky tech comment"
+        aria-expanded="false"
+        aria-controls="inky-bubble"
         title="Click me!"
     >
-        <div id="inky-lottie" class="inky-lottie"></div>
+        <span class="inky-frame">
+            <img
+                class="inky-poster"
+                src="/assets/articles/2026/inky-poster.svg"
+                alt=""
+                width="200"
+                height="200"
+                loading="lazy"
+                decoding="async"
+            />
+            <span id="inky-lottie" class="inky-lottie" aria-hidden="true"></span>
+        </span>
+    </button>
+
+    <button type="button" class="inky-hide" id="inky-hide" aria-label="Hide Inky" title="Hide Inky">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+        </svg>
     </button>
 </div>
+
+<!-- Stays behind when Inky is hidden, so he can be called back. -->
+<button type="button" class="inky-show" id="inky-show" aria-label="Show Inky">
+    <span aria-hidden="true">❯</span> inky
+</button>
+
+<!-- Apply a remembered "hidden" before the first paint, so he never flashes. -->
+<script is:inline data-astro-rerun define:vars={{ INKY_HIDDEN_KEY }}>
+    try {
+        if (localStorage.getItem(INKY_HIDDEN_KEY) === "true") {
+            document.getElementById("inky-container").dataset.hidden = "true";
+        }
+    } catch {
+        // Without storage Inky simply starts out visible.
+    }
+</script>
 
 <!-- Pass comments to JS -->
 <script define:vars={{ comments }}>
@@ -70,22 +110,28 @@ const comments = await getInkyComments();
 </script>
 
 <script>
-    import { createInkyDeck, type InkyDeck, type InkyLine, type InkyTurn } from "../utils/inky-client";
+    import {
+        createInkyDeck,
+        readInkyHidden,
+        writeInkyHidden,
+        type InkyDeck,
+        type InkyLine,
+        type InkyTurn,
+    } from "../utils/inky-client";
 
-    // Lazy-load lottie-web only when needed (on desktop screens >= 1200px)
-    let lottieModule: typeof import("lottie-web") | null = null;
     const ANIMATION = "inky-animation";
     const DEACTIVATE_DELAY = 12000; // 12 seconds
+    const IDLE_TIMEOUT = 4000;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Phones and narrow windows never see him, so nothing is loaded for them.
+    const wide = window.matchMedia("(min-width: 1200px)");
+    const savesData = () =>
+        Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+    // Whether this page's Inky may download and run the animation right now.
+    const mayAnimate = () => !reducedMotion.matches && !savesData() && wide.matches;
 
-    reducedMotion.addEventListener("change", () => {
-        if (reducedMotion.matches) {
-            lottieModule?.default.pause(ANIMATION);
-        } else {
-            lottieModule?.default.play(ANIMATION);
-        }
-    });
-
+    // lottie-web is imported on demand only; see scheduleAnimation().
+    let lottieModule: typeof import("lottie-web") | null = null;
     async function loadLottie() {
         if (!lottieModule) {
             lottieModule = await import("lottie-web");
@@ -93,21 +139,48 @@ const comments = await getInkyComments();
         return lottieModule.default;
     }
 
-    // One bubble at a time; the document listener below closes it on outside clicks.
-    let active: { container: HTMLElement; bubble: HTMLElement } | null = null;
-    document.addEventListener("click", (event) => {
-        if (active && !active.container.contains(event.target as Node)) {
-            active.bubble.classList.remove("visible");
+    reducedMotion.addEventListener("change", () => {
+        if (reducedMotion.matches) {
+            lottieModule?.default.pause(ANIMATION);
+        } else {
+            // Starts the animation if this page never did; resumes it otherwise.
+            current?.animate();
+            lottieModule?.default.play(ANIMATION);
         }
     });
 
-    // Astro swaps the document on client navigation; drop the old animation first.
-    let roaming: AbortController | null = null;
-    document.addEventListener("astro:before-swap", () => {
-        lottieModule?.default.destroy(ANIMATION);
-        roaming?.abort();
-        roaming = null;
-        active = null;
+    // A window that widens past the breakpoint shows Inky, so wake him then.
+    let startCurrentPage: (() => void) | null = null;
+    wide.addEventListener("change", () => {
+        if (wide.matches) startCurrentPage?.();
+    });
+
+    // What the page's Inky needs from the document-level listeners below.
+    interface InkySession {
+        container: HTMLElement;
+        closeBubble: () => void;
+        isBubbleOpen: () => boolean;
+        animate: () => void;
+        stop: () => void;
+    }
+    let current: InkySession | null = null;
+
+    // One bubble at a time: an outside click or Escape closes it.
+    document.addEventListener("click", (event) => {
+        if (current && !current.container.contains(event.target as Node)) current.closeBubble();
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && current?.isBubbleOpen()) current.closeBubble();
+    });
+
+    // Astro swaps the document on client navigation; drop the old Inky first and
+    // carry a "hidden" choice over, so it also holds where storage is blocked.
+    document.addEventListener("astro:before-swap", (event) => {
+        const hidden = document.getElementById("inky-container")?.dataset.hidden;
+        const next = event.newDocument.getElementById("inky-container");
+        if (hidden && next) next.dataset.hidden = hidden;
+        current?.stop();
+        current = null;
     });
 
     interface Heckle { section: string; comment: string }
@@ -122,10 +195,8 @@ const comments = await getInkyComments();
         article: HTMLElement,
         heckles: Heckle[],
         speak: (comment: string) => void,
+        signal: AbortSignal,
     ) {
-        roaming?.abort();
-        roaming = new AbortController();
-        const { signal } = roaming;
         const MASCOT = 200;
         const MARGIN = 12;
         const follow = !reducedMotion.matches;
@@ -134,6 +205,7 @@ const comments = await getInkyComments();
         let pending = false;
 
         if (follow) container.classList.add("inky-roaming");
+        signal.addEventListener("abort", () => container.classList.remove("inky-roaming", "inky-bubble-below"));
 
         function ranges() {
             const tops = heckles
@@ -161,10 +233,11 @@ const comments = await getInkyComments();
         }
 
         function update() {
-            if (pending) return;
+            if (pending || signal.aborted) return;
             pending = true;
             requestAnimationFrame(() => {
                 pending = false;
+                if (signal.aborted) return;
                 try {
                     place();
                     heckle();
@@ -179,48 +252,35 @@ const comments = await getInkyComments();
         place();
     }
 
-    async function initInky() {
-        const container = document.getElementById("inky-container");
-        const mascot = document.getElementById("inky-mascot");
-        const lottieContainer = document.getElementById("inky-lottie");
-        const bubble = document.getElementById("inky-bubble");
-        const text = document.getElementById("inky-text");
-        const sourceLink = document.getElementById("inky-source") as HTMLAnchorElement | null;
-
-        if (!container || !mascot || !bubble || !text || !lottieContainer) return;
-        // Both the initial script run and astro:page-load reach here on the first
-        // page view. The flag lives on the element, so a freshly swapped page
-        // initializes again while the same page never initializes twice.
-        if (mascot.dataset.inkyReady) return;
-        mascot.dataset.inkyReady = "true";
-        if (window.innerWidth < 1200) return;
-
-        const lottie = await loadLottie();
-        if (!lottieContainer.isConnected) return;
-
-        lottie.destroy(ANIMATION);
-        lottie.loadAnimation({
-            container: lottieContainer,
-            renderer: "svg",
-            loop: true,
-            autoplay: !reducedMotion.matches,
-            path: "/animations/octopus.json",
-            name: ANIMATION,
-        });
-
+    /** Wake Inky on this page: comments, heckles and, later, the animation. */
+    function startSession(
+        container: HTMLElement,
+        mascot: HTMLElement,
+        lottieContainer: HTMLElement,
+        bubble: HTMLElement,
+        text: HTMLElement,
+        sourceLink: HTMLAnchorElement | null,
+    ): InkySession {
+        const controller = new AbortController();
+        const { signal } = controller;
         const comments = ((window as any).inkyComments ?? []) as InkyLine[];
         const deck: InkyDeck = createInkyDeck(comments);
         let isActivated = false;
         let deactivateTimer: ReturnType<typeof setTimeout> | null = null;
-        active = { container, bubble };
+        let animationRequested = false;
+
+        function setBubble(open: boolean) {
+            bubble.classList.toggle("visible", open);
+            mascot.setAttribute("aria-expanded", String(open));
+        }
 
         function resetDeactivateTimer() {
             if (deactivateTimer) clearTimeout(deactivateTimer);
             deactivateTimer = setTimeout(() => {
                 if (isActivated) {
                     isActivated = false;
-                    mascot!.classList.remove("activated");
-                    bubble!.classList.remove("visible");
+                    mascot.classList.remove("activated");
+                    setBubble(false);
                 }
             }, DEACTIVATE_DELAY);
         }
@@ -236,27 +296,79 @@ const comments = await getInkyComments();
             }
             sourceLink.href = turn.source.url;
             sourceLink.title = turn.source.title;
+            sourceLink.setAttribute("aria-label", `Source: ${turn.source.title}`);
             sourceLink.style.display = "flex";
             const icon = { hackernews: ".hn-icon", thenewstack: ".tns-icon", devops: ".devops-icon" }[turn.source.type];
             if (icon) sourceLink.querySelector(icon)?.classList.add("visible");
         }
 
-        mascot.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (!isActivated) {
-                isActivated = true;
-                mascot.classList.add("activated");
-            }
-            const turn = deck.next();
+        function say(turn: InkyTurn) {
+            isActivated = true;
+            mascot.classList.add("activated");
+            // Open first: the bubble is a live region and must be shown to announce.
+            setBubble(true);
             text.textContent = turn.text;
             updateSourceIcon(turn);
-            bubble.classList.add("visible");
             resetDeactivateTimer();
-        });
+        }
 
-        mascot.addEventListener("mouseenter", () => {
+        // The animation replaces the poster once it has drawn its first frame.
+        async function animate() {
+            if (animationRequested || signal.aborted || !mayAnimate()) return;
+            animationRequested = true;
+            try {
+                const lottie = await loadLottie();
+                if (signal.aborted || !lottieContainer.isConnected) return;
+                // The preference may have changed while the renderer was loading.
+                if (!mayAnimate()) {
+                    animationRequested = false;
+                    return;
+                }
+                lottie.destroy(ANIMATION);
+                const animation = lottie.loadAnimation({
+                    container: lottieContainer,
+                    renderer: "svg",
+                    loop: true,
+                    autoplay: !reducedMotion.matches,
+                    path: "/animations/octopus.json",
+                    name: ANIMATION,
+                });
+                animation.addEventListener("DOMLoaded", () => {
+                    if (!signal.aborted) container.classList.add("inky-animated");
+                });
+            } catch (error) {
+                // The poster stays; Inky still talks.
+                animationRequested = false;
+                console.error("Inky's animation could not be loaded", error);
+            }
+        }
+
+        // Not during page load: wait until the page has loaded and the browser is
+        // idle. Reduced motion and Save-Data keep the still picture for good.
+        function scheduleAnimation() {
+            if (!mayAnimate()) return;
+            const whenIdle = () => {
+                if (signal.aborted) return;
+                if ("requestIdleCallback" in window) {
+                    requestIdleCallback(() => animate(), { timeout: IDLE_TIMEOUT });
+                } else {
+                    setTimeout(animate, 1500);
+                }
+            };
+            if (document.readyState === "complete") whenIdle();
+            else window.addEventListener("load", whenIdle, { once: true, signal });
+        }
+
+        mascot.addEventListener("click", (event) => {
+            event.stopPropagation();
+            animate();
+            say(deck.next());
+        }, { signal });
+        mascot.addEventListener("pointerenter", () => {
+            animate();
             if (isActivated) resetDeactivateTimer();
-        });
+        }, { signal });
+        mascot.addEventListener("focus", () => animate(), { signal });
 
         // Posts may carry pre-generated heckles in their frontmatter.
         const heckleNode = document.getElementById("inky-heckles");
@@ -269,14 +381,68 @@ const comments = await getInkyComments();
         }
         if (heckles.length > 0 && article) {
             startRoaming(container, article, heckles, (comment) => {
-                isActivated = true;
-                mascot.classList.add("activated");
-                text.textContent = comment;
-                updateSourceIcon({ text: comment, source: null, shown: deck.shown, total: deck.total, exhausted: false });
-                bubble.classList.add("visible");
-                resetDeactivateTimer();
-            });
+                say({ text: comment, source: null, shown: deck.shown, total: deck.total, exhausted: false });
+            }, signal);
         }
+
+        scheduleAnimation();
+
+        return {
+            container,
+            closeBubble: () => setBubble(false),
+            isBubbleOpen: () => bubble.classList.contains("visible"),
+            animate,
+            stop() {
+                controller.abort();
+                if (deactivateTimer) clearTimeout(deactivateTimer);
+                lottieModule?.default.destroy(ANIMATION);
+                container.classList.remove("inky-animated");
+                mascot.classList.remove("activated");
+                setBubble(false);
+            },
+        };
+    }
+
+    function initInky() {
+        const container = document.getElementById("inky-container");
+        const mascot = document.getElementById("inky-mascot");
+        const lottieContainer = document.getElementById("inky-lottie");
+        const bubble = document.getElementById("inky-bubble");
+        const text = document.getElementById("inky-text");
+        const hide = document.getElementById("inky-hide");
+        const show = document.getElementById("inky-show");
+        const sourceLink = document.getElementById("inky-source") as HTMLAnchorElement | null;
+
+        if (!container || !mascot || !bubble || !text || !lottieContainer || !hide || !show) return;
+        // Both the initial script run and astro:page-load reach here on the first
+        // page view. The flag lives on the element, so a freshly swapped page
+        // initializes again while the same page never initializes twice.
+        if (mascot.dataset.inkyReady) return;
+        mascot.dataset.inkyReady = "true";
+
+        const start = () => {
+            if (!wide.matches || container.dataset.hidden || current || !container.isConnected) return;
+            current = startSession(container, mascot, lottieContainer, bubble, text, sourceLink);
+        };
+        startCurrentPage = start;
+
+        hide.addEventListener("click", (event) => {
+            event.stopPropagation();
+            current?.stop();
+            current = null;
+            container.dataset.hidden = "true";
+            writeInkyHidden(true);
+            show.focus();
+        });
+        show.addEventListener("click", () => {
+            delete container.dataset.hidden;
+            writeInkyHidden(false);
+            start();
+            mascot.focus();
+        });
+
+        if (readInkyHidden()) container.dataset.hidden = "true";
+        start();
     }
 
     // Initialize on first load and after View Transitions navigation
@@ -293,10 +459,52 @@ const comments = await getInkyComments();
         display: none;
     }
 
+    /* Hidden by choice: only the small "show" tab remains. */
+    .inky-show {
+        display: none;
+    }
+
     @media (min-width: 1200px) {
         .inky-container {
             display: block;
         }
+
+        .inky-container[data-hidden] {
+            display: none;
+        }
+
+        .inky-container[data-hidden] + .inky-show {
+            display: inline-flex;
+        }
+    }
+
+    .inky-show {
+        position: fixed;
+        left: 0.75rem;
+        bottom: 0.75rem;
+        z-index: 100;
+        align-items: center;
+        gap: 0.4em;
+        padding: 0.25rem 0.625rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        color: var(--color-muted);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-chip);
+        cursor: pointer;
+        transition:
+            color 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .inky-show span {
+        color: var(--color-accent);
+    }
+
+    .inky-show:hover {
+        color: var(--color-foreground);
+        border-color: var(--color-accent);
     }
 
     /* On heckled posts the container follows the cursor along the left edge. */
@@ -332,6 +540,7 @@ const comments = await getInkyComments();
     }
 
     .inky-mascot {
+        display: block;
         background: none;
         border: none;
         cursor: pointer;
@@ -348,9 +557,16 @@ const comments = await getInkyComments();
     }
 
     .inky-mascot:hover,
+    .inky-mascot:focus-visible,
     .inky-mascot.activated {
         opacity: 1;
         /* Slide out and rotate to normal */
+        transform: translateX(10px) rotate(0deg);
+    }
+
+    /* He stays out while the pointer or focus is on his hide control. */
+    .inky-container:has(.inky-hide:hover, .inky-hide:focus-visible) .inky-mascot {
+        opacity: 1;
         transform: translateX(10px) rotate(0deg);
     }
 
@@ -358,15 +574,81 @@ const comments = await getInkyComments();
         transform: translateX(10px) rotate(0deg) scale(0.97);
     }
 
-    .inky-lottie {
+    .inky-mascot:focus-visible {
+        border-radius: var(--radius-panel);
+    }
+
+    /* The poster and the animation share one box, so the swap does not move him. */
+    .inky-frame {
+        position: relative;
+        display: block;
         width: 100%;
         height: 100%;
         filter: drop-shadow(0 0 8px color-mix(in srgb, var(--color-accent) 30%, transparent));
     }
 
-    .inky-mascot:hover .inky-lottie,
-    .inky-mascot.activated .inky-lottie {
+    .inky-mascot:hover .inky-frame,
+    .inky-mascot.activated .inky-frame {
         filter: drop-shadow(0 0 15px color-mix(in srgb, var(--color-accent) 50%, transparent));
+    }
+
+    .inky-poster,
+    .inky-lottie {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .inky-poster {
+        object-fit: contain;
+    }
+
+    .inky-lottie {
+        visibility: hidden;
+    }
+
+    .inky-container.inky-animated .inky-poster {
+        visibility: hidden;
+    }
+
+    .inky-container.inky-animated .inky-lottie {
+        visibility: visible;
+    }
+
+    /* Hide control: appears when he is hovered, focused or talking. */
+    .inky-hide {
+        position: absolute;
+        left: 0.5rem;
+        bottom: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        color: var(--color-muted);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 50%;
+        cursor: pointer;
+        opacity: 0;
+        transition:
+            opacity 0.2s ease,
+            color 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    .inky-container:hover .inky-hide,
+    .inky-container:focus-within .inky-hide,
+    .inky-mascot.activated ~ .inky-hide {
+        opacity: 1;
+    }
+
+    .inky-hide:hover {
+        color: var(--color-foreground);
+        border-color: var(--color-accent);
     }
 
     /* Speech bubble */
@@ -376,13 +658,13 @@ const comments = await getInkyComments();
         left: 80px;
         background: var(--color-surface);
         border: 2px solid var(--color-accent);
-        border-radius: 1rem;
+        border-radius: var(--radius-panel);
         padding: 1rem;
         max-width: 280px;
         min-width: 200px;
         box-shadow:
             0 0 20px color-mix(in srgb, var(--color-accent) 20%, transparent),
-            0 4px 20px rgba(0, 0, 0, 0.15);
+            0 4px 20px rgb(0 0 0 / 0.15);
         opacity: 0;
         visibility: hidden;
         transform: translateY(10px) scale(0.95);
@@ -418,7 +700,7 @@ const comments = await getInkyComments();
 
     .inky-text {
         margin: 0;
-        font-size: 0.9rem;
+        font-size: var(--text-small);
         line-height: 1.5;
         color: var(--color-foreground);
     }
@@ -431,7 +713,7 @@ const comments = await getInkyComments();
     }
 
     .inky-name {
-        font-size: 0.75rem;
+        font-size: var(--text-label);
         color: var(--color-accent);
         font-style: italic;
     }
