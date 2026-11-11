@@ -13,9 +13,11 @@ test('the corner mascot mounts once on wide screens and answers clicks', async (
   const octopus = page.locator('#inky-lottie svg');
   await expect(octopus).toBeVisible();
   const mascot = page.locator('#inky-mascot');
+  await expect(mascot).toHaveAttribute('aria-expanded', 'false');
   await mascot.click();
   const bubble = page.locator('#inky-bubble');
   await expect(bubble).toHaveClass(/visible/);
+  await expect(mascot).toHaveAttribute('aria-expanded', 'true');
   const first = (await page.locator('#inky-text').textContent())?.trim();
   expect(first).toBeTruthy();
   await mascot.click();
@@ -24,7 +26,16 @@ test('the corner mascot mounts once on wide screens and answers clicks', async (
   // Clicking elsewhere closes the bubble; the octopus stays surfaced.
   await page.locator('h1').first().click();
   await expect(bubble).not.toHaveClass(/visible/);
+  await expect(mascot).toHaveAttribute('aria-expanded', 'false');
   await expect(mascot).toHaveClass(/activated/);
+  // Escape closes it too and leaves the keyboard on the mascot.
+  await mascot.focus();
+  await page.keyboard.press('Enter');
+  await expect(bubble).toHaveClass(/visible/);
+  await page.keyboard.press('Escape');
+  await expect(bubble).not.toHaveClass(/visible/);
+  await expect(mascot).toHaveAttribute('aria-expanded', 'false');
+  await expect(mascot).toBeFocused();
   expect(animationRequests).toBe(1);
 
   // Client navigation replaces the document; the replacement must initialize too.
@@ -34,6 +45,111 @@ test('the corner mascot mounts once on wide screens and answers clicks', async (
   await page.locator('#inky-mascot').click();
   await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
   expect(animationRequests).toBe(2);
+  expect(errors).toEqual([]);
+});
+
+test('the corner mascot is a still picture until the page has loaded', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 844 });
+  // Hold the animation back to observe the state every visitor starts in.
+  let release: () => void = () => {};
+  const held = new Promise<void>(resolve => { release = resolve; });
+  await page.route(/octopus\.json/, async route => { await held; await route.continue(); });
+  const scripts: string[] = [];
+  page.on('request', request => { if (request.resourceType() === 'script') scripts.push(request.url()); });
+  await page.goto('/posts/', { waitUntil: 'domcontentloaded' });
+  const poster = page.locator('#inky-mascot img.inky-poster');
+  await expect(poster).toBeVisible();
+  expect(await poster.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+  await expect(page.locator('#inky-container')).not.toHaveClass(/inky-animated/);
+  // No script the page asks for up front carries the animation library.
+  const html = await (await page.request.get('/posts/')).text();
+  const eager = [...html.matchAll(/<script[^>]+src="([^"]+)"/g), ...html.matchAll(/<link[^>]+rel="modulepreload"[^>]+href="([^"]+)"/g)].map(match => match[1]);
+  expect(eager.filter(url => /lottie/i.test(url))).toEqual([]);
+  // He answers before the animation exists.
+  await page.locator('#inky-mascot').click();
+  await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
+  release();
+  await expect(page.locator('#inky-lottie svg')).toBeVisible();
+  await expect(poster).toBeHidden();
+  expect(scripts.some(url => /lottie/i.test(url))).toBe(true);
+});
+
+test('reduced motion keeps the corner mascot still and downloads no animation', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1280, height: 844 } });
+  const page = await context.newPage();
+  const requests: string[] = [];
+  page.on('request', request => { if (/octopus\.json|lottie/i.test(request.url())) requests.push(request.url()); });
+  await page.goto('/posts/');
+  const mascot = page.locator('#inky-mascot');
+  await expect(mascot.locator('img.inky-poster')).toBeVisible();
+  await mascot.hover();
+  await mascot.click();
+  await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
+  await expect(page.locator('#inky-text')).not.toBeEmpty();
+  await page.waitForTimeout(500);
+  await expect(mascot.locator('img.inky-poster')).toBeVisible();
+  expect(requests).toEqual([]);
+  await context.close();
+});
+
+test('the corner mascot can be hidden, stays hidden and comes back', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/posts/');
+  const container = page.locator('#inky-container');
+  const show = page.getByRole('button', { name: 'Show Inky' });
+  await expect(show).toBeHidden();
+  // The control is reachable from the keyboard, right after the mascot.
+  await page.locator('#inky-mascot').focus();
+  await page.keyboard.press('Tab');
+  const hide = page.getByRole('button', { name: 'Hide Inky' });
+  await expect(hide).toBeFocused();
+  await expect(hide).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Enter');
+  await expect(container).toBeHidden();
+  await expect(show).toBeFocused();
+
+  // The choice survives a reload and client navigation, and loads no animation.
+  const requests: string[] = [];
+  page.on('request', request => { if (/octopus\.json/.test(request.url())) requests.push(request.url()); });
+  await page.reload();
+  await expect(container).toBeHidden();
+  await expect(show).toBeVisible();
+  await page.locator('main a[href*="saving-a-markdown-file"]').click();
+  await expect(page.locator('article')).toBeVisible();
+  await expect(page.locator('#inky-container')).toBeHidden();
+  await page.waitForTimeout(500);
+  expect(requests).toEqual([]);
+
+  await page.getByRole('button', { name: 'Show Inky' }).click();
+  await expect(page.locator('#inky-container')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show Inky' })).toBeHidden();
+  await expect(page.locator('#inky-mascot')).toBeFocused();
+  await page.locator('#inky-mascot').click();
+  await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
+  await page.reload();
+  await expect(page.locator('#inky-container')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test('hiding the corner mascot works when storage is blocked', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'localStorage', {
+      get() { throw new DOMException('Storage blocked', 'SecurityError'); },
+    });
+  });
+  await page.goto('/posts/');
+  await page.locator('#inky-mascot').hover();
+  await page.getByRole('button', { name: 'Hide Inky' }).click();
+  await expect(page.locator('#inky-container')).toBeHidden();
+  // Without storage the choice still follows client navigation.
+  await page.locator('main a[href*="saving-a-markdown-file"]').click();
+  await expect(page.locator('article')).toBeVisible();
+  await expect(page.locator('#inky-container')).toBeHidden();
   expect(errors).toEqual([]);
 });
 

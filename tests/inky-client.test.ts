@@ -1,9 +1,12 @@
 import { expect, test } from "bun:test";
 import {
   INKY_EXHAUSTED_LINES,
+  INKY_HIDDEN_KEY,
   createInkyDeck,
+  readInkyHidden,
   shuffle,
   sourceOf,
+  writeInkyHidden,
   type InkyLine,
 } from "../src/utils/inky-client";
 
@@ -63,4 +66,28 @@ test("only news lines with a web URL get a source link", () => {
   });
   expect(sourceOf(lines[2])).toMatchObject({ label: "DevOps.com", title: "Read article" });
   expect(sourceOf({ comment: "x", sourceType: "rss", sourceUrl: "https://example.com/c" })?.label).toBe("Source");
+});
+
+test("the hidden preference round-trips through storage", () => {
+  const values = new Map<string, string>();
+  const storage = () => ({
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => void values.set(key, value),
+    removeItem: (key: string) => void values.delete(key),
+  });
+  expect(readInkyHidden(storage)).toBe(false);
+  writeInkyHidden(true, storage);
+  expect(values.get(INKY_HIDDEN_KEY)).toBe("true");
+  expect(readInkyHidden(storage)).toBe(true);
+  writeInkyHidden(false, storage);
+  expect(values.has(INKY_HIDDEN_KEY)).toBe(false);
+  expect(readInkyHidden(storage)).toBe(false);
+});
+
+test("blocked storage neither throws nor hides the mascot", () => {
+  const blocked = () => {
+    throw new DOMException("Storage blocked", "SecurityError");
+  };
+  expect(readInkyHidden(blocked)).toBe(false);
+  expect(() => writeInkyHidden(true, blocked)).not.toThrow();
 });
