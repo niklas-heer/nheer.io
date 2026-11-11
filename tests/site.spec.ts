@@ -422,3 +422,15 @@ test('the sitemap lists the projects section and dates posts', async ({ request 
   expect(sitemap).toMatch(/<loc>https:\/\/nheer\.com\/posts\/\d{4}\/\d{2}\/[^<]+\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
   expect(sitemap).not.toContain('/404');
 });
+
+test.describe('with a light system theme', () => {
+  test.use({ colorScheme: 'light' });
+
+  test('a first visit follows the system and a saved choice overrides it', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await page.getByRole('button', { name: 'Switch to dark theme' }).first().click();
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  });
+});

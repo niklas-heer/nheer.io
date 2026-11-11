@@ -70,15 +70,19 @@ const ogImage = new URL(image, Astro.site);
 
         <ClientRouter />
 
-        <!-- Theme initialization (prevent flash) -->
+        <!-- Theme initialization (prevent flash): a saved choice wins, otherwise follow the system. -->
         <script is:inline>
             (() => {
+                let theme = null;
                 try {
-                    const theme = localStorage.getItem("theme");
-                    document.documentElement.dataset.theme = theme === "light" ? "light" : "dark";
+                    theme = localStorage.getItem("theme");
                 } catch {
-                    // The default dark theme also works without browser storage.
+                    // Without browser storage, the system preference decides.
                 }
+                if (theme !== "light" && theme !== "dark") {
+                    theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+                }
+                document.documentElement.dataset.theme = theme;
             })();
         </script>
 
