@@ -1,0 +1,199 @@
+---
+// The screenshot card for one project: cover, name, tagline and a line of
+// facts. The Projects index lists every project with it and the homepage
+// reuses it for the featured ones. Render it inside a list.
+import { Image } from "astro:assets";
+import ProjectIcon from "./ProjectIcon.astro";
+import type { Project } from "../../utils/project-data";
+import { formatCount, formatRelative } from "../../utils/projects";
+
+interface Props {
+    project: Project;
+    now: Date;
+    /** Heading level of the project name; pick the one below the section's heading. */
+    heading?: "h3" | "h4";
+    sizes?: string;
+}
+
+const {
+    project,
+    now,
+    heading: Heading = "h4",
+    sizes = "(min-width: 68rem) 21rem, (min-width: 40rem) 45vw, 6.5rem",
+} = Astro.props;
+const { data } = project.entry;
+const language = project.stats.languages[0];
+const lastCommit = project.stats.lastCommit ? formatRelative(project.stats.lastCommit, now) : null;
+---
+
+<li class="project-card" data-project={project.slug}>
+    <Image src={data.cover} alt="" widths={[360, 560, 720]} sizes={sizes} class="project-thumb" />
+    <div class="project-card-body">
+        <Heading class="project-card-title">
+            <a href={project.url}>{data.title}</a>
+        </Heading>
+        <p class="project-card-tagline">{data.tagline}</p>
+        <p class="project-card-meta">
+            {data.visibility === "private" ? (
+                <span class="private-badge"><ProjectIcon name="lock" />private</span>
+            ) : (
+                !!project.stats.stars && (
+                    <span><ProjectIcon name="star" /><span class="mono">{formatCount(project.stats.stars)}</span><span class="sr-only"> stars</span></span>
+                )
+            )}
+            {language && (
+                <span>
+                    <span class="language-dot" style={`background: ${language.color}`} aria-hidden="true" />
+                    {language.name}
+                </span>
+            )}
+            {lastCommit && <span class="meta-push">{lastCommit}</span>}
+        </p>
+    </div>
+</li>
+
+<style>
+    .mono {
+        font-family: var(--font-mono);
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .project-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+        transition: border-color 0.15s ease;
+    }
+
+    .project-card:hover {
+        border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+    }
+
+    .project-thumb {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2 / 1;
+        object-fit: cover;
+        /* Covers are 16:10; terminal captures leave the lower part empty. */
+        object-position: top center;
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-background);
+    }
+
+    .project-card-body {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.875rem 1rem 1rem;
+    }
+
+    .project-card-title {
+        font-size: var(--text-body);
+        font-weight: 650;
+    }
+
+    .project-card-title a {
+        color: var(--color-foreground);
+    }
+
+    /* The title link covers the whole card, so there is one link per project. */
+    .project-card-title a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+    }
+
+    .project-card:hover .project-card-title a {
+        color: var(--color-accent);
+    }
+
+    .project-card-tagline {
+        flex: 1;
+        font-size: var(--text-small);
+        line-height: 1.45;
+        color: var(--color-muted);
+        text-wrap: pretty;
+    }
+
+    .project-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.875rem;
+        margin-top: 0.625rem;
+        font-size: var(--text-label);
+        color: var(--color-muted);
+    }
+
+    .project-card-meta > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .project-card-meta .meta-push {
+        margin-left: auto;
+    }
+
+    .private-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.05rem 0.45rem;
+        font-family: var(--font-mono);
+        letter-spacing: 0.02em;
+        color: var(--color-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+    }
+
+    .language-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-foreground) 18%, transparent);
+    }
+
+    /* Phones: a compact row with a small, uncropped preview beside the text. */
+    @media (max-width: 40rem) {
+        .project-card {
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.75rem;
+        }
+
+        .project-thumb {
+            flex-shrink: 0;
+            width: 6.5rem;
+            aspect-ratio: 16 / 10;
+            object-position: center;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-chip);
+        }
+
+        .project-card-body {
+            min-width: 0;
+            padding: 0;
+        }
+
+        .project-card-meta {
+            margin-top: 0.375rem;
+        }
+    }
+</style>

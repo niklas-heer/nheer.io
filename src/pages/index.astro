@@ -1,75 +1,65 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SocialIcon from "../components/SocialIcon.astro";
+import ProjectCard from "../components/projects/ProjectCard.astro";
 import { getCollection } from "astro:content";
 import { parseEmoji } from "../utils/emoji";
 import { siteConfig } from "../config";
 import { getPostPath } from "../utils/content-metadata";
-import { fetchReadingData } from "../utils/hardcover";
+import { fetchReadingData, getAuthors, getBookUrl, getLatestRead } from "../utils/hardcover";
 import { fetchPodcastData } from "../utils/database";
 import { getProjectsData } from "../utils/project-data";
+import { formatCount } from "../utils/projects";
+import { selectedWriting } from "../data/selected-writing";
 
-// Get latest posts
-const allPosts = await getCollection("posts", ({ data }) => {
-    return !data.draft && !data.archive && data.lang === "en";
+const allPosts = (
+    await getCollection("posts", ({ data }) => {
+        return !data.draft && !data.archive && data.lang === "en";
+    })
+).sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Three hand-picked articles open the page; see src/data/selected-writing.ts.
+const selected = selectedWriting.map((item) => {
+    const post = allPosts.find((candidate) => candidate.id === item.id);
+    if (!post) throw new Error(`Selected writing lists "${item.id}", but no published post has that id`);
+    return { ...item, post };
 });
-const latestPosts = allPosts
-    .sort(
-        (a, b) =>
-            new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
-    )
-    .slice(0, 3);
+const [leadArticle, ...sideArticles] = selected;
+// The newest posts follow, without repeating a selected one.
+const latestPosts = allPosts.filter((post) => !selected.some((item) => item.post.id === post.id)).slice(0, 3);
+const newestPost = allPosts[0];
 
 const [readingData, podcastData, projectsData] = await Promise.all([
     fetchReadingData(),
     fetchPodcastData(),
     getProjectsData(),
 ]);
-const currentlyReading = readingData?.currentlyReading?.slice(0, 2) || [];
+const currentlyReading = readingData?.currentlyReading ?? [];
 const yesterdayStats = podcastData?.yesterdayStats;
-const yesterdayMinutes = yesterdayStats
-    ? Math.round(yesterdayStats.timeListened / 60)
-    : null;
+const yesterdayMinutes = yesterdayStats ? Math.round(yesterdayStats.timeListened / 60) : null;
 
-// Curated introductions stay useful even when external services are unavailable.
-const featuredProjects = [
-    {
-        name: "tdx",
-        description: "Manage todos in plain Markdown from a fast terminal interface.",
-        url: "https://github.com/niklas-heer/tdx",
-    },
-    {
-        name: "speed-comparison",
-        description: "Compare programming-language performance with an open benchmark suite.",
-        url: "https://github.com/niklas-heer/speed-comparison",
-    },
-].map((project) => {
-    // Statistics and the project page come from the Projects section when it lists the repository.
-    const listed = projectsData.projects.find((entry) => entry.entry.data.repo === `niklas-heer/${project.name}`);
-    const language = listed?.stats.languages[0];
-    return {
-        ...project,
-        url: listed?.url ?? project.url,
-        stars: listed?.stats.stars ?? null,
-        language: language ? { name: language.name, color: language.color } : null,
-    };
-});
-const featuredPost =
-    allPosts.find((post) => post.id.endsWith("saving-a-markdown-file")) ||
-    latestPosts[0];
-const newestPost = latestPosts[0];
+const featuredProjects = projectsData.featured.slice(0, 3);
+const projectCount = projectsData.projects.length;
+const totalStars = projectsData.projects.reduce((sum, project) => sum + (project.stats.stars ?? 0), 0);
+
+// The shelf: what is open now, then the most recently finished, five in all.
+const SHELF_SIZE = 5;
+const shelf = [
+    ...currentlyReading.map((item) => ({ item, reading: true })),
+    ...(readingData?.recentlyRead ?? []).map((item) => ({ item, reading: false })),
+].slice(0, SHELF_SIZE);
 
 const cleanTitle = (title: string) => title.replace(/\*\*/g, "");
 const formatMonth = (date: Date) =>
-    new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(
-        date,
-    );
+    new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(date);
 const formatDay = (date: Date) =>
-    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(
-        date,
-    );
-const bookAuthor = (book: { contributions?: { author: { name: string } }[] }) =>
-    book.contributions?.[0]?.author?.name ?? null;
+    new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+const readingTime = (post: (typeof allPosts)[number]) =>
+    Math.max(1, Math.ceil((post.body || "").split(/\s+/).length / 200));
+const finishedLabel = (item: (typeof shelf)[number]["item"]) => {
+    const finished = getLatestRead(item)?.finished_at || item.last_read_date;
+    return finished ? `Finished ${formatMonth(new Date(finished))}` : "Finished";
+};
 
 const socials = [
     { name: "GitHub", href: siteConfig.social.github },
@@ -89,15 +79,16 @@ const terminalData = {
         { name: "reviews", path: "/reviews" },
         { name: "about", path: "/about" },
     ],
-    posts: allPosts
-        .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime())
-        .slice(0, 5)
-        .map((post) => ({
-            title: cleanTitle(post.data.title),
-            url: getPostPath(post),
-            date: formatMonth(new Date(post.data.date)),
-        })),
-    projects: featuredProjects.map(({ name, url, description }) => ({ name, url, description })),
+    posts: allPosts.slice(0, 5).map((post) => ({
+        title: cleanTitle(post.data.title),
+        url: getPostPath(post),
+        date: formatMonth(new Date(post.data.date)),
+    })),
+    projects: featuredProjects.map((project) => ({
+        name: project.entry.data.title,
+        url: project.url,
+        description: project.entry.data.tagline,
+    })),
     socials,
 };
 const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
@@ -107,236 +98,200 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
     title="Home"
     description="Homepage and blog by Niklas Heer - Leadership, DevSecOps and Quality"
 >
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-heading">
-            <img
-                src="/assets/images/about/nheer-memoji.png"
-                alt=""
-                width="88"
-                height="88"
-                fetchpriority="high"
-                class="hero-image"
-            />
-            <h1 class="hero-name">{siteConfig.author.name}</h1>
-        </div>
-
-        <!--
-            A short terminal session answers the two questions a visitor has.
-            All lines are in the HTML; the script only replays them on load.
-        -->
-        <div class="terminal" data-terminal>
-            <div class="terminal-bar" aria-hidden="true">
-                <span class="terminal-dots"><i></i><i></i><i></i></span>
-                <span class="terminal-title">niklas@nheer: ~</span>
-            </div>
-            <div class="terminal-screen">
-                <p class="terminal-line terminal-command" data-command="whoami" data-intro>
-                    <span class="terminal-prompt" aria-hidden="true">❯</span>
-                    <span class="terminal-command-text">whoami</span>
-                </p>
-                <p class="terminal-line terminal-output" data-intro data-answer="whoami">
+    <div class="home wide-breakout">
+        <!-- Hero: who this is, in plain text, beside a small working terminal. -->
+        <section class="hero">
+            <div class="hero-intro">
+                <div class="hero-heading">
+                    <img
+                        src="/assets/images/about/nheer-memoji.png"
+                        alt=""
+                        width="88"
+                        height="88"
+                        fetchpriority="high"
+                        class="hero-image"
+                    />
+                    <h1 class="hero-name">{siteConfig.author.name}</h1>
+                </div>
+                <p class="hero-lead">
                     Engineering manager at Tradebyte, building an internal developer
                     platform. On the side I make small terminal tools, read a lot,
                     and write about what I learn from both.
                 </p>
-                <p class="terminal-line terminal-command" data-command="now" data-intro>
-                    <span class="terminal-prompt" aria-hidden="true">❯</span>
-                    <span class="terminal-command-text">now</span>
-                </p>
-                <dl class="terminal-line terminal-output terminal-now" data-intro data-answer="now">
-                    <div class="terminal-now-row">
-                        <dt>reading</dt>
-                        <dd>
-                            {
-                                currentlyReading.length > 0 ? (
-                                    currentlyReading.map((item, index) => (
-                                        <>
-                                            {index > 0 && <span class="terminal-sep">, </span>}
-                                            <a
-                                                href={`https://hardcover.app/books/${item.book.slug}`}
-                                                target="_blank"
-                                                rel="noopener"
-                                            >
-                                                {item.book.title}
-                                            </a>
-                                            {bookAuthor(item.book) && (
-                                                <span class="terminal-dim"> by {bookAuthor(item.book)}</span>
-                                            )}
-                                        </>
-                                    ))
-                                ) : (
-                                    <a href="/reading">the reading list</a>
-                                )
-                            }
-                        </dd>
-                    </div>
-                    <div class="terminal-now-row">
-                        <dt>listening</dt>
-                        <dd>
-                            {
-                                yesterdayMinutes !== null ? (
-                                    <>
-                                        {yesterdayMinutes} min of podcasts yesterday
-                                        <span class="terminal-dim"> · </span>
-                                        <a href="/listening">stats</a>
-                                    </>
-                                ) : (
-                                    <a href="/listening">podcast stats</a>
-                                )
-                            }
-                        </dd>
-                    </div>
+                <ul class="hero-socials" aria-label="Elsewhere">
                     {
-                        newestPost && (
-                            <div class="terminal-now-row">
-                                <dt>writing</dt>
-                                <dd>
-                                    <a href={getPostPath(newestPost)}>
-                                        {cleanTitle(newestPost.data.title)}
-                                    </a>
-                                </dd>
-                            </div>
-                        )
+                        socials.map((social) => (
+                            <li>
+                                <a
+                                    href={social.href}
+                                    target={social.href.startsWith("mailto:") ? undefined : "_blank"}
+                                    rel={social.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                                >
+                                    <SocialIcon name={social.name} class="hero-social-icon" />
+                                    <span>{social.name}</span>
+                                </a>
+                            </li>
+                        ))
                     }
-                </dl>
-                <div class="terminal-history" data-terminal-history aria-live="polite"></div>
-                <form class="terminal-line terminal-command terminal-input-line" data-terminal-form action="/" method="get">
-                    <label class="terminal-prompt" for="terminal-input" aria-hidden="true">❯</label>
-                    <input
-                        id="terminal-input"
-                        class="terminal-input"
-                        type="text"
-                        name="cmd"
-                        autocomplete="off"
-                        autocapitalize="off"
-                        spellcheck="false"
-                        enterkeyhint="send"
-                        aria-label="Type a command, for example help"
-                        placeholder="type help"
-                        data-terminal-input
-                    />
-                </form>
+                </ul>
             </div>
-            <script type="application/json" is:inline data-terminal-data set:html={terminalJson} />
-        </div>
 
-        <ul class="hero-socials" aria-label="Elsewhere">
-            {
-                socials.map((social) => (
-                    <li>
-                        <a
-                            href={social.href}
-                            target={social.href.startsWith("mailto:") ? undefined : "_blank"}
-                            rel={social.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-                        >
-                            <SocialIcon name={social.name} class="hero-social-icon" />
-                            <span>{social.name}</span>
-                        </a>
-                    </li>
-                ))
-            }
-        </ul>
-    </section>
+            <!--
+                The terminal shows what is current and takes commands. All lines
+                are in the HTML; the script only replays them on a first visit.
+            -->
+            <div class="terminal" data-terminal>
+                <div class="terminal-bar" aria-hidden="true">
+                    <span class="terminal-dots"><i></i><i></i><i></i></span>
+                    <span class="terminal-title">niklas@nheer: ~</span>
+                </div>
+                <div class="terminal-screen">
+                    <template data-answer="whoami">
+                        <p class="terminal-line terminal-output">
+                            Engineering manager at Tradebyte, building an internal developer
+                            platform. On the side I make small terminal tools, read a lot,
+                            and write about what I learn from both.
+                        </p>
+                    </template>
+                    <p class="terminal-line terminal-command" data-command="now" data-intro>
+                        <span class="terminal-prompt" aria-hidden="true">❯</span>
+                        <span class="terminal-command-text">now</span>
+                    </p>
+                    <dl class="terminal-line terminal-output terminal-now" data-intro data-answer="now">
+                        <div class="terminal-now-row">
+                            <dt>reading</dt>
+                            <dd>
+                                {
+                                    currentlyReading.length > 0 ? (
+                                        currentlyReading.slice(0, 2).map((item, index) => (
+                                            <>
+                                                {index > 0 && <span class="terminal-sep">, </span>}
+                                                <a href={getBookUrl(item.book)} target="_blank" rel="noopener">
+                                                    {item.book.title}
+                                                </a>
+                                            </>
+                                        ))
+                                    ) : (
+                                        <a href="/reading">the reading list</a>
+                                    )
+                                }
+                            </dd>
+                        </div>
+                        <div class="terminal-now-row">
+                            <dt>listening</dt>
+                            <dd>
+                                {
+                                    yesterdayMinutes !== null ? (
+                                        <>
+                                            {yesterdayMinutes} min of podcasts yesterday
+                                            <span class="terminal-dim"> · </span>
+                                            <a href="/listening">stats</a>
+                                        </>
+                                    ) : (
+                                        <a href="/listening">podcast stats</a>
+                                    )
+                                }
+                            </dd>
+                        </div>
+                        {
+                            newestPost && (
+                                <div class="terminal-now-row">
+                                    <dt>writing</dt>
+                                    <dd>
+                                        <a href={getPostPath(newestPost)}>
+                                            {cleanTitle(newestPost.data.title)}
+                                        </a>
+                                    </dd>
+                                </div>
+                            )
+                        }
+                    </dl>
+                    <div class="terminal-history" data-terminal-history aria-live="polite"></div>
+                    <form class="terminal-line terminal-command terminal-input-line" data-terminal-form action="/" method="get">
+                        <label class="terminal-prompt" for="terminal-input" aria-hidden="true">❯</label>
+                        <input
+                            id="terminal-input"
+                            class="terminal-input"
+                            type="text"
+                            name="cmd"
+                            autocomplete="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            enterkeyhint="send"
+                            aria-label="Type a command, for example help"
+                            placeholder="type help"
+                            data-terminal-input
+                        />
+                    </form>
+                </div>
+                <script type="application/json" is:inline data-terminal-data set:html={terminalJson} />
+            </div>
+        </section>
 
-    <!-- Selected writing -->
-    {
-        featuredPost && (
-            <section class="home-section">
-                <h2 class="section-heading">Selected Writing</h2>
-                <a href={getPostPath(featuredPost)} class="featured-post">
-                    <span class="emoji-tile emoji-tile-large" aria-hidden="true">
-                        {featuredPost.data.icon && parseEmoji(featuredPost.data.icon)}
-                    </span>
-                    <span class="featured-post-body">
-                        <span class="featured-post-title">
-                            {cleanTitle(featuredPost.data.title)}
-                        </span>
-                        <span class="featured-post-description">
-                            {featuredPost.data.description}
-                        </span>
-                        <span class="featured-post-meta">
-                            {formatMonth(new Date(featuredPost.data.date))}
-                        </span>
-                    </span>
-                </a>
-            </section>
-        )
-    }
+        <!-- Writing: three selected articles as a typographic lead, then the newest. -->
+        <section class="home-section" aria-labelledby="writing-heading">
+            <header class="section-head">
+                <p class="mono-label is-prompt">Start here</p>
+                <h2 id="writing-heading" class="section-heading">
+                    Selected writing
+                    <a href="/posts" class="section-more">All posts</a>
+                </h2>
+            </header>
 
-    <!-- Latest posts -->
-    <section class="home-section">
-        <h2 class="section-heading">
-            Latest Posts
-            <a href="/posts" class="section-more">All posts</a>
-        </h2>
-        <ul class="post-list">
-            {
-                latestPosts.map((post) => (
-                    <li>
-                        <a href={getPostPath(post)} class="post-row">
-                            <span class="emoji-tile" aria-hidden="true">
-                                {post.data.icon && parseEmoji(post.data.icon)}
-                            </span>
-                            <span class="post-row-body">
-                                <span class="post-row-title">
-                                    {cleanTitle(post.data.title)}
-                                </span>
-                                {post.data.description && (
-                                    <span class="post-row-description">
-                                        {post.data.description}
-                                    </span>
-                                )}
-                            </span>
-                            <time
-                                class="post-row-date"
-                                datetime={new Date(post.data.date).toISOString()}
-                            >
-                                {formatDay(new Date(post.data.date))}
-                            </time>
-                        </a>
-                    </li>
-                ))
-            }
-        </ul>
-    </section>
+            <div class="lead-grid">
+                <article class="lead lead-main">
+                    <p class="mono-label"><span class="lead-number">01</span>{leadArticle.lens}</p>
+                    <h3 class="lead-title">
+                        <a href={getPostPath(leadArticle.post)}>{cleanTitle(leadArticle.post.data.title)}</a>
+                    </h3>
+                    <p class="lead-sentence">{leadArticle.sentence}</p>
+                    <p class="lead-meta">
+                        <time datetime={new Date(leadArticle.post.data.date).toISOString()}>
+                            {formatMonth(new Date(leadArticle.post.data.date))}
+                        </time>
+                        <span aria-hidden="true">·</span>
+                        {readingTime(leadArticle.post)} min read
+                    </p>
+                </article>
+                <div class="lead-side">
+                    {
+                        sideArticles.map((item, index) => (
+                            <article class="lead">
+                                <p class="mono-label"><span class="lead-number">{String(index + 2).padStart(2, "0")}</span>{item.lens}</p>
+                                <h3 class="lead-title">
+                                    <a href={getPostPath(item.post)}>{cleanTitle(item.post.data.title)}</a>
+                                </h3>
+                                <p class="lead-sentence">{item.sentence}</p>
+                                <p class="lead-meta">
+                                    <time datetime={new Date(item.post.data.date).toISOString()}>
+                                        {formatMonth(new Date(item.post.data.date))}
+                                    </time>
+                                    <span aria-hidden="true">·</span>
+                                    {readingTime(item.post)} min read
+                                </p>
+                            </article>
+                        ))
+                    }
+                </div>
+            </div>
 
-    <div class="home-columns">
-        <!-- Projects -->
-        <section class="home-section">
-            <h2 class="section-heading">
-                Featured Projects
-                <a href="/projects" class="section-more">All projects</a>
-            </h2>
-            <ul class="project-list">
+            <h3 class="mono-label latest-label">Latest posts</h3>
+            <ul class="latest-list">
                 {
-                    featuredProjects.map((project) => (
+                    latestPosts.map((post) => (
                         <li>
-                            <a
-                                href={project.url}
-                                class="project-row"
-                                target={project.url.startsWith("http") ? "_blank" : undefined}
-                                rel={project.url.startsWith("http") ? "noopener noreferrer" : undefined}
-                            >
-                                <span class="project-head">
-                                    <span class="project-name">{project.name}</span>
-                                    {project.language && (
-                                        <span class="project-language">
-                                            <span
-                                                class="project-language-dot"
-                                                style={`background-color: ${project.language.color}`}
-                                            />
-                                            {project.language.name}
-                                        </span>
-                                    )}
-                                    {project.stars !== null && (
-                                        <span class="project-stars">
-                                            ★ {project.stars}
-                                        </span>
-                                    )}
+                            <a href={getPostPath(post)} class="latest-post">
+                                <span class="emoji-tile" aria-hidden="true">
+                                    {post.data.icon && parseEmoji(post.data.icon)}
                                 </span>
-                                <span class="project-description">
-                                    {project.description}
+                                <span class="latest-body">
+                                    <time class="latest-date" datetime={new Date(post.data.date).toISOString()}>
+                                        {formatDay(new Date(post.data.date))}
+                                    </time>
+                                    <span class="latest-title">{cleanTitle(post.data.title)}</span>
+                                    {post.data.description && (
+                                        <span class="latest-description">{post.data.description}</span>
+                                    )}
                                 </span>
                             </a>
                         </li>
@@ -345,40 +300,75 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
             </ul>
         </section>
 
-        <!-- Reading -->
-        <section class="home-section">
-            <h2 class="section-heading">On the Shelf</h2>
-            {
-                currentlyReading.length > 0 ? (
-                    <div class="shelf">
-                        {currentlyReading.map((item) => (
-                            <a
-                                href={`https://hardcover.app/books/${item.book.slug}`}
-                                target="_blank"
-                                rel="noopener"
-                                class="shelf-book"
-                                title={item.book.title}
-                            >
-                                {item.book.image?.url ? (
-                                    <img
-                                        src={item.book.image.url}
-                                        alt={item.book.title}
-                                        width="72"
-                                        height="108"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
-                                ) : (
-                                    <span class="shelf-placeholder">{item.book.title}</span>
-                                )}
-                            </a>
+        <!-- Projects: the same screenshot cards the Projects page uses. -->
+        {
+            featuredProjects.length > 0 && (
+                <section class="home-section" aria-labelledby="projects-heading">
+                    <header class="section-head">
+                        <p class="mono-label is-prompt">{projectCount} projects{totalStars > 0 && ` · ${formatCount(totalStars)} stars`}</p>
+                        <h2 id="projects-heading" class="section-heading">
+                            Featured projects
+                            <a href="/projects" class="section-more">All projects</a>
+                        </h2>
+                    </header>
+                    <ul class="home-projects">
+                        {featuredProjects.map((project) => (
+                            <ProjectCard
+                                project={project}
+                                now={projectsData.now}
+                                heading="h3"
+                                sizes="(min-width: 68rem) 21rem, (min-width: 40rem) 30vw, 6.5rem"
+                            />
                         ))}
-                    </div>
+                    </ul>
+                </section>
+            )
+        }
+
+        <!-- Reading: a row of covers standing on a shelf line. -->
+        <section class="home-section" aria-labelledby="shelf-heading">
+            <header class="section-head">
+                <p class:list={["mono-label", "is-prompt", { "is-mark": currentlyReading.length > 0 }]}>{currentlyReading.length > 0 ? "Reading now" : "Reading"}</p>
+                <h2 id="shelf-heading" class="section-heading">
+                    On the shelf
+                    <a href="/reading" class="section-more">See reading list</a>
+                </h2>
+            </header>
+            {
+                shelf.length > 0 ? (
+                    <ul class="shelf">
+                        {shelf.map(({ item, reading }) => (
+                            <li class:list={["shelf-item", { "is-reading": reading }]}>
+                                <a href={getBookUrl(item.book)} target="_blank" rel="noopener" class="shelf-book">
+                                    <span class="shelf-cover">
+                                        {item.book.image?.url ? (
+                                            <img
+                                                src={item.book.image.url}
+                                                alt=""
+                                                width="160"
+                                                height="240"
+                                                loading="lazy"
+                                                decoding="async"
+                                            />
+                                        ) : (
+                                            <span class="shelf-placeholder" aria-hidden="true">{item.book.title}</span>
+                                        )}
+                                    </span>
+                                    <span class="shelf-caption">
+                                        <span class:list={["mono-label", { "is-mark": reading }]}>
+                                            {reading ? "Reading now" : finishedLabel(item)}
+                                        </span>
+                                        <span class="shelf-title">{item.book.title}</span>
+                                        <span class="shelf-author">{getAuthors(item.book)}</span>
+                                    </span>
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
                 ) : (
                     <p class="shelf-empty">Books, notes, and past reads.</p>
                 )
             }
-            <a href="/reading" class="shelf-link">See reading list</a>
         </section>
     </div>
 </BaseLayout>
@@ -386,36 +376,49 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
 <style>
     /* Hero */
     .hero {
-        margin-bottom: 4rem;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2rem;
+        margin-bottom: 3.5rem;
     }
 
     .hero-heading {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: 0.875rem;
+        margin-bottom: 1.25rem;
     }
 
     .hero-image {
-        width: 88px;
-        height: 88px;
+        width: 4.5rem;
+        height: 4.5rem;
         object-fit: contain;
         flex-shrink: 0;
     }
 
     .hero-name {
-        font-size: clamp(2.5rem, 7vw, 3.75rem);
+        font-size: clamp(var(--text-display), 7vw, var(--text-hero));
         font-weight: 800;
         letter-spacing: -0.04em;
         line-height: 1;
         margin: 0;
     }
 
+    .hero-lead {
+        max-width: 34rem;
+        margin-bottom: 1.5rem;
+        font-size: var(--text-lead);
+        line-height: 1.5;
+        letter-spacing: -0.01em;
+        color: var(--color-foreground);
+        text-wrap: pretty;
+    }
+
     .hero-socials {
         display: flex;
         flex-wrap: wrap;
         gap: 0.25rem 1.25rem;
-        font-size: 0.9375rem;
+        font-size: var(--text-small);
         font-weight: 500;
     }
 
@@ -423,6 +426,8 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         display: inline-flex;
         align-items: center;
         gap: 0.4em;
+        /* Comfortable to tap without growing the row. */
+        padding-block: 0.25rem;
         color: var(--color-foreground);
         text-decoration: underline;
         text-underline-offset: 0.25em;
@@ -444,33 +449,163 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         color: currentColor;
     }
 
-    /* Sections */
-    .home-section {
-        margin-bottom: 3rem;
-    }
+    @media (min-width: 56rem) {
+        .hero {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+            align-items: start;
+            gap: 3.5rem;
+            margin-bottom: 4.5rem;
+        }
 
-    .home-columns {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0 3rem;
-    }
+        .hero-image {
+            width: 5.5rem;
+            height: 5.5rem;
+        }
 
-    @media (min-width: 40rem) {
-        .home-columns {
-            grid-template-columns: 1.2fr 1fr;
+        .hero-heading {
+            gap: 1rem;
         }
     }
 
-    /* Post rows */
-    .post-list,
-    .project-list {
-        display: flex;
-        flex-direction: column;
+    /* Sections */
+    .home-section {
+        margin-bottom: 3.5rem;
     }
 
-    .post-row {
+    .home-section:last-child {
+        margin-bottom: 0;
+    }
+
+    @media (min-width: 56rem) {
+        .home-section {
+            margin-bottom: 4.5rem;
+        }
+    }
+
+    /* Selected writing: one lead article and two beside it, set in type alone. */
+    .lead-grid {
         display: grid;
-        grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
+        border-top: 1px solid var(--color-border);
+    }
+
+    .lead {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding-block: 1.5rem;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .lead-number {
+        margin-right: 0.75em;
+        color: var(--color-accent);
+    }
+
+    .lead-title {
+        font-size: var(--text-lead);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-wrap: balance;
+    }
+
+    .lead-main .lead-title {
+        font-size: clamp(var(--text-heading), 4.4vw, var(--text-display));
+        font-weight: 750;
+        letter-spacing: -0.035em;
+        line-height: 1.05;
+    }
+
+    .lead-title a {
+        color: var(--color-foreground);
+        text-decoration: underline;
+        text-decoration-thickness: 0.06em;
+        text-underline-offset: 0.16em;
+        text-decoration-color: transparent;
+        transition:
+            color 0.15s ease,
+            text-decoration-color 0.15s ease;
+    }
+
+    .lead-title a:hover {
+        color: var(--color-accent);
+        text-decoration-color: currentColor;
+    }
+
+    .lead-sentence {
+        max-width: 34rem;
+        color: var(--color-muted);
+        text-wrap: pretty;
+    }
+
+    .lead-main .lead-sentence {
+        font-size: var(--text-lead);
+        line-height: 1.45;
+        color: var(--color-foreground);
+    }
+
+    .lead-meta {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        color: var(--color-muted);
+    }
+
+    @media (min-width: 56rem) {
+        .lead-grid {
+            grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .lead {
+            border-bottom: none;
+        }
+
+        .lead-main {
+            gap: 0.875rem;
+            padding: 2rem 3rem 2rem 0;
+        }
+
+        /* The date sits on the column's last line, level with the one beside it. */
+        .lead-main .lead-meta {
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+
+        .lead-side {
+            display: flex;
+            flex-direction: column;
+            padding-left: 2.5rem;
+            border-left: 1px solid var(--color-border);
+        }
+
+        .lead-side .lead {
+            flex: 1;
+            justify-content: center;
+            padding-block: 1.5rem;
+        }
+
+        .lead-side .lead + .lead {
+            border-top: 1px solid var(--color-border);
+        }
+    }
+
+    /* Latest posts */
+    .latest-label {
+        margin: 1.75rem 0 0.5rem;
+    }
+
+    .latest-list {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .latest-post {
+        display: grid;
+        grid-template-columns: 2.5rem minmax(0, 1fr);
         align-items: start;
         gap: 0.875rem;
         padding: 0.875rem 0;
@@ -478,30 +613,36 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         color: var(--color-foreground);
     }
 
-    .post-list li:last-child .post-row {
+    .latest-list li:last-child .latest-post {
         border-bottom: none;
     }
 
-    .post-row-body {
+    .latest-body {
         display: flex;
         flex-direction: column;
         gap: 0.125rem;
         min-width: 0;
     }
 
-    .post-row-title {
+    .latest-date {
+        font-family: var(--font-mono);
+        font-size: var(--text-label);
+        color: var(--color-muted);
+    }
+
+    .latest-title {
         font-weight: 600;
         letter-spacing: -0.01em;
         line-height: 1.3;
         text-wrap: balance;
     }
 
-    .post-row:hover .post-row-title {
+    .latest-post:hover .latest-title {
         color: var(--color-accent);
     }
 
-    .post-row-description {
-        font-size: 0.9375rem;
+    .latest-description {
+        font-size: var(--text-small);
         color: var(--color-muted);
         line-height: 1.5;
         display: -webkit-box;
@@ -510,94 +651,65 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         overflow: hidden;
     }
 
-    .post-row-date {
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        color: var(--color-muted);
-        white-space: nowrap;
-        padding-top: 0.25rem;
-    }
-
-    @media (max-width: 30rem) {
-        .post-row {
-            grid-template-columns: 2.5rem minmax(0, 1fr);
+    @media (min-width: 56rem) {
+        .latest-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 2.5rem;
         }
 
-        .post-row-date {
-            grid-column: 2;
-            padding-top: 0;
+        .latest-post {
+            padding: 0.5rem 0 0;
+            border-bottom: none;
         }
     }
 
-    /* Project rows */
-    .project-row {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        padding: 0.875rem 0;
-        border-bottom: 1px solid var(--color-border);
+    /* Featured projects */
+    .home-projects {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+    }
+
+    @media (min-width: 40rem) {
+        .home-projects {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    /*
+     * Shelf: covers stand on one continuous line, captions hang below it.
+     * The cells touch so the line runs unbroken; the spacing is inside them.
+     */
+    .shelf {
+        --shelf-gap: 0.875rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .shelf-book {
+        display: block;
         color: var(--color-foreground);
     }
 
-    .project-list li:last-child .project-row {
-        border-bottom: none;
+    .shelf-cover {
+        display: block;
+        padding: 0 var(--shelf-gap) 0.625rem 0;
+        border-bottom: 1px solid var(--color-border);
     }
 
-    .project-head {
-        display: flex;
-        align-items: baseline;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        font-family: var(--font-mono);
-        font-size: 0.875rem;
-    }
-
-    .project-name {
-        font-weight: 600;
-        font-size: 0.9375rem;
-    }
-
-    .project-row:hover .project-name {
-        color: var(--color-accent);
-    }
-
-    .project-language,
-    .project-stars {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.375rem;
-        color: var(--color-muted);
-        font-size: 0.8125rem;
-    }
-
-    .project-language-dot {
-        width: 0.625rem;
-        height: 0.625rem;
-        border-radius: 50%;
-    }
-
-    .project-description {
-        font-size: 0.9375rem;
-        color: var(--color-muted);
-        text-wrap: pretty;
-    }
-
-    /* Shelf */
-    .shelf {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .shelf-book img,
+    .shelf-cover img,
     .shelf-placeholder {
-        width: 72px;
-        height: 108px;
+        display: block;
+        width: 100%;
+        max-width: 8.5rem;
+        height: auto;
+        aspect-ratio: 2 / 3;
         object-fit: cover;
         border-radius: 3px;
         box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.3),
-            0 8px 20px rgba(0, 0, 0, 0.25);
+            0 1px 2px rgb(0 0 0 / 0.3),
+            0 8px 20px rgb(0 0 0 / 0.25);
         transition: transform 0.2s ease;
     }
 
@@ -605,55 +717,97 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         display: flex;
         align-items: center;
         padding: 0.5rem;
-        font-size: 0.6875rem;
+        font-size: var(--text-label);
         line-height: 1.3;
         background: var(--color-surface-raised);
         color: var(--color-muted);
     }
 
     .shelf-book:hover img {
-        transform: translateY(-3px);
+        transform: translateY(-4px);
+    }
+
+    /* The open book carries the amber mark on its stretch of the line. */
+    .shelf-item.is-reading .shelf-cover {
+        border-bottom: 2px solid var(--color-mark);
+        padding-bottom: calc(0.625rem - 1px);
+    }
+
+    .shelf-caption {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        padding: 0.625rem var(--shelf-gap) 0 0;
+    }
+
+    .shelf-caption .mono-label {
+        letter-spacing: 0.04em;
+    }
+
+    .shelf-title {
+        font-size: var(--text-small);
+        font-weight: 600;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .shelf-book:hover .shelf-title {
+        color: var(--color-accent);
+    }
+
+    .shelf-author {
+        font-size: var(--text-small);
+        color: var(--color-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .shelf-empty {
-        font-size: 0.9375rem;
         color: var(--color-muted);
-        margin-bottom: 1rem;
     }
 
-    .shelf-link {
-        font-size: 0.9375rem;
-        font-weight: 500;
-        text-decoration: underline;
-        text-underline-offset: 0.2em;
-        text-decoration-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+    /* Phones show four covers; names stay available to assistive technology. */
+    @media (max-width: 39.99rem) {
+        .shelf-item:nth-child(n + 5) {
+            display: none;
+        }
+
+        .shelf-title,
+        .shelf-author {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
     }
 
-    .shelf-link:hover {
-        text-decoration-color: currentColor;
+    @media (min-width: 40rem) {
+        .shelf {
+            --shelf-gap: 1.5rem;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
     }
 </style>
 
 <style is:global>
-    /* Terminal: always a dark screen, in both themes */
+    /* Terminal: always a dark screen, in both themes; its palette is in global.css. */
     .terminal {
-        --term-bg: #14111c;
-        --term-bar: #1e1a28;
-        --term-border: #2f2940;
-        --term-fg: #ece8f4;
-        --term-muted: #9a92ad;
-        --term-accent: #b49dff;
         font-family: var(--font-mono);
-        font-size: 0.9375rem;
+        font-size: var(--text-small);
         line-height: 1.6;
         color: var(--term-fg);
         background: var(--term-bg);
         border: 1px solid var(--term-border);
         border-radius: var(--radius-card);
         box-shadow:
-            0 1px 0 rgba(255, 255, 255, 0.04) inset,
-            0 24px 48px -24px rgba(0, 0, 0, 0.6);
-        margin-bottom: 1.5rem;
+            0 1px 0 rgb(255 255 255 / 0.04) inset,
+            0 24px 48px -24px rgb(0 0 0 / 0.6);
         overflow: hidden;
         cursor: default;
     }
@@ -662,34 +816,25 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         display: grid;
         grid-template-columns: 1fr auto 1fr;
         align-items: center;
-        padding: 0.625rem 0.875rem;
+        padding: 0.5rem 0.875rem;
         background: var(--term-bar);
         border-bottom: 1px solid var(--term-border);
     }
 
     .terminal .terminal-dots {
         display: flex;
-        gap: 0.4rem;
+        gap: 0.375rem;
     }
 
     .terminal .terminal-dots i {
-        width: 0.7rem;
-        height: 0.7rem;
+        width: 0.625rem;
+        height: 0.625rem;
         border-radius: 50%;
-        background: #ff5f57;
-        opacity: 0.85;
-    }
-
-    .terminal .terminal-dots i:nth-child(2) {
-        background: #febc2e;
-    }
-
-    .terminal .terminal-dots i:nth-child(3) {
-        background: #28c840;
+        background: color-mix(in srgb, var(--term-muted) 45%, transparent);
     }
 
     .terminal .terminal-title {
-        font-size: 0.75rem;
+        font-size: var(--text-label);
         color: var(--term-muted);
         letter-spacing: 0.01em;
     }
@@ -698,10 +843,10 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         border-color: color-mix(in srgb, var(--term-accent) 55%, var(--term-border));
     }
 
+    /* The screen is as tall as its lines and scrolls once a session gets long. */
     .terminal .terminal-screen {
-        padding: 1.125rem 1.5rem 1.25rem;
-        min-height: 12.5rem;
-        max-height: 30rem;
+        padding: 1rem 1.25rem 1.125rem;
+        max-height: 24rem;
         overflow-y: auto;
         overscroll-behavior: contain;
     }
@@ -755,7 +900,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
     }
 
     .terminal .terminal-list a:hover {
-        color: #d3c6ff;
+        color: var(--term-accent-hover);
         text-decoration-color: currentColor;
     }
 
@@ -763,11 +908,11 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         color: var(--term-fg);
         font-weight: 600;
         display: inline-block;
-        min-width: 12ch;
+        min-width: 10ch;
     }
 
     .terminal .terminal-error {
-        color: #ff8a80;
+        color: var(--term-error);
     }
 
     .terminal .terminal-line {
@@ -775,8 +920,9 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         overflow-wrap: anywhere;
     }
 
-    .terminal .terminal-line + .terminal-command {
-        margin-top: 0.75rem;
+    .terminal .terminal-line + .terminal-command,
+    .terminal .terminal-history:not(:empty) + .terminal-command {
+        margin-top: 0.625rem;
     }
 
     .terminal .terminal-command {
@@ -821,7 +967,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
 
     .terminal .terminal-now a:hover,
     .terminal .terminal-output a:hover {
-        color: #d3c6ff;
+        color: var(--term-accent-hover);
         text-decoration-color: currentColor;
     }
 
@@ -829,51 +975,41 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         color: var(--term-muted);
     }
 
-    .terminal .is-typing::after,
-    .terminal .terminal-now-row.is-typing dd::after {
-        display: inline-block;
-        width: 0.6ch;
-        height: 1.1em;
-        vertical-align: text-bottom;
-        background: var(--term-accent);
-    }
-
-    .terminal .is-typing::after,
-    .terminal .terminal-now-row.is-typing dd::after {
-        content: "";
-        margin-left: 0.1ch;
-    }
-
-    .terminal .terminal-now-row.is-typing::after {
-        content: none;
-    }
-
-    /* Replay: hide lines until the script reveals them */
+    /*
+     * Replay. Lines keep their place and stay invisible until the script
+     * reveals them; the part of a line not typed yet is invisible too. The
+     * caret is drawn over the next character's cell and takes no room.
+     */
     .terminal[data-playing] .terminal-line,
     .terminal[data-playing] .terminal-now-row {
-        display: none;
+        visibility: hidden;
     }
 
-    .terminal[data-playing] .terminal-line.is-shown {
-        display: block;
-    }
-
-    .terminal[data-playing] .terminal-command.is-shown {
-        display: flex;
-    }
-
+    .terminal[data-playing] .terminal-line.is-shown,
     .terminal[data-playing] .terminal-now-row.is-shown {
-        display: grid;
+        visibility: visible;
+    }
+
+    .terminal .terminal-untyped {
+        visibility: hidden;
+    }
+
+    .terminal .terminal-caret {
+        margin-right: -0.6ch;
+        border-right: 0.6ch solid var(--term-accent);
     }
 
     @media (max-width: 30rem) {
         .terminal .terminal-screen {
-            padding: 1rem 1.125rem;
-            font-size: 0.875rem;
+            padding: 0.875rem 1rem 1rem;
         }
 
         .terminal .terminal-now-row {
             grid-template-columns: 1fr;
+        }
+
+        .terminal .terminal-now dt {
+            font-size: var(--text-label);
         }
 
         .terminal .terminal-output {
@@ -886,6 +1022,8 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
     // The hero terminal replays a short intro on load, then becomes a small
     // interactive shell. The markup is complete without JavaScript, reduced
     // motion skips the replay, and a click on the screen finishes it early.
+    // Lines wait invisibly in their final place and are typed where they stand,
+    // so the replay never changes the layout.
     import { navigate } from "astro:transitions/client";
 
     type Section = { name: string; path: string };
@@ -949,7 +1087,9 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
             print(p);
         };
         const replay = (name: string) => {
-            const answer = terminal.querySelector<HTMLElement>(`[data-answer="${name}"]`);
+            // An answer is either a line on the screen or a template kept off it.
+            const found = terminal.querySelector<HTMLElement>(`[data-answer="${name}"]`);
+            const answer = found instanceof HTMLTemplateElement ? found.content.firstElementChild : found;
             if (!answer) return;
             const clone = answer.cloneNode(true) as HTMLElement;
             clone.removeAttribute("data-intro");
@@ -1102,26 +1242,41 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
         document.addEventListener("keydown", requestSkip, { once: true });
         const pause = (ms: number) => (skip ? Promise.resolve() : wait(ms));
 
-        // Types every text node inside an element, in document order.
+        // Types every text node inside an element, in document order. Each text
+        // node is split into a visible "typed" part and an invisible rest, so
+        // the text wraps exactly as it will when finished.
         async function typeInto(element: HTMLElement, perChar: number) {
             const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-            const nodes: { node: Text; text: string }[] = [];
+            const nodes: Text[] = [];
             let current = walker.nextNode();
             while (current) {
-                nodes.push({ node: current as Text, text: current.textContent ?? "" });
+                // Whitespace between elements stays as it is: wrapping it would
+                // add boxes to the grid rows.
+                if (current.textContent?.trim()) nodes.push(current as Text);
                 current = walker.nextNode();
             }
-            nodes.forEach(({ node }) => { node.textContent = ""; });
-            element.classList.add("is-typing");
-            for (const { node, text } of nodes) {
-                if (skip) { node.textContent = text; continue; }
-                for (const char of text) {
-                    node.textContent += char;
-                    if (skip) { node.textContent = text; break; }
+            const parts = nodes.map((node) => {
+                const typed = document.createElement("span");
+                const rest = document.createElement("span");
+                rest.className = "terminal-untyped";
+                rest.textContent = node.textContent ?? "";
+                const holder = document.createDocumentFragment();
+                holder.append(typed, rest);
+                node.replaceWith(holder);
+                return { node, typed, rest };
+            });
+            for (const { node, typed, rest } of parts) {
+                typed.className = "terminal-caret";
+                for (const char of rest.textContent ?? "") {
+                    if (skip) break;
+                    typed.textContent += char;
+                    rest.textContent = (rest.textContent ?? "").slice(char.length);
                     if (char.trim()) await wait(perChar + Math.random() * perChar);
                 }
+                // Put the original text node back once it is fully typed (or skipped).
+                rest.remove();
+                typed.replaceWith(node);
             }
-            element.classList.remove("is-typing");
         }
 
         const lines = Array.from(terminal.querySelectorAll<HTMLElement>(".terminal-line"));

@@ -174,6 +174,66 @@ test('the homepage terminal runs commands, keeps history and navigates', async (
   expect(errors).toEqual([]);
 });
 
+test('the homepage opens with a readable introduction and three selected articles', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  // The introduction is ordinary text beside the name, not terminal output.
+  const lead = page.locator('.hero-lead');
+  await expect(lead).toContainText('Engineering manager at Tradebyte');
+  expect(await lead.evaluate((element) => getComputedStyle(element).fontFamily)).toContain('Bricolage');
+  expect(await lead.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(20);
+  const terminal = page.locator('[data-terminal]');
+  const [introBox, terminalBox] = [await page.locator('.hero-intro').boundingBox(), await terminal.boundingBox()];
+  expect(terminalBox!.x).toBeGreaterThan(introBox!.x + introBox!.width - 1);
+  // The terminal is as tall as its lines, and still answers whoami.
+  expect(terminalBox!.height).toBeLessThan(320);
+  const input = page.getByRole('textbox', { name: /type a command/i });
+  await input.fill('whoami');
+  await input.press('Enter');
+  await expect(page.locator('[data-terminal-history]')).toContainText('Engineering manager at Tradebyte');
+
+  const writing = page.getByRole('region', { name: 'Selected writing' });
+  const articles = writing.getByRole('article');
+  await expect(articles).toHaveCount(3);
+  const hrefs = new Set<string>();
+  for (const article of await articles.all()) {
+    const link = article.getByRole('heading', { level: 3 }).getByRole('link');
+    const href = await link.getAttribute('href');
+    expect(href).toMatch(/^\/posts\/\d{4}\/\d{2}\/[^/]+\/$/);
+    hrefs.add(href!);
+    expect((await page.request.get(href!)).status()).toBe(200);
+    await expect(article.locator('.lead-sentence')).not.toBeEmpty();
+  }
+  expect(hrefs.size).toBe(3);
+  // The newest posts follow without repeating a selected one.
+  for (const href of await writing.locator('.latest-post').evaluateAll((links) => links.map((link) => link.getAttribute('href')!))) {
+    expect(hrefs.has(href)).toBe(false);
+  }
+  // Projects reuse the screenshot cards; the shelf row holds at most five covers.
+  const projects = page.getByRole('region', { name: 'Featured projects' });
+  await expect(projects.locator('.project-card')).toHaveCount(3);
+  await expect(projects.locator('.project-card img').first()).toBeVisible();
+  expect(await page.getByRole('region', { name: 'On the shelf' }).locator('.shelf-item').count()).toBeLessThanOrEqual(5);
+});
+
+for (const width of [1280, 390]) {
+  test(`the terminal replay does not move the homepage at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // A first visit replays the terminal intro line by line.
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => document.fonts.ready);
+    const terminal = page.locator('[data-terminal]');
+    await expect(terminal).toHaveAttribute('data-playing', 'true');
+    const measure = () => page.evaluate(() => ({
+      terminal: document.querySelector('[data-terminal]')!.getBoundingClientRect().height,
+      below: document.querySelector('#writing-heading')!.getBoundingClientRect().top + window.scrollY,
+    }));
+    const during = await measure();
+    await expect(terminal).not.toHaveAttribute('data-playing', /.*/, { timeout: 20_000 });
+    expect(await measure()).toEqual(during);
+  });
+}
+
 for (const width of [1280, 390]) {
   test(`the header shares one shell with wide and reading pages at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
