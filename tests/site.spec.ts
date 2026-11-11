@@ -444,6 +444,8 @@ test('posts are shared as articles with their date and structured data', async (
   expect(data['@type']).toBe('BlogPosting');
   expect(data.headline).toBeTruthy();
   expect(data.mainEntityOfPage).toBe(await page.locator('link[rel="canonical"]').getAttribute('href'));
+  expect(data.dateModified).toBe(data.datePublished);
+  await expect(page.locator('meta[property="article:author"]')).toHaveAttribute('content', 'https://nheer.com/about/');
 
   await page.goto('/about/');
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');

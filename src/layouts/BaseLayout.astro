@@ -34,6 +34,8 @@ const articleData = article && JSON.stringify({
     headline: plainText(title),
     description,
     datePublished: article.published.toISOString(),
+    // Posts record no edit date, so the publication date is the latest known change.
+    dateModified: article.published.toISOString(),
     author,
     publisher: author,
     image: ogImage.href,
@@ -68,7 +70,7 @@ const articleData = article && JSON.stringify({
         />
 
         {article && <meta property="article:published_time" content={article.published.toISOString()} />}
-        {article && <meta property="article:author" content={siteConfig.author.name} />}
+        {article && <meta property="article:author" content={new URL("/about/", Astro.site)} />}
         {article?.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
         {articleData && <script type="application/ld+json" set:html={articleData} />}
 
