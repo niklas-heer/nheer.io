@@ -411,3 +411,14 @@ test('related posts on project pages lead to real posts', async ({ page, request
     expect((await request.get(href)).status()).toBe(200);
   }
 });
+
+test('the sitemap lists the projects section and dates posts', async ({ request }) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  const projects = readdirSync('src/content/projects').filter((file) => /\.mdx?$/.test(file));
+  expect(sitemap).toContain('<loc>https://nheer.com/projects/</loc>');
+  for (const file of projects) {
+    expect(sitemap).toContain(`<loc>https://nheer.com/projects/${file.replace(/\.mdx?$/, '')}/</loc>`);
+  }
+  expect(sitemap).toMatch(/<loc>https:\/\/nheer\.com\/posts\/\d{4}\/\d{2}\/[^<]+\/<\/loc><lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+  expect(sitemap).not.toContain('/404');
+});
