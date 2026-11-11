@@ -202,6 +202,83 @@ for (const width of [1280, 390]) {
   });
 }
 
+for (const width of [1280, 390]) {
+  test(`the listening and reading charts use flat ink and keep their axes at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/listening');
+    const plot = page.locator('.chart-bars');
+    await expect(plot).toBeVisible();
+    const plotBox = (await plot.boundingBox())!;
+    // Axis labels sit on their gridlines: the scale's top, its half and the baseline.
+    const labels = page.locator('.chart-y-label');
+    await expect(labels).toHaveCount(3);
+    const centres = await labels.evaluateAll((nodes) => nodes.map((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const box = range.getBoundingClientRect();
+      return box.top + box.height / 2;
+    }));
+    expect(Math.abs(centres[0] - plotBox.y)).toBeLessThan(2);
+    expect(Math.abs(centres[1] - (plotBox.y + plotBox.height / 2))).toBeLessThan(2);
+    expect(Math.abs(centres[2] - (plotBox.y + plotBox.height))).toBeLessThan(2);
+    await expect(labels.last()).toHaveText('0');
+    // Day labels stay inside the chart card, below the bars.
+    const card = (await page.locator('.monthly-chart').boundingBox())!;
+    const dayLabels = await page.locator('.chart-day-label').evaluateAll((nodes) => nodes.filter((node) => node.textContent!.trim()).map((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rect = range.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
+    }));
+    expect(dayLabels.length).toBeGreaterThan(3);
+    // Neighbouring labels never run into each other.
+    for (let index = 1; index < dayLabels.length; index++) {
+      expect(dayLabels[index].left).toBeGreaterThan(dayLabels[index - 1].right);
+    }
+    for (const box of dayLabels) {
+      expect(box.top).toBeGreaterThanOrEqual(plotBox.y + plotBox.height);
+      expect(box.bottom).toBeLessThanOrEqual(card.y + card.height);
+      expect(box.left).toBeGreaterThanOrEqual(card.x);
+      expect(box.right).toBeLessThanOrEqual(card.x + card.width);
+    }
+    const tokens = await page.evaluate(() => {
+      const probe = document.createElement('i');
+      document.body.append(probe);
+      const resolve = (name: string) => { probe.style.color = `var(${name})`; return getComputedStyle(probe).color; };
+      const colours = { accent: resolve('--color-accent'), mark: resolve('--color-mark') };
+      probe.remove();
+      return colours;
+    });
+    const bars = await page.locator('.chart-bar').evaluateAll((nodes) => nodes.map((node) => ({
+      today: node.parentElement!.classList.contains('today'),
+      colour: getComputedStyle(node).backgroundColor,
+      image: getComputedStyle(node).backgroundImage,
+    })));
+    for (const bar of bars) {
+      expect(bar.image).toBe('none');
+      expect(bar.colour).toBe(bar.today ? tokens.mark : tokens.accent);
+    }
+
+    await page.goto('/reading');
+    const years = page.locator('.chart-bar-group');
+    test.skip(await years.count() === 0, 'No reading data in this build');
+    const yearBars = await years.evaluateAll((groups) => groups.map((group) => {
+      const bar = group.querySelector('.chart-bar')!;
+      return {
+        current: group.getAttribute('data-current') === 'true',
+        colour: getComputedStyle(bar).backgroundColor,
+        image: getComputedStyle(bar).backgroundImage,
+      };
+    }));
+    expect(yearBars.filter((bar) => bar.current).length).toBeLessThanOrEqual(1);
+    for (const bar of yearBars) {
+      expect(bar.image).toBe('none');
+      expect(bar.colour).toBe(bar.current ? tokens.mark : tokens.accent);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
+
 test('the homepage social links include Bluesky and each carries an icon', async ({ page }) => {
   await page.goto('/');
   const socials = page.getByRole('list', { name: 'Elsewhere' });
