@@ -1,0 +1,190 @@
+---
+title: "A family travel blog you post to from Telegram"
+description: "How a Telegram bot, Astro and GitHub Actions carried 92 updates from a family trip, and why the blog now runs on Cloudflare instead."
+date: "2026-11-11T10:00:00+01:00"
+icon: ":airplane:"
+tags: ["web", "astro", "cloudflare", "github-actions", "ai"]
+toc: true
+draft: false
+lang: "en"
+inky:
+  - section: "intro"
+    comment: "New achievement! Family Broadcast, But With Git. You replaced a group chat with Telegram posts, maps, previews, and a private site, because apparently photos need version control. Reward: one calm archive."
+  - section: "what-the-family-saw"
+    comment: "Patch 1.0.0: Authentication is now one shared password plus a magic link, proudly removing the need for accounts while making the site's security a family secret."
+  - section: "posting-from-a-telegram-chat"
+    comment: "Incident #1042: Claude Code handled the first updates, then the Telegram bot took over with retries, edits, undo, and location failures. Severity: thoughtfully automated. Even a road without a town got an error message and a retry button."
+  - section: "what-astro-was-good-at"
+    comment: "Surface, the Astro site serves static HTML in about 60 milliseconds, then spends a minute rebuilding 165 pages because one new family moment arrived. Speed has been carefully scheduled."
+  - section: "github-actions-as-the-publishing-backend"
+    comment: "New achievement! Deployment Archaeology. You discovered Vercel could resurrect an older commit and erase two newer posts, then made GitHub Actions babysit main. Reward: a 21-minute loading ritual."
+  - section: "timing-the-same-posts-on-cloudflare"
+    comment: "Patch 2.0.0: The mirror put posts on Cloudflare in a median 4.5 seconds, after GitHub had already resized the photos and while nobody asked it to translate anything. Benchmarks love a head start."
+  - section: "why-the-blog-now-runs-on-cloudflare"
+    comment: "Incident #1092: The blog moved 92 posts, reactions, counts, and sign-ups into D1, trading 60-millisecond static pages for live updates and up to 730-millisecond uncached ones. Severity: cautiously successful."
+  - section: "whats-still-missing"
+    comment: "Surface, authors now use passkeys because the Telegram bot was retired exactly when it became useful; Cloudflare is merely probably better until a real trip tests it. The parents remain the integration test."
+---
+
+import ArticleMetrics from '../../../components/ArticleMetrics.astro';
+import ArticleFlow from '../../../components/ArticleFlow.astro';
+import MermaidDiagram from '../../../components/MermaidDiagram.astro';
+import ArticleSplit from '../../../components/ArticleSplit.astro';
+import TravelDeployRace from '../../../components/TravelDeployRace.astro';
+import TravelPublishTimes from '../../../components/TravelPublishTimes.astro';
+
+My parents and I spent three and a half weeks in South Africa this autumn, and the people at home wanted to follow along.
+
+The usual answer is a group chat. Photos pile up, the good ones scroll away, and a week later nobody can find the picture from the lodge. I wanted something calmer: a small private website with one entry per moment, a map of where we'd been, and nothing to install.
+
+The catch was the posting. Nobody on a trip wants to open a laptop at ten at night. And it had to work for all three of us, not just for the one who writes software.
+
+So the blog took posts from a Telegram chat. You send the bot a few lines, some photos or a voice note, it writes the entry and shows you a preview, and one tap puts it online. It was well received at home, and it worked better than I expected.
+
+<figure>
+  <img src="/assets/articles/2026/family-blog-header-desktop.webp" alt="The blog's home page header: three cartoon avatars above the title Gaildorf Gang in South Africa, the line 'Niklas, Klaus and Ellen, 10 October to 2 November 2026', a note saying 'Back home. Thanks for following along!', 21,248 km travelled, a row of day markers from Frankfurt to Home, and '92 updates from 40 places, 343 photos', on a violet background with jacaranda blossoms." width="1600" height="820" loading="eager" decoding="async" />
+  <figcaption>The top of the blog's home page as it looks now, after the trip. The row of dashes is one marker per day; during the trip a little car showed how far along we were.</figcaption>
+</figure>
+
+<ArticleMetrics
+  id="trip-numbers"
+  label="The trip / in numbers"
+  title="What ended up on the blog."
+  caption="Counts from the blog's repository and its GitHub Actions history. A Telegram post is a successful run of the bot's publish workflow; the other updates went out through Claude Code sessions, mostly on the first day."
+  metrics={[
+    { label: 'Updates', value: 92, detail: 'With 343 photos from 40 places.' },
+    { label: 'Posted through Telegram', value: 73, detail: 'Most of the rest came before the bot existed.' },
+    { label: 'Authors', value: 3, detail: '59 updates by me, 21 by my father, 12 by my mother.' },
+    { label: 'Push sign-ups', value: 15, detail: 'Devices that get a notification for every new post.' },
+  ]}
+/>
+
+## What the family saw
+
+The site is a timeline grouped by day, newest first. Each update can have text, a photo grid, a video or a small map, and it shows who wrote it. A route map draws the trip along the roads, flights as arcs. A "New" badge marks what arrived since your last visit, readers can leave emoji reactions, and every page exists in German too, because not everyone at home reads English.
+
+<ArticleSplit id="phone-header" mediaSide="right" balance="text" align="top">
+  <p>It sits behind one shared password, and a one-tap link logs you in. The layout is built for phones first: a tab bar at the bottom, a light and a dark mode that follow the phone, and the option to add the blog to the home screen, where it opens like an app.</p>
+  <p>The header changed over the trip. While we were travelling it showed where we were right now, with the local time and the weather. Now that we're back, it thanks everyone and links to a recap of the whole trip on one page.</p>
+  <p>Beyond the header, every page is full of family photos, so the rest of this post shows how the updates got there rather than the updates themselves.</p>
+  <figure slot="media">
+    <img src="/assets/articles/2026/family-blog-header-phone.webp" alt="The same header on a phone in dark mode: the app icon and the title Gaildorf Gang in the top bar, the three avatars, the trip title, 'Back home. Thanks for following along!', 21,248 km travelled and the day markers." width="780" height="1128" loading="lazy" decoding="async" />
+    <figcaption>The header on a phone, in dark mode.</figcaption>
+  </figure>
+</ArticleSplit>
+
+## Posting from a Telegram chat
+
+The first updates, from the drive to Frankfurt to landing in Port Elizabeth the next morning, went out through Claude Code on my phone. I described the moment, the agent wrote the post, opened a pull request and merged it. That worked for me, but it meant one session per update, and I was the only one who could do it.
+
+On the second day the Telegram bot went live. Here is what happened after someone sent it a message:
+
+<ArticleFlow
+  id="telegram-flow"
+  label="Publishing / one update"
+  title="From a chat message to a live post."
+  caption="The flow during the trip. Messages sent in quick succession became one draft. The bot only accepted messages from the three of us."
+  steps={[
+    { label: 'Send', title: 'Write to the bot', detail: 'Text, photos, a video, a voice note or a location, in German or English.' },
+    { label: 'Draft', title: 'A model writes the post', detail: 'Voice notes are transcribed first. The bot shows a preview with Publish and Discard, or asks a question.' },
+    { label: 'Publish', title: 'A GitHub Action puts it live', detail: 'Resize photos, commit the post, build the site, deploy it, and reply "It\'s live" with the link.' },
+  ]}
+/>
+
+This is the bot's last post of the trip, the morning we got home:
+
+<ArticleSplit id="telegram-chat" mediaSide="right" balance="equal" align="top" wide>
+  <p>I sent one line: "We are tired but back in Gaildorf 🙌". The bot answered with its version of the post, a place, and an invitation to send photos or changes. Then I shared my location, and the preview came back with the place confirmed and the sentence tidied up.</p>
+  <p>Tapping Publish brought "Wird veröffentlicht" (publishing) and a promise of a link in about two minutes. The link arrived two minutes later with "Ist online" (it's live), together with a reminder that replying to that message changes the post, and a button to take it down again.</p>
+  <p>The bot talks to us in German. The posts it writes are in English, and the site translated each one into German as it went live, for the readers who prefer that.</p>
+  <figure slot="media">
+    <img src="/assets/articles/2026/family-blog-telegram-chat.webp" alt="A Telegram chat. I write 'We are tired but back in Gaildorf'. The bot replies with a draft and the place Gaildorf, asking in German for photos or changes. I share a location. The bot sends the revised draft, then 'Wird veröffentlicht … In etwa zwei Minuten schicke ich dir den Link', then 'Ist online' with a link, a note that replying changes the post, a link preview of the blog, and a button 'Wieder entfernen'." width="1060" height="1804" loading="lazy" decoding="async" />
+    <figcaption>A real conversation with the bot. The shared location, the post's address, the site's domain and the bot's name are blurred.</figcaption>
+  </figure>
+</ArticleSplit>
+
+The writing step does more than translate. Messages typed on a phone at the end of a long day arrive tired and out of order: what happened in the evening, then something from the morning, then a correction. The prompt has the model first lay out the facts in the order they happened and then write a short entry from that list, in our words, without adding feelings or details nobody mentioned. The rules for privacy are in the same prompt: places at town level, no addresses, no flight numbers. Telegram strips GPS from photos, so the bot asked where a post was from when it couldn't tell.
+
+Most of the bot's features came from the trip itself. Replying to the "It's live" message changes that post. `/edit` picks any earlier post and takes the change in plain language, like "it was Wednesday at 2 pm". `/add` puts more photos into an earlier post, and if they're someone else's, the post shows both authors. `/undo` takes your latest post down.
+
+The rule I cared about most was that nothing fails silently. If a publish run broke, the chat got the reason and two buttons, "Try again" and "Change it", and the draft stayed. On the third morning a post failed with "Could not name this location". We had stopped on a road with no town nearby, and the place lookup gave up. The fix, naming road spots after the nearest town, went in that same morning, and the post went out with a retry.
+
+For my parents the whole system was a chat. No account on the site, no editor, and no need to know that there was a Git repository behind it.
+
+## What Astro was good at
+
+During the trip the site was built with [Astro](https://astro.build) and hosted on Vercel. Each update was a folder in Git: an MDX file with its frontmatter, plus the photos. That fit Astro well.
+
+Content collections validate every post against a schema, so a broken date or a photo without alt text fails the build instead of producing a broken page. Photos are resized to several widths at build time, and the viewer picks smaller files when a phone is on data saver. The result was static HTML, which is hard to beat for speed. Measured from South Africa, the time to first byte was around 60 milliseconds.
+
+The cost of static is that every change is a rebuild. One new post meant installing dependencies, building about 165 pages and deploying the result. Caching the optimised images helped a lot: that step went from 15 seconds on a cold start to about one second. A publish still took a minute or more, and anything live, like reactions or view counts, needed separate storage and functions next to the static site.
+
+## GitHub Actions as the publishing backend
+
+Tapping Publish didn't build anything on Vercel directly. The bot ran as a Vercel Function, and it sent a `repository_dispatch` event to GitHub. A workflow then did the real work, using the same `npm run post` script I used by hand: download the media, write the post, commit it to `main`, build, deploy, and reply in the chat.
+
+That kept every post in Git, which I liked. It also taught me a few things about GitHub Actions I hadn't needed before.
+
+**A concurrency group can drop work.** The obvious way to keep two publish runs from colliding is a `concurrency` group. By default, a group holds one running and one pending run. When another run arrives while one is running and one is waiting, GitHub cancels the waiting one. So two posts sent while a publish was still running could lose the first of them. The publish workflow has no group. Overlapping runs rebase onto `main` and retry their push instead.
+
+**Commits made with `GITHUB_TOKEN` don't start other workflows.** The deploy workflow committed German translations before deploying. That push doesn't start a new run, which is what you want in that spot. It also means the commit has no check results of its own, which surprised me the first time.
+
+**Two deploy paths will race.** Vercel's own Git integration was still building pushes to `main` too. On the third day two of its builds of older commits finished up to 45 minutes late and replaced a deployment that already had two newer posts. They were simply gone from the site.
+
+<TravelDeployRace />
+
+By then the Action already built the site itself and ran `vercel deploy --prebuilt`, which returns once the deployment is live, instead of waiting for Vercel to notice the push. The fix added two things. Vercel's Git builds are off for `main`, so only GitHub Actions deploy production. And a production deployment is only promoted while its commit is still `main`'s newest, so a build that finishes late is never put live.
+
+One more Vercel detail from before the fix: on the Hobby plan, its Git builds refused to deploy commits to a private repository from anyone but the account owner. So the bot's commits carry my name as the author and `github-actions[bot]` as the committer, and kept doing so.
+
+Over the trip, the bot's 87 successful runs, 73 new posts and 14 edits, took a median of 79 seconds from the moment GitHub created the workflow run to the "It's live" reply. One took 21 minutes, which is a long time to stare at a phone.
+
+## Timing the same posts on Cloudflare
+
+Halfway through the trip I started wondering whether the minute was necessary. Most of it went to installing dependencies, building every page and deploying them, all to add one entry.
+
+So I built a prototype on Cloudflare Workers next to the live site. Posts live in a D1 database, photos in R2 storage, and publishing writes one row and clears the cached pages that show it. Nothing rebuilds.
+
+To compare the two on real posts without risking the live one, I added a `mirror` workflow. It starts with `workflow_run` after a live publish has finished, sends the posts that changed to the prototype, and logs both times. A failure there never touched the live site. From 22 October on, new posts also went to the prototype, and 25 of them have a time for both paths.
+
+<TravelPublishTimes />
+
+For those 25 posts, the live path took a median of 84 seconds (the 79 above covers every run of the trip) and the Cloudflare one 4.5 seconds, upload from the GitHub runner included. Per post that's 11 to 60 times faster, about 20 times for the typical post. The comparison isn't perfectly even. The mirror got photos the live pipeline had already resized, and it skipped the German translation, so the real gap is smaller. I didn't measure how much those two steps would add on Cloudflare.
+
+## Why the blog now runs on Cloudflare
+
+Since 10 November the blog has run as a Cloudflare Worker. I went with it for more than the timings.
+
+- **GitHub is out of the publishing path.** The site no longer needs an Actions runner to be available to show a new post.
+- **One database instead of three stores.** On Vercel, reactions and push sign-ups lived in Vercel Blob, view counts in Upstash Redis, posts in Git. Blob on Vercel's free plan allows 2,000 writes a month, which is why the view counts went to Redis, and reactions needed ETag retries so that two taps at once didn't overwrite each other. Now it's all in D1.
+- **Live updates.** A Durable Object holds a small live room, so a new post or a reaction shows up for other readers without a reload. In the prototype a reaction showed up in a second browser 60 to 70 milliseconds later.
+- **Cost.** The $5 Workers Paid plan covers it, and my account already had it.
+
+<MermaidDiagram
+  id="cloudflare-layout"
+  label="Architecture / since November"
+  title="One Worker, one database, one bucket."
+  description="A reader's request goes through a gateway that checks the password, then to a cached site that reads posts from D1 and media from R2. Publishing writes to D1 and R2, purges the affected pages from the site's cache, and tells the live room, which pushes the change to browsers that are open."
+  caption="The production layout. The gateway is never cached; the site behind it is, and publishing purges exactly the pages a post appears on."
+  code={`flowchart LR
+    R[Reader] --> G[Gateway: password] --> S[Cached site]
+    S --> D[(D1: posts, reactions, views)]
+    S --> M[(R2: photos, videos)]
+    A[Author] --> P[Publish]
+    P --> D
+    P --> M
+    P --> C[Purge cache tags] --> S
+    P --> L[Live room] --> B[Open browsers]`}
+/>
+
+It isn't free of trade-offs. Rendering a page from D1 on every request took 320 to 730 milliseconds from South Africa, where we were, against about 60 for the static site. So pages have to come from Cloudflare's cache, and every publish has to purge the right ones. Cached, the first byte of a page arrived after 60 to 155 milliseconds from South Africa and Germany, against 35 to 65 for the static site.
+
+The framework changed too. With the posts in a database, Astro's strengths here, static pages, content collections and build-time images, stopped applying, while the parts that make the site feel alive were glue I had to write myself. I rebuilt the prototype with [TanStack Start](https://tanstack.com/start) to compare. It took more code and sends about 160 KB of JavaScript on the first visit, which Astro barely needed. In exchange, live posts, reactions, paging and a publish page in the browser come out of the framework instead of out of my glue.
+
+The move itself was careful. All 92 posts, the reactions, the view counts and the 15 push sign-ups came along, and readers who were logged in on the old site stayed logged in. Every post still exists in Git. The Vercel project and its last deployment are still there, the retired workflows are kept under a Git tag named `vercel-final`, and going back is a documented DNS change.
+
+## What's still missing
+
+The Telegram bot didn't make the move. The trip was over, so I retired it instead of porting it. For now authors post through a page on the site after signing in with a passkey, and those posts aren't translated into German automatically.
+
+So I think Cloudflare is the better home for this blog, with one caveat: the new setup hasn't been through a trip yet. Before the next one, the bot needs to come back as a Cloudflare Workflow, and then I'll find out whether my parents notice that their posts arrive a minute sooner.
