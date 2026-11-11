@@ -248,12 +248,14 @@ for (const width of [1280, 390]) {
     expect(Math.abs(header.right - wide.right)).toBeLessThan(1);
     const wordmark = await edges('.wordmark');
     expect(Math.abs(wordmark.left - wide.left)).toBeLessThan(1);
-    // The header does not move between a wide page, the homepage and a reading page.
-    for (const path of ['/', '/posts/']) {
+    // The header does not move between a wide page, the homepage and reading pages,
+    // and none of them scrolls sideways.
+    for (const path of ['/', '/posts/', '/about/', '/reviews/', '/archive/', '/imprint/', '/listening/', '/reading/']) {
       await page.goto(path);
       const other = await edges('.site-header');
-      expect(Math.abs(other.left - header.left)).toBeLessThan(1);
-      expect(Math.abs(other.right - header.right)).toBeLessThan(1);
+      expect(Math.abs(other.left - header.left), path).toBeLessThan(1);
+      expect(Math.abs(other.right - header.right), path).toBeLessThan(1);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true);
     }
     const column = await edges('main');
     expect(column.left).toBeGreaterThanOrEqual(header.left - 0.5);
@@ -663,4 +665,13 @@ test('posts are shared as articles with their date and structured data', async (
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
   await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(0);
   await expect(page.locator('link[rel="me"][href="https://bsky.app/profile/nheer.bsky.social"]')).toHaveCount(1);
+});
+
+test('the listening chart gives every day so far to screen readers', async ({ page }) => {
+  await page.goto('/listening');
+  const table = page.getByRole('table', { name: /Minutes listened per day in/ });
+  test.skip(await table.count() === 0, 'No listening data in this build');
+  const days = await page.locator('.chart-bar-wrapper:not(.future)').count();
+  await expect(table.locator('tbody tr')).toHaveCount(days);
+  await expect(table.locator('tbody tr').first().locator('td')).toHaveText(/^\d+$/);
 });

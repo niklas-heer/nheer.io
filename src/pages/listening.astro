@@ -326,6 +326,17 @@ const todayMinutes = chartData[today - 1]?.minutes ?? 0;
                                 </span>
                             ))}
                         </div>
+                        {monthlyStats.length > 0 && (
+                            <table class="sr-only">
+                                <caption>Minutes listened per day in {monthName}</caption>
+                                <thead><tr><th scope="col">Day</th><th scope="col">Minutes</th></tr></thead>
+                                <tbody>
+                                    {chartData.filter(({ day }) => day <= today).map(({ day, minutes }) => (
+                                        <tr><th scope="row">{monthName} {day}</th><td>{minutes}</td></tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                         {monthlyStats.length === 0 && (
                             <div class="chart-empty">
                                 <span>
