@@ -278,3 +278,34 @@ test('on a heckled post the mascot follows the cursor and heckles the section un
   expect(heckles.map(h => h.comment)).not.toContain(spoken);
   expect(errors).toEqual([]);
 });
+
+test('Save-Data keeps the corner mascot still even when a reader reaches for him', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'connection', { value: { saveData: true }, configurable: true });
+  });
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const requests: string[] = [];
+  page.on('request', request => { if (/octopus\.json|lottie/i.test(request.url())) requests.push(request.url()); });
+  await page.goto('/posts/');
+  const mascot = page.locator('#inky-mascot');
+  await mascot.hover();
+  await mascot.focus();
+  await mascot.click();
+  await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
+  await page.waitForTimeout(500);
+  await expect(mascot.locator('img.inky-poster')).toBeVisible();
+  expect(requests).toEqual([]);
+});
+
+test('a window that widens past the breakpoint wakes the corner mascot', async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 844 });
+  await page.goto('/posts/');
+  await page.getByRole('heading', { name: 'Blog', exact: true }).waitFor();
+  await expect(page.locator('#inky-container')).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 844 });
+  const mascot = page.locator('#inky-mascot');
+  await expect(mascot).toBeVisible();
+  await mascot.click();
+  await expect(page.locator('#inky-bubble')).toHaveClass(/visible/);
+  await expect(mascot).toHaveAttribute('aria-expanded', 'true');
+});

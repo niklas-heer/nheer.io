@@ -123,6 +123,12 @@ const comments = await getInkyComments();
     const DEACTIVATE_DELAY = 12000; // 12 seconds
     const IDLE_TIMEOUT = 4000;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    // Phones and narrow windows never see him, so nothing is loaded for them.
+    const wide = window.matchMedia("(min-width: 1200px)");
+    const savesData = () =>
+        Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
+    // Whether this page's Inky may download and run the animation right now.
+    const mayAnimate = () => !reducedMotion.matches && !savesData() && wide.matches;
 
     // lottie-web is imported on demand only; see scheduleAnimation().
     let lottieModule: typeof import("lottie-web") | null = null;
@@ -136,11 +142,17 @@ const comments = await getInkyComments();
     reducedMotion.addEventListener("change", () => {
         if (reducedMotion.matches) {
             lottieModule?.default.pause(ANIMATION);
-        } else if (lottieModule) {
-            lottieModule.default.play(ANIMATION);
         } else {
+            // Starts the animation if this page never did; resumes it otherwise.
             current?.animate();
+            lottieModule?.default.play(ANIMATION);
         }
+    });
+
+    // A window that widens past the breakpoint shows Inky, so wake him then.
+    let startCurrentPage: (() => void) | null = null;
+    wide.addEventListener("change", () => {
+        if (wide.matches) startCurrentPage?.();
     });
 
     // What the page's Inky needs from the document-level listeners below.
@@ -302,11 +314,16 @@ const comments = await getInkyComments();
 
         // The animation replaces the poster once it has drawn its first frame.
         async function animate() {
-            if (animationRequested || signal.aborted || reducedMotion.matches) return;
+            if (animationRequested || signal.aborted || !mayAnimate()) return;
             animationRequested = true;
             try {
                 const lottie = await loadLottie();
                 if (signal.aborted || !lottieContainer.isConnected) return;
+                // The preference may have changed while the renderer was loading.
+                if (!mayAnimate()) {
+                    animationRequested = false;
+                    return;
+                }
                 lottie.destroy(ANIMATION);
                 const animation = lottie.loadAnimation({
                     container: lottieContainer,
@@ -327,11 +344,9 @@ const comments = await getInkyComments();
         }
 
         // Not during page load: wait until the page has loaded and the browser is
-        // idle. A visitor who asks for less data keeps the still picture until
-        // they reach for him.
+        // idle. Reduced motion and Save-Data keep the still picture for good.
         function scheduleAnimation() {
-            if (reducedMotion.matches) return;
-            if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return;
+            if (!mayAnimate()) return;
             const whenIdle = () => {
                 if (signal.aborted) return;
                 if ("requestIdleCallback" in window) {
@@ -406,10 +421,10 @@ const comments = await getInkyComments();
         mascot.dataset.inkyReady = "true";
 
         const start = () => {
-            // Phones and narrow windows never see him, so nothing is loaded for them.
-            if (window.innerWidth < 1200 || container.dataset.hidden) return;
+            if (!wide.matches || container.dataset.hidden || current || !container.isConnected) return;
             current = startSession(container, mascot, lottieContainer, bubble, text, sourceLink);
         };
+        startCurrentPage = start;
 
         hide.addEventListener("click", (event) => {
             event.stopPropagation();
