@@ -41,7 +41,7 @@ Samples read: `2026-09-07_homelab-for-the-family.mdx` (family audience, similar 
 | `GITHUB_TOKEN` pushes start no workflow | `deploy.yml` comments |
 | Vercel Git builds finished up to 45 min late, two posts offline; three-part fix | Commit #39 message, `scripts/deploy.mjs` header |
 | Hobby refused private-repo commits by others | `telegram.yml` comment ("seen with its Git builds") |
-| 79 s median, once 21 min | 87 successful bot runs: run created → run finished (dispatch to reply). The post says "from the moment GitHub created the workflow run". |
+| 79 s median, once 21 min | 87 successful bot runs: run created → run finished (dispatch to reply). The post says "from the moment GitHub created the workflow run until it finished"; the reply is sent at the end of the run, just before the push notifications (`scripts/telegram-publish.mjs`), and its own timestamp was not measured. |
 | 25 paired posts: 84 s vs 4.5 s median; 11–60×, 20× median | `mirror` run logs: live run created→updated vs "ms with upload" for posts logged as `new` |
 | Prototype: uncached 320–730 ms from ZA; reaction 59–69 ms; $5 plan already held | Prototype results section of the design document |
 | TanStack: more code (1,874 + 713 CSS vs 835 lines), ~160 KB JS | Framework comparison in the design document |

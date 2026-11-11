@@ -103,7 +103,7 @@ This is the bot's last post of the trip, the morning we got home:
   </figure>
 </ArticleSplit>
 
-The writing step does more than translate. Messages typed on a phone at the end of a long day arrive tired and out of order: what happened in the evening, then something from the morning, then a correction. The prompt has the model first lay out the facts in the order they happened and then write a short entry from that list, in our words, without adding feelings or details nobody mentioned. The rules for privacy are in the same prompt: places at town level, no addresses, no flight numbers. Telegram strips GPS from photos, so the bot asked where a post was from when it couldn't tell.
+The writing step does more than translate. Messages typed on a phone at the end of a long day arrive tired and out of order: what happened in the evening, then something from the morning, then a correction. The prompt has the model first lay out the facts in the order they happened and then write a short entry from that list, in our words, without adding feelings or details nobody mentioned. The rules for privacy are in the same prompt: places at town level, no addresses, no flight numbers. Telegram strips GPS from photos sent the normal way, so the bot asked where a post was from when it couldn't tell. A photo sent as a file keeps its GPS. The publish step then used it to name the town and removed it before the photo went online.
 
 Most of the bot's features came from the trip itself. Replying to the "It's live" message changes that post. `/edit` picks any earlier post and takes the change in plain language, like "it was Wednesday at 2 pm". `/add` puts more photos into an earlier post, and if they're someone else's, the post shows both authors. `/undo` takes your latest post down.
 
@@ -137,7 +137,7 @@ By then the Action already built the site itself and ran `vercel deploy --prebui
 
 One more Vercel detail from before the fix: on the Hobby plan, its Git builds refused to deploy commits to a private repository from anyone but the account owner. So the bot's commits carry my name as the author and `github-actions[bot]` as the committer, and kept doing so.
 
-Over the trip, the bot's 87 successful runs, 73 new posts and 14 edits, took a median of 79 seconds from the moment GitHub created the workflow run to the "It's live" reply. One took 21 minutes, which is a long time to stare at a phone.
+Over the trip, the bot's 87 successful runs, 73 new posts and 14 edits, took a median of 79 seconds from the moment GitHub created the workflow run until it finished. The "It's live" reply came at the very end, just before the push notifications went out. One took 21 minutes, which is a long time to stare at a phone.
 
 ## Timing the same posts on Cloudflare
 
