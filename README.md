@@ -76,7 +76,10 @@ mise run preview:articles --port 4323
 
 `mise run check` runs the sample-data build, full test suite, and dependency
 audit in sequence. The audit includes development dependencies and fails on any
-reported vulnerability, including low-severity advisories. The only exceptions
+reported vulnerability, including low-severity advisories. The homelab
+publishing job runs the same tests with `SITE_AUDIT_SCOPE=publish`, which audits
+only production dependencies and fails only on high or critical advisories, so a
+newly published minor advisory stops the GitHub check, not the live site. The only exceptions
 are listed in `scripts/audit.mjs`, each with a reason, a maximum package version
 and an expiry date; an exception stops applying once a newer version is installed
 or the date passes.

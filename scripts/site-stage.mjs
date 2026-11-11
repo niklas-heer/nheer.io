@@ -21,7 +21,7 @@ const stages = {
   'sync-page-views': { required: ['DATABASE_URL', 'VERCEL_TOKEN', 'VERCEL_PROJECT_ID', 'VERCEL_ORG_ID'], command: ['node', 'scripts/sync-page-views.mjs'] },
   build: { required: ['DATABASE_URL', 'HARDCOVER_API_TOKEN', 'GITHUB_TOKEN'], command: ['npm', 'run', 'build'] },
   'build-check': { required: [], command: ['npm', 'run', 'build'] },
-  test: { required: [], command: ['npm', 'test'] },
+  test: { required: [], command: ['npm', 'test'], env: { SITE_AUDIT_SCOPE: 'publish' } },
   publish: deployTarget(env),
 };
 const config = stages[stage];
@@ -39,6 +39,7 @@ if (stage === 'build-check') {
   env.SITE_TEST_DATA = 'true';
   delete env.REQUIRE_LIVE_DATA;
 }
+Object.assign(env, config.env);
 if (stage === 'publish') assertLiveSnapshot(JSON.parse(readFileSync('dist/build-health.json', 'utf8')));
 const [command, ...args] = config.command;
 const result = spawnSync(command, args, { env, stdio: 'inherit' });
