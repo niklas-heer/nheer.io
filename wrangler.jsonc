@@ -1,0 +1,28 @@
+// nheer.com on Cloudflare Workers (docs/cloudflare.md).
+// Every page, image, script and feed in dist/ is a static asset: Cloudflare serves it without running worker/index.ts,
+// so pages cost no Worker requests and keep working even if the free daily request allowance runs out. Only /api/*
+// runs the Worker: the page-view counter, kept in the D1 database `nheer`.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nheer",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  // The temporary address https://nheer.niklas-heer.workers.dev, for checking a deployment before the domain points here.
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // /about answers with a redirect to /about/, the address the site links to.
+    "html_handling": "auto-trailing-slash",
+    // An unknown address gets dist/404.html with status 404, without running the Worker.
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+  // public/_headers and public/_redirects (copied into dist/) set the security and cache headers and the old addresses.
+  "vars": { "SITE_ORIGIN": "https://nheer.com" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "nheer", "database_id": "13f4bee1-ca3d-47f0-8f20-19b1518268f8", "migrations_dir": "migrations" }
+  ]
+}

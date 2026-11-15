@@ -27,7 +27,7 @@ export async function refreshSite({ mode = 'check', env = process.env, run, conn
   if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 
   const commandEnv = { ...env, CI: 'true' };
-  if (mode === 'check' || env.SITE_DEPLOY_TARGET === 'vercel') commandEnv.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
+  if (mode === 'check' || ['cloudflare', 'vercel'].includes(env.SITE_DEPLOY_TARGET)) commandEnv.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
   if (mode === 'check') {
     commandEnv.SITE_TEST_DATA = 'true';
     delete commandEnv.REQUIRE_LIVE_DATA;

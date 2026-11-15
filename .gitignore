@@ -38,3 +38,6 @@ test-results/
 
 # Where private and relocated project checkouts live (see docs/projects.md)
 .projects-local.json
+
+# Wrangler state and logs
+.wrangler/

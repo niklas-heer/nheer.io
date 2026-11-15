@@ -25,6 +25,9 @@ export async function packageVercel({ root = process.cwd() } = {}) {
   await rm(output, { recursive: true, force: true });
   await mkdir(output, { recursive: true });
   await cp(dist, join(output, 'static'), { recursive: true });
+  // Cloudflare's rules files (public/_headers, public/_redirects); the routes above do their work on Vercel.
+  await rm(join(output, 'static/_headers'), { force: true });
+  await rm(join(output, 'static/_redirects'), { force: true });
   await writeFile(join(output, 'config.json'), JSON.stringify({ version: 3, routes }, null, 2));
   // Keep a copy of the health report in the package; deployment validates it.
   return JSON.parse(await readFile(join(dist, 'build-health.json'), 'utf8'));

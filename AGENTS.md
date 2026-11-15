@@ -1,8 +1,8 @@
 # nheer.io
 
-Personal website and blog, built with Astro and Tailwind CSS and hosted on Vercel.
+Personal website and blog, built with Astro and Tailwind CSS, moving from Vercel to a Cloudflare Worker.
 
-Read [README.md](README.md) for setup and development, and [docs/vercel-migration.md](docs/vercel-migration.md) for deployment status, token setup and DNS records.
+Read [README.md](README.md) for setup and development, [docs/cloudflare.md](docs/cloudflare.md) for hosting, page views and rollback, and [docs/vercel-migration.md](docs/vercel-migration.md) for the Vercel setup it replaces.
 
 - Install [mise](https://mise.jdx.dev/getting-started.html) first; it owns the toolchain versions for this checkout.
 - Content and site code are the normal working area. Treat `docs/` runbooks as the source of truth for deployment procedure.

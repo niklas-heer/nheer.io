@@ -11,13 +11,15 @@ test('Vercel package preserves tested assets, routes, redirects, 404 and static 
   const root = await mkdtemp(join(tmpdir(), 'nheer-vercel-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'dist/posts/example'), { recursive: true });
-  for (const file of ['index.html', '404.html', 'posts/example/index.html', 'cv.pdf']) {
+  for (const file of ['index.html', '404.html', 'posts/example/index.html', 'cv.pdf', '_headers', '_redirects']) {
     await writeFile(join(root, 'dist', file), 'unchanged-' + file);
   }
   await writeFile(join(root, 'dist/build-health.json'), JSON.stringify({ source: 'sample' }));
   await packageVercel({ root });
   const output = join(root, '.vercel/output');
   assert.equal(await readFile(join(output, 'static/cv.pdf'), 'utf8'), 'unchanged-cv.pdf');
+  // Cloudflare's rules files would be served as plain files on Vercel.
+  for (const file of ['_headers', '_redirects']) await assert.rejects(readFile(join(output, 'static', file)), { code: 'ENOENT' });
   const { routes } = JSON.parse(await readFile(join(output, 'config.json'), 'utf8'));
   const route = path => routes.find(route => route.dest && route.src && new RegExp(`^(?:${route.src})$`).test(path));
   assert.equal(route('/').dest, '/index.html');
@@ -54,4 +56,22 @@ test('the Vercel publisher refuses sample-data builds before invoking the CLI', 
   assert.match(result.stderr, /requires a live-data build/);
   assert.doesNotMatch(result.stderr, /test-secret/);
   await assert.rejects(readFile(join(root, '.vercel/output/config.json')), { code: 'ENOENT' });
+});
+
+test('the Cloudflare publisher refuses sample-data builds before invoking Wrangler', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'nheer-no-publish-cf-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await mkdir(join(root, 'dist'));
+  await writeFile(join(root, 'dist/build-health.json'), JSON.stringify({ source: 'fixture', snapshot: new Date().toISOString() }));
+  await writeFile(join(root, 'dist/index.html'), '<p data-page-views></p>');
+  const script = fileURLToPath(new URL('../publish-cloudflare.mjs', import.meta.url));
+  const publish = env => spawnSync(process.execPath, [script], { cwd: root, encoding: 'utf8', env: { ...process.env, ...env } });
+  let result = publish({ CLOUDFLARE_API_TOKEN: '', CLOUDFLARE_ACCOUNT_ID: '' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Publishing needs CLOUDFLARE_API_TOKEN/);
+  result = publish({ CLOUDFLARE_API_TOKEN: 'test-secret', CLOUDFLARE_ACCOUNT_ID: 'test-account' });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /requires a live-data build/);
+  assert.doesNotMatch(result.stderr + result.stdout, /test-secret/);
+  await assert.rejects(readFile(join(root, '.wrangler/logs')), { code: 'ENOENT' });
 });

@@ -4,21 +4,50 @@ import { join } from 'node:path';
 import { initReadingFilters } from '../src/utils/reading-filters';
 import { privateRepositoryNames } from './private-project-names';
 
-test('page views are rendered in HTML and follow client navigation', async ({ page, request }) => {
-  test.skip(!readFileSync('dist/index.html', 'utf8').includes('data-page-views'), 'View counts disabled');
-  const fixture = (await (await request.get('/build-health.json')).json()).pageViews.source === 'fixture';
+test('each page counts its view and shows the total, also after client navigation', async ({ page }) => {
+  const html = readFileSync('dist/index.html', 'utf8');
+  test.skip(!html.includes('data-page-views'), 'View counts disabled');
+  const counted: string[] = [];
+  const totals: Record<string, number> = { '/': 1234, '/posts': 1, '/about': 56789 };
+  await page.route('**/api/view', async (route) => {
+    const { path } = route.request().postDataJSON();
+    counted.push(path);
+    await route.fulfill({ json: { views: totals[path] ?? 0 } });
+  });
+  const counter = page.locator('[data-page-views]');
+
+  // A live build counts only on nheer.com: here it must not count and the line stays invisible.
+  if (html.includes('data-host="nheer.com"')) {
+    await page.goto('/');
+    await expect(counter).toBeAttached();
+    await expect(counter).toBeHidden();
+    await page.waitForLoadState('networkidle');
+    expect(counted).toEqual([]);
+    return;
+  }
+
   await page.goto('/');
-  await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1,234 views on this page' : /[0-9,]+ views? on this page/);
+  await expect(counter).toHaveText('1,234 views on this page');
   await page.locator('.nav-menu-container').hover();
   await page.locator('header a[href="/posts/"]').first().click();
-  await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1 view on this page' : /[0-9,]+ views? on this page/);
+  await expect(counter).toHaveText('1 view on this page');
   await page.locator('.nav-menu-container').hover();
   await page.locator('header a[href="/about/"]').first().click();
-  await expect(page).toHaveURL(/\/about\/?$/);
-  await expect(page.locator('[data-page-views]')).toBeVisible();
+  await expect(page).toHaveURL(/\/about\/$/);
+  await expect(counter).toHaveText('56,789 views on this page');
+  expect(counted).toEqual(['/', '/posts', '/about']);
   expect(await page.locator('script[src*="insights/script"]').count()).toBe(0);
+
+  // Not counted: an unknown address has no counter, and a failed count leaves the line invisible.
   await page.goto('/missing-page-counter-test');
-  await expect(page.locator('[data-page-views]')).toHaveCount(0);
+  await expect(counter).toHaveCount(0);
+  await page.unroute('**/api/view');
+  await page.route('**/api/view', (route) => route.fulfill({ status: 503, body: '' }));
+  await page.goto('/reading/');
+  await expect(counter).toBeAttached();
+  await page.waitForLoadState('networkidle');
+  await expect(counter).toBeHidden();
+  expect(counted).toEqual(['/', '/posts', '/about']);
 });
 
 for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }]) {

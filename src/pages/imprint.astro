@@ -29,17 +29,22 @@ const pageViewsEnabled = import.meta.env.PUBLIC_PAGE_VIEWS_ENABLED === 'true';
 
         {pageViewsEnabled ? <>
         <p>
-            This site uses Vercel Web Analytics to count page views and display
-            each page's total. Vercel processes aggregate traffic information,
-            including the page visited, referring site, browser, device and
-            approximate location. The integration removes URL query parameters
-            and fragments before sending page views.
+            This site counts how often each page is read and shows the total
+            under the page. When a page opens, your browser tells nheer.com
+            which page it is, and the site adds one to that page's count for
+            the day. Only the page's address, the date and the count are stored:
+            no cookies, no IP address, no browser or device details, and nothing
+            that could recognise you on a later visit. The numbers count page
+            views, not people. Counts from September 19 to November 2026 come
+            from Vercel Web Analytics, which counted page views while Vercel
+            hosted this site.
         </p>
         <p>
-            Vercel Web Analytics uses no third-party tracking cookies. Its visitor identifier
-            expires after 24 hours. Public counters show page views, not unique
-            people. Daily aggregate counts are retained in a private database; public totals refresh approximately every three hours. For details, see
-            <a href="https://vercel.com/docs/analytics/privacy-policy">Vercel's analytics privacy documentation</a>.
+            The site is hosted by Cloudflare, Inc. Like any web host, Cloudflare
+            processes your IP address and the details of each request to deliver
+            pages and protect the site from abuse, and keeps the page counter's
+            request logs for a few days. For details, see
+            <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>.
         </p>
         </> : <>
         <p>

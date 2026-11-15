@@ -8,7 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "npm run test:pipeline && npm run test:unit && playwright test && npm run audit",
+    "test": "npm run test:pipeline && npm run typecheck:worker && npm run test:unit && playwright test && npm run audit",
     "refresh": "node scripts/refresh-site.mjs refresh",
     "sync:cv": "node scripts/sync-cv.mjs",
     "publish:site": "node scripts/refresh-site.mjs publish",
@@ -17,7 +17,9 @@
     "preview:articles": "PREVIEW_DRAFTS=true SITE_TEST_DATA=true astro dev --host 127.0.0.1",
     "test:sync": "node scripts/tests/podcast-sync.integration.mjs",
     "test:unit": "bun test tests/*.test.ts",
-    "audit": "node scripts/audit.mjs"
+    "audit": "node scripts/audit.mjs",
+    "typecheck:worker": "tsc -p worker",
+    "deploy:cloudflare": "node scripts/publish-cloudflare.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.6",
@@ -26,7 +28,6 @@
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@tailwindcss/vite": "^4.3.5",
-    "@vercel/analytics": "^2.0.1",
     "astro": "^7.4.7",
     "astro-expressive-code": "^0.44.3",
     "lottie-web": "^5.13.0",
@@ -43,7 +44,10 @@
     "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0"
+    "@cloudflare/workers-types": "5.20261115.1",
+    "@playwright/test": "1.63.0",
+    "typescript": "5.9.3",
+    "wrangler": "4.162.0"
   },
   "overrides": {
     "katex": "^0.18.11",

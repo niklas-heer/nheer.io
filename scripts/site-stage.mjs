@@ -29,7 +29,7 @@ if (!config) throw new Error('Unknown site pipeline stage');
 const missing = config.required.filter((name) => !env[name]);
 if (missing.length) throw new Error(`Missing configuration: ${missing.join(', ')}`);
 if (stage === 'build') {
-  if (env.SITE_DEPLOY_TARGET === 'vercel') env.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
+  if (['cloudflare', 'vercel'].includes(env.SITE_DEPLOY_TARGET)) env.PUBLIC_PAGE_VIEWS_ENABLED = 'true';
   env.REQUIRE_LIVE_DATA = 'true';
   delete env.SITE_TEST_DATA;
   delete env.PREVIEW_DRAFTS;
