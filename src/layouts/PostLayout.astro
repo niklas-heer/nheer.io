@@ -56,7 +56,7 @@ const newer = position >= 0 && position < siblings.length - 1 ? siblings[positio
 >
     {heckles && <script type="application/json" id="inky-heckles" set:html={heckles} />}
     <ReadingProgress />
-    <a href="/posts" class="back-link">Back to posts</a>
+    <a href="/posts/" class="back-link">Back to posts</a>
 
     <article>
         <header class="post-header">
@@ -133,7 +133,7 @@ const newer = position >= 0 && position < siblings.length - 1 ? siblings[positio
                     <a href={siteConfig.social.bluesky} target="_blank" rel="noopener noreferrer" class="post-ending-link">
                         <SocialIcon name="Bluesky" class="post-ending-icon" />Bluesky</a>.
                 </p>
-                <a href="/posts" class="back-link">Back to all posts</a>
+                <a href="/posts/" class="back-link">Back to all posts</a>
             </div>
         </footer>
     </article>

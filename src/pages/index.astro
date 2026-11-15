@@ -172,7 +172,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                                             </>
                                         ))
                                     ) : (
-                                        <a href="/reading">the reading list</a>
+                                        <a href="/reading/">the reading list</a>
                                     )
                                 }
                             </dd>
@@ -185,10 +185,10 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                                         <>
                                             {yesterdayMinutes} min of podcasts yesterday
                                             <span class="terminal-dim"> · </span>
-                                            <a href="/listening">stats</a>
+                                            <a href="/listening/">stats</a>
                                         </>
                                     ) : (
-                                        <a href="/listening">podcast stats</a>
+                                        <a href="/listening/">podcast stats</a>
                                     )
                                 }
                             </dd>
@@ -234,7 +234,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                 <p class="mono-label is-prompt">Start here</p>
                 <h2 id="writing-heading" class="section-heading">
                     Selected writing
-                    <a href="/posts" class="section-more">All posts</a>
+                    <a href="/posts/" class="section-more">All posts</a>
                 </h2>
             </header>
 
@@ -308,7 +308,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                         <p class="mono-label is-prompt">{projectCount} projects{totalStars > 0 && ` · ${formatCount(totalStars)} stars`}</p>
                         <h2 id="projects-heading" class="section-heading">
                             Featured projects
-                            <a href="/projects" class="section-more">All projects</a>
+                            <a href="/projects/" class="section-more">All projects</a>
                         </h2>
                     </header>
                     <ul class="home-projects">
@@ -331,7 +331,7 @@ const terminalJson = JSON.stringify(terminalData).replace(/</g, "\\u003c");
                 <p class:list={["mono-label", "is-prompt", { "is-mark": currentlyReading.length > 0 }]}>{currentlyReading.length > 0 ? "Reading now" : "Reading"}</p>
                 <h2 id="shelf-heading" class="section-heading">
                     On the shelf
-                    <a href="/reading" class="section-more">See reading list</a>
+                    <a href="/reading/" class="section-more">See reading list</a>
                 </h2>
             </header>
             {

@@ -2,17 +2,19 @@
 import ThemeToggle from "./ThemeToggle.astro";
 
 const navItems = [
-    { name: "Blog", href: "/posts", icon: "blog" },
-    { name: "Reading", href: "/reading", icon: "reading" },
-    { name: "Listening", href: "/listening", icon: "podcasts" },
-    { name: "Projects", href: "/projects", icon: "projects" },
-    { name: "Reviews", href: "/reviews", icon: "reviews" },
-    { name: "About", href: "/about", icon: "about" },
+    { name: "Blog", href: "/posts/", icon: "blog" },
+    { name: "Reading", href: "/reading/", icon: "reading" },
+    { name: "Listening", href: "/listening/", icon: "podcasts" },
+    { name: "Projects", href: "/projects/", icon: "projects" },
+    { name: "Reviews", href: "/reviews/", icon: "reviews" },
+    { name: "About", href: "/about/", icon: "about" },
 ];
 
 const currentPath = Astro.url.pathname;
-const isActive = (href: string) =>
-    currentPath === href || currentPath.startsWith(`${href}/`);
+const isActive = (href: string) => {
+    const section = href.replace(/\/$/, "");
+    return currentPath === section || currentPath.startsWith(`${section}/`);
+};
 ---
 
 <header class="site-header">
