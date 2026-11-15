@@ -2,10 +2,10 @@
 
 Personal website and blog by Niklas Heer.
 
-Vercel hosting and persistent per-page view counts are implemented. Daily analytics
-snapshots stay in the private homelab PostgreSQL database; the footer displays
-cumulative totals from each build. See [the migration runbook](docs/vercel-migration.md)
-for deployment status, token setup and exact DNS records.
+The site is moving from Vercel to a Cloudflare Worker that serves the prebuilt pages and
+counts page views in its own D1 database. See [docs/cloudflare.md](docs/cloudflare.md) for
+what runs where, page views, checks and rollback; [docs/vercel-migration.md](docs/vercel-migration.md)
+records the Vercel setup it replaces.
 
 Built with [Astro](https://astro.build/) and styled with [Tailwind CSS](https://tailwindcss.com/).
 
@@ -155,13 +155,15 @@ maintained separately and should be checked when updating the CV.
 
 Argo Workflows owns the recurring refresh pipeline in the homelab repository:
 checkout → install → Pocket Casts sync → Inky sync → page-view sync → build →
-browser tests → Vercel. The public website is served by Vercel from `nheer.com`;
+browser tests → publish (`SITE_DEPLOY_TARGET`: `cloudflare` or `vercel`). The page-view
+sync runs only for Vercel; on Cloudflare the Worker counts views itself;
 PostgreSQL stays private inside the cluster.
 
 `node scripts/site-stage.mjs <stage>` runs a single Argo stage. For a local full
 run, use `mise run refresh` (sync/build/test) or `mise run publish` (also deploys).
 Both require the environment variables documented in `.env.example`; publishing
-also requires the Vercel token, project ID and team ID. Production builds
+also requires the target's credentials (`CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID`, or the Vercel token, project ID and team ID). Production builds
 fail if required live data is unavailable. Ordinary `mise run build` retains the
 credential-free development fallback.
 
@@ -179,7 +181,7 @@ connect Vercel Git builds.
 - **Code theme**: Tokyo Night (dark) and GitHub Light (light)
 - **Syntax Highlighting**: Expressive Code
 - **Tooling**: mise, npm (locked installs), Bun (tests and sync scripts)
-- **Deployment**: Vercel (DNS at INWX, managed in hosting-infra)
+- **Deployment**: Cloudflare Workers static assets plus a small Worker and D1 for page views (Vercel until the move)
 
 ## License
 

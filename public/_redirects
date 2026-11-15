@@ -1,0 +1,8 @@
+# Cloudflare Workers static assets read this file (wrangler.jsonc); it is not served.
+# The listening page used to live under /podcasts.
+/podcasts /listening/ 301
+/podcasts/ /listening/ 301
+/gh/sc https://github.com/niklas-heer/speed-comparison 301
+/gh/sc/ https://github.com/niklas-heer/speed-comparison 301
+/gh/speed-comparison https://github.com/niklas-heer/speed-comparison 301
+/gh/speed-comparison/ https://github.com/niklas-heer/speed-comparison 301

@@ -55,6 +55,17 @@ test('Vercel publishing preserves checks and uses the guarded prebuilt publisher
   assert.equal(x.commands.some(command => command.includes('netlify')), false);
 });
 
+test('Cloudflare publishing skips the Vercel analytics sync and deploys the Worker', async () => {
+  const x = fixture();
+  await refreshSite({ ...x.options, env: { ...env, SITE_DEPLOY_TARGET: 'cloudflare', CLOUDFLARE_API_TOKEN: 'test', CLOUDFLARE_ACCOUNT_ID: 'test' } });
+  assert.equal(x.commands.some(command => command.includes('scripts/sync-page-views.mjs')), false);
+  assert.deepEqual(x.commands.at(-2), ['node', 'scripts/verify-build.mjs']);
+  assert.deepEqual(x.commands.at(-1), ['node', 'scripts/publish-cloudflare.mjs']);
+  const missing = fixture();
+  await assert.rejects(refreshSite({ ...missing.options, env: { ...env, SITE_DEPLOY_TARGET: 'cloudflare' } }), /CLOUDFLARE_API_TOKEN/);
+  assert.deepEqual(missing.commands, []);
+});
+
 test('unknown deployment target and missing Vercel credentials stop before commands', async () => {
   for (const target of ['vercel', 'typo']) {
     const x = fixture();

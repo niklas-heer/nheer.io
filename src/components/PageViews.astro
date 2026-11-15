@@ -1,39 +1,49 @@
 ---
-import { fetchPageViews } from '../utils/page-views';
+// Each page's view count. The number is not in the HTML: on nheer.com the page asks the site's own counter
+// (worker/index.ts, POST /api/view) to count this view and shows the total it answers. Elsewhere (previews, local
+// builds) nothing is counted and the line stays invisible.
 const enabled = import.meta.env.PUBLIC_PAGE_VIEWS_ENABLED === 'true';
+const testData = (process.env.SITE_TEST_DATA ?? import.meta.env.SITE_TEST_DATA) === 'true';
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
 const publicPage = !path.startsWith('/drafts') && !['/404', '/404.html'].includes(path);
-const snapshot = enabled && publicPage ? await fetchPageViews() : null;
-const views = snapshot?.totals.get(path) ?? 0;
 ---
 
-{enabled && publicPage && snapshot && (
-  <p class="mt-2" data-page-views data-path={path} data-host={Astro.site?.hostname} title="Recorded since September 19, 2026; refreshed every three hours.">
-    {new Intl.NumberFormat('en-US').format(views)} {views === 1 ? 'view' : 'views'} on this page
+{enabled && publicPage && (
+  <p
+    class="mt-2 invisible"
+    data-page-views
+    data-path={path}
+    data-host={testData ? '' : Astro.site?.hostname}
+    title="Counted since September 19, 2026."
+  >
+    <span data-page-views-count>0 views on this page</span>
   </p>
 )}
 
 <script>
-  import { inject, pageview } from '@vercel/analytics';
+  const format = new Intl.NumberFormat('en-US');
 
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('astro:page-load', async () => {
     const counter = document.querySelector<HTMLElement>('[data-page-views]');
     if (!counter) return;
-    const path = counter.dataset.path!;
-
-    // Only canonical production traffic contributes to the public count.
-    if (location.hostname === counter.dataset.host) {
-      inject({
-        mode: 'production', framework: 'astro', disableAutoTrack: true,
-        beforeSend(event) {
-          const url = new URL(event.url);
-          url.search = '';
-          url.hash = '';
-          return { ...event, url: url.href };
-        },
+    const { path, host } = counter.dataset;
+    // Only the canonical site counts; sample builds leave the host empty so tests can count.
+    if (host && location.hostname !== host) return;
+    try {
+      const response = await fetch('/api/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path }),
+        keepalive: true,
       });
-      pageview({ path, route: path });
+      if (response.status !== 200) return;
+      const { views } = await response.json();
+      if (!Number.isSafeInteger(views) || views < 0 || !counter.isConnected) return;
+      counter.querySelector('[data-page-views-count]')!.textContent =
+        `${format.format(views)} ${views === 1 ? 'view' : 'views'} on this page`;
+      counter.classList.remove('invisible');
+    } catch {
+      // No count is better than a wrong one; the line stays invisible.
     }
-
   });
 </script>
