@@ -1,6 +1,6 @@
 # nheer.io
 
-Personal website and blog, built with Astro and Tailwind CSS, moving from Vercel to a Cloudflare Worker.
+Personal website and blog, built with Astro and Tailwind CSS, served by a Cloudflare Worker (Vercel until 2026-11-15).
 
 Read [README.md](README.md) for setup and development, [docs/cloudflare.md](docs/cloudflare.md) for hosting, page views and rollback, and [docs/vercel-migration.md](docs/vercel-migration.md) for the Vercel setup it replaces.
 

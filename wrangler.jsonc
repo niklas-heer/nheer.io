@@ -9,8 +9,12 @@
   "compatibility_date": "2026-11-01",
   "observability": { "enabled": true },
   "upload_source_maps": true,
-  // The temporary address https://nheer.niklas-heer.workers.dev, for checking a deployment before the domain points here.
-  "workers_dev": true,
+  // nheer.com is a Worker Custom Domain (it owns the apex DNS record). www.nheer.com is a proxied placeholder record
+  // that a zone redirect rule sends to the apex with 308, without running the Worker (docs/cloudflare.md).
+  "routes": [{ "pattern": "nheer.com", "custom_domain": true }],
+  // No second copy of the site on workers.dev.
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

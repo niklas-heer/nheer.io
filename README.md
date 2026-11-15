@@ -2,8 +2,8 @@
 
 Personal website and blog by Niklas Heer.
 
-The site is moving from Vercel to a Cloudflare Worker that serves the prebuilt pages and
-counts page views in its own D1 database. See [docs/cloudflare.md](docs/cloudflare.md) for
+Since 2026-11-15 a Cloudflare Worker serves the prebuilt pages and counts page views in
+its own D1 database. See [docs/cloudflare.md](docs/cloudflare.md) for
 what runs where, page views, checks and rollback; [docs/vercel-migration.md](docs/vercel-migration.md)
 records the Vercel setup it replaces.
 
@@ -181,7 +181,7 @@ connect Vercel Git builds.
 - **Code theme**: Tokyo Night (dark) and GitHub Light (light)
 - **Syntax Highlighting**: Expressive Code
 - **Tooling**: mise, npm (locked installs), Bun (tests and sync scripts)
-- **Deployment**: Cloudflare Workers static assets plus a small Worker and D1 for page views (Vercel until the move)
+- **Deployment**: Cloudflare Workers static assets plus a small Worker and D1 for page views (Vercel until 2026-11-15)
 
 ## License
 
