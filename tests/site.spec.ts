@@ -10,10 +10,10 @@ test('page views are rendered in HTML and follow client navigation', async ({ pa
   await page.goto('/');
   await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1,234 views on this page' : /[0-9,]+ views? on this page/);
   await page.locator('.nav-menu-container').hover();
-  await page.locator('header a[href="/posts"]').first().click();
+  await page.locator('header a[href="/posts/"]').first().click();
   await expect(page.locator('[data-page-views]')).toContainText(fixture ? '1 view on this page' : /[0-9,]+ views? on this page/);
   await page.locator('.nav-menu-container').hover();
-  await page.locator('header a[href="/about"]').first().click();
+  await page.locator('header a[href="/about/"]').first().click();
   await expect(page).toHaveURL(/\/about\/?$/);
   await expect(page.locator('[data-page-views]')).toBeVisible();
   expect(await page.locator('script[src*="insights/script"]').count()).toBe(0);
@@ -284,7 +284,7 @@ test('a post carries its summary, its neighbours and a way to follow along', asy
   const ending = page.locator('.post-ending');
   await expect(ending.getByRole('link', { name: 'RSS' })).toHaveAttribute('href', '/rss.xml');
   await expect(ending.getByRole('link', { name: 'Bluesky' })).toHaveAttribute('href', 'https://bsky.app/profile/nheer.bsky.social');
-  await expect(ending.getByRole('link', { name: 'Back to all posts' })).toHaveAttribute('href', '/posts');
+  await expect(ending.getByRole('link', { name: 'Back to all posts' })).toHaveAttribute('href', '/posts/');
   // The newest post has nothing newer; the pair still leads back in time.
   await pair.locator('a[rel="next"]').click();
   await expect(page).toHaveURL(new RegExp(`${hrefs[0]}$`));
